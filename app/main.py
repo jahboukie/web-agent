@@ -29,11 +29,11 @@ def create_application() -> FastAPI:
         redoc_url="/redoc" if settings.DEBUG else None,
     )
     
-    # Add security middleware
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=["*"] if settings.DEBUG else ["yourdomain.com"]
-    )
+    # Add security middleware (disabled for development)
+    # app.add_middleware(
+    #     TrustedHostMiddleware,
+    #     allowed_hosts=["*"] if settings.DEBUG else ["yourdomain.com"]
+    # )
     
     # Add CORS middleware
     app.add_middleware(

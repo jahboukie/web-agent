@@ -53,8 +53,8 @@ async def create_superuser(db: AsyncSession) -> User:
     superuser_data = UserCreate(
         email="admin@webagent.com",
         username="admin",
-        password="admin123!",  # Change this in production!
-        confirm_password="admin123!",
+        password="Admin123!",  # Change this in production!
+        confirm_password="Admin123!",
         full_name="WebAgent Administrator",
         is_active=True
     )
@@ -89,13 +89,13 @@ async def create_test_data(db: AsyncSession) -> None:
         {
             "email": "test1@example.com",
             "username": "testuser1",
-            "password": "testpass123!",
+            "password": "Testpass123!",
             "full_name": "Test User One"
         },
         {
             "email": "test2@example.com", 
             "username": "testuser2",
-            "password": "testpass123!",
+            "password": "Testpass123!",
             "full_name": "Test User Two"
         }
     ]
@@ -143,7 +143,8 @@ async def check_database_health(db: AsyncSession) -> dict:
         result.scalar()
         
         # Count users
-        user_count_result = await db.execute(select(User).count())
+        from sqlalchemy import func
+        user_count_result = await db.execute(select(func.count(User.id)))
         user_count = user_count_result.scalar()
         
         # Check for superuser
