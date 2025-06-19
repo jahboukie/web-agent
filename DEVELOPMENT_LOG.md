@@ -1,7 +1,7 @@
 # WebAgent Development Log
 
 **Project Start Date:** June 19, 2025  
-**Current Phase:** Phase 1 - Foundation  
+**Current Phase:** Phase 2B - Core Intelligence Implementation  
 **Last Updated:** June 19, 2025
 
 ---
@@ -104,11 +104,13 @@ WebAgent is an AI system that executes natural language goals on websites throug
 
 #### Ready for Next Phase 🚀
 
-**HANDOFF TO CLAUDE CODE - PHASE 2B IMPLEMENTATION**
+**PHASE 2B - CORE INTELLIGENCE IMPLEMENTATION**
 
 **Current Status:** Phase 2A Complete - Authentication & Database Foundation Ready
-**Next Developer:** Claude Code
-**Target:** Phase 2B - Web Parser and Task Planning Implementation
+**Current Developer:** Claude Code
+**Target:** Phase 2B - Background Task Processing & Web Parser Architecture
+
+**Current Session Focus:** Background Task Processing Architecture Design
 
 #### High Priority Tasks for Phase 2B 📋
 
@@ -167,6 +169,31 @@ WebAgent is an AI system that executes natural language goals on websites throug
 - User dashboard and management
 - Monitoring and alerting
 - Deployment infrastructure
+
+**June 19, 2025 - Session 3 (Claude Code) - PHASE 2B ARCHITECTURE**
+- ✅ **Background Task Processing Architecture Design**
+  - Designed hybrid approach: FastAPI BackgroundTasks for MVP, Redis queue for scale
+  - Created comprehensive browser context management with pooling strategy
+  - Defined task lifecycle management with real-time status tracking
+  - Planned integration patterns for future TaskPlanner and ActionExecutor services
+
+- ✅ **WebParser Service Architecture** 
+  - Designed async webpage parsing with Playwright integration
+  - Created caching strategy for duplicate URL handling and performance
+  - Defined error handling and retry logic for browser automation failures
+  - Planned resource management and cleanup for memory efficiency
+
+- ✅ **Database Schema Enhancements**
+  - Extended Task model with background processing fields
+  - Added progress tracking, resource monitoring, and error details
+  - Designed migration path for new background task capabilities
+  - Created indexing strategy for performance optimization
+
+- ✅ **Monitoring & Observability Framework**
+  - Designed metrics collection for task performance and resource usage
+  - Created health check endpoints for background task monitoring
+  - Planned WebSocket integration for real-time status updates
+  - Defined scalability path from MVP to enterprise deployment
 
 ---
 
@@ -228,6 +255,66 @@ WebAgent is an AI system that executes natural language goals on websites throug
 - Proper HTTP status codes
 - Pagination for list endpoints
 - Comprehensive error responses
+
+### AD-005: Background Task Processing Strategy (June 19, 2025)
+
+**Decision:** Hybrid approach with FastAPI BackgroundTasks + Redis queue migration path
+**Rationale:**
+- FastAPI BackgroundTasks provide immediate MVP capability without additional infrastructure
+- Redis task queue offers production scalability and worker distribution
+- Clear migration path prevents architectural rewrites
+- Maintains simplicity for development while enabling enterprise scale
+
+**Implementation Strategy:**
+- Phase 1: FastAPI BackgroundTasks for immediate functionality
+- Phase 2: Redis-based task queue for horizontal scaling
+- Shared TaskStatusService for consistent progress tracking
+- Database-driven task lifecycle management
+
+**Alternatives Considered:**
+- Celery: Rejected due to complexity overhead for MVP
+- Pure Redis queue: Rejected due to immediate development needs
+- Synchronous processing: Rejected due to user experience impact
+
+### AD-006: Browser Context Management (June 19, 2025)
+
+**Decision:** Browser context pooling with per-task isolation
+**Rationale:**
+- Context pooling reduces browser startup overhead (3-5 second savings per task)
+- Per-task isolation prevents cross-contamination of browser state
+- Resource limits prevent memory leaks and runaway processes
+- Anti-detection measures improve success rates
+
+**Design Features:**
+- Configurable pool size (default: 5 contexts)
+- Automatic context cleanup after resource limits
+- Session isolation through fresh context assignment
+- User agent rotation and viewport randomization
+
+**Resource Management:**
+- Maximum 512MB memory per context
+- 5-minute maximum task duration
+- Automatic cleanup of stale contexts
+
+### AD-007: Caching Strategy for Web Parsing (June 19, 2025)
+
+**Decision:** Redis-based caching with content-aware invalidation
+**Rationale:**
+- Significant performance improvement for repeated URLs (10x faster responses)
+- Reduces browser automation load and associated costs
+- Content-aware cache keys enable option-specific caching
+- TTL-based expiration balances freshness with performance
+
+**Cache Design:**
+- Cache key: `webpage_cache:{url_hash}:{options_hash}`
+- Default TTL: 1 hour (configurable per domain)
+- Cache hit/miss tracking for optimization
+- Force refresh option for user control
+
+**Cache Invalidation:**
+- Time-based expiration (TTL)
+- Manual refresh via force_refresh parameter
+- Future: Webhook-based invalidation for dynamic content
 
 ---
 
