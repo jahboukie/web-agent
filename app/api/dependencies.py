@@ -17,11 +17,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Database session dependency.
-    
+
     Yields:
         AsyncSession: Database session
     """
-    async with get_async_session() as session:
+    async for session in get_async_session():
         try:
             yield session
         except Exception as e:
@@ -30,6 +30,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+        break  # Only get one session
 
 
 async def get_current_user(
