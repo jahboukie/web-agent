@@ -207,14 +207,14 @@ class WebpageCacheService:
             return base_ttl  # 1 hour
         
         # Adjust based on content complexity
-        element_count = len(result.interactive_elements)
+        element_count = result.web_page.interactive_elements_count
         if element_count > 100:
             # Complex pages change less frequently
             return int(base_ttl * 1.5)
         elif element_count < 10:
             # Simple pages might be more dynamic
             return int(base_ttl * 0.8)
-        
+
         return base_ttl
     
     async def _store_cache_metadata(
@@ -234,10 +234,10 @@ class WebpageCacheService:
                 'cached_at': datetime.utcnow().isoformat(),
                 'ttl': ttl,
                 'expires_at': (datetime.utcnow() + timedelta(seconds=ttl)).isoformat(),
-                'element_count': len(result.interactive_elements),
-                'content_blocks': len(result.content_blocks),
-                'has_screenshot': result.screenshot_path is not None,
-                'content_hash': result.content_hash
+                'element_count': result.web_page.interactive_elements_count,
+                'content_blocks': len(result.web_page.content_blocks),
+                'has_screenshot': len(result.screenshots) > 0,
+                'content_hash': result.web_page.content_hash
             }
             
             await self.redis_client.setex(

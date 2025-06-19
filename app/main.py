@@ -164,6 +164,13 @@ async def startup_event():
         version=settings.APP_VERSION,
     )
 
+    # Fix Windows event loop policy for Playwright
+    import sys
+    import asyncio
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        logger.info("Set Windows ProactorEventLoopPolicy for Playwright compatibility")
+
     # Initialize database
     try:
         from app.db.session import get_async_session, check_database_connection

@@ -64,20 +64,21 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Get an async database session.
-    
+
     This is the main dependency function for FastAPI endpoints.
-    
+    Sessions are managed by the caller - no automatic commits.
+
     Yields:
         AsyncSession: Database session
     """
     session_factory = get_async_session_factory()
-    
+
     async with session_factory() as session:
         try:
             logger.debug("Database session created")
             yield session
-            await session.commit()
-            logger.debug("Database session committed")
+            # Note: No automatic commit - let the caller manage transactions
+            logger.debug("Database session yielded successfully")
         except Exception as e:
             logger.error("Database session error, rolling back", error=str(e))
             await session.rollback()

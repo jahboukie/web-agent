@@ -130,16 +130,22 @@ class TaskStatusService:
         performance_metrics: Optional[Dict[str, Any]] = None
     ) -> bool:
         """Mark task as completed with results."""
-        
+
+        logger.info("🔧 COMPLETE_TASK: Starting complete_task", task_id=task_id)
+
         try:
             completion_time = datetime.utcnow()
-            
+
+            logger.info("🔧 COMPLETE_TASK: Getting task duration info", task_id=task_id)
+
             # Get task to calculate duration
             result = await db.execute(
                 select(Task.processing_started_at, Task.created_at)
                 .where(Task.id == task_id)
             )
             task_times = result.first()
+
+            logger.info("🔧 COMPLETE_TASK: Task times retrieved", task_id=task_id, has_task_times=task_times is not None)
             
             actual_duration = None
             if task_times and task_times.processing_started_at:
@@ -159,18 +165,24 @@ class TaskStatusService:
             
             # Add performance metrics to progress details
             if performance_metrics:
+                logger.info("🔧 COMPLETE_TASK: Adding performance metrics", task_id=task_id)
                 result = await db.execute(select(Task.progress_details).where(Task.id == task_id))
                 existing_details = result.scalar_one_or_none() or {}
                 existing_details["performance_metrics"] = performance_metrics
                 existing_details["completed_at"] = completion_time.isoformat()
                 update_data["progress_details"] = existing_details
-            
+
+            logger.info("🔧 COMPLETE_TASK: About to execute database update", task_id=task_id, update_data_keys=list(update_data.keys()))
+
             await db.execute(
                 update(Task)
                 .where(Task.id == task_id)
                 .values(update_data)
             )
+
+            logger.info("🔧 COMPLETE_TASK: About to commit transaction", task_id=task_id)
             await db.commit()
+            logger.info("✅ COMPLETE_TASK: Transaction committed successfully", task_id=task_id)
             
             logger.info(
                 "Task completed successfully",
@@ -181,8 +193,12 @@ class TaskStatusService:
             return True
             
         except Exception as e:
-            logger.error("Failed to complete task", task_id=task_id, error=str(e))
-            await db.rollback()
+            logger.error("❌ COMPLETE_TASK: Failed to complete task", task_id=task_id, error=str(e), error_type=type(e).__name__)
+            try:
+                await db.rollback()
+                logger.info("🔧 COMPLETE_TASK: Transaction rolled back", task_id=task_id)
+            except Exception as rollback_error:
+                logger.error("❌ COMPLETE_TASK: Failed to rollback transaction", task_id=task_id, rollback_error=str(rollback_error))
             return False
     
     @staticmethod

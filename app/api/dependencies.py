@@ -18,18 +18,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Database session dependency.
 
+    Provides a clean database session for FastAPI endpoints.
+    Handles transaction management appropriately for read/write operations.
+
     Yields:
         AsyncSession: Database session
     """
     async for session in get_async_session():
-        try:
-            yield session
-        except Exception as e:
-            logger.error("Database session error", error=str(e))
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+        yield session
         break  # Only get one session
 
 

@@ -151,6 +151,7 @@ class WebPageParseRequest(BaseModel):
     force_refresh: bool = False
     include_screenshot: bool = True
     wait_for_load: int = Field(default=3, ge=1, le=30)
+    wait_for_network_idle: bool = False
     extract_forms: bool = True
     extract_links: bool = True
     semantic_analysis: bool = True

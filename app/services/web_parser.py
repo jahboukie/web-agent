@@ -14,6 +14,7 @@ This service provides:
 import asyncio
 import hashlib
 import json
+import psutil
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
@@ -74,17 +75,18 @@ class WebParserService:
 
             if cached_result:
                 # Update task with cached result
-                cached_result.task_id = task_id
-                cached_result.cached = True
+                cached_result.cache_hit = True
 
                 performance_metrics = {
                     'parsing_duration_seconds': (datetime.utcnow() - start_time).total_seconds(),
                     'cache_hit': True,
-                    'elements_extracted': len(cached_result.interactive_elements),
-                    'content_blocks': len(cached_result.content_blocks)
+                    'elements_extracted': cached_result.web_page.interactive_elements_count,
+                    'content_blocks': len(cached_result.web_page.content_blocks)
                 }
 
-                await TaskStatusService.complete_task(db, task_id, cached_result.dict(), performance_metrics)
+                # Convert cached result to JSON-serializable dict (HttpUrl -> str)
+                cached_result_dict = json.loads(cached_result.json())
+                await TaskStatusService.complete_task(db, task_id, cached_result_dict, performance_metrics)
 
                 logger.info(
                     "Webpage parsing completed from cache",
@@ -152,12 +154,45 @@ class WebParserService:
             performance_metrics = {
                 'parsing_duration_seconds': (datetime.utcnow() - start_time).total_seconds(),
                 'cache_hit': False,
-                'elements_extracted': len(result.interactive_elements),
-                'content_blocks': len(result.content_blocks),
-                'screenshot_captured': result.screenshot_path is not None
+                'elements_extracted': result.web_page.interactive_elements_count,
+                'content_blocks': len(result.web_page.content_blocks),
+                'screenshot_captured': len(result.screenshots) > 0
             }
 
-            await TaskStatusService.complete_task(db, task_id, result.dict(), performance_metrics)
+            logger.info("🔧 FINALIZATION: Starting finalization step", task_id=task_id)
+
+            # Monitor memory usage
+            try:
+                process = psutil.Process()
+                memory_info = process.memory_info()
+                memory_mb = memory_info.rss / 1024 / 1024
+                logger.info("📊 FINALIZATION: Memory usage", task_id=task_id, memory_mb=round(memory_mb, 2))
+            except Exception as mem_error:
+                logger.warning("Failed to get memory info", task_id=task_id, error=str(mem_error))
+
+            # Debug: Log the result structure before passing to complete_task
+            # Convert to JSON-serializable dict (HttpUrl -> str)
+            result_dict = json.loads(result.json())
+
+            logger.info(
+                "🔍 FINALIZATION: Result structure before complete_task",
+                task_id=task_id,
+                result_keys=list(result_dict.keys()),
+                has_web_page=('web_page' in result_dict),
+                has_processing_time_ms=('processing_time_ms' in result_dict),
+                result_type=type(result).__name__,
+                result_dict_size=len(str(result_dict)),
+                performance_metrics=performance_metrics
+            )
+
+            logger.info("🔧 FINALIZATION: About to call complete_task", task_id=task_id)
+
+            try:
+                await TaskStatusService.complete_task(db, task_id, result_dict, performance_metrics)
+                logger.info("✅ FINALIZATION: complete_task succeeded", task_id=task_id)
+            except Exception as e:
+                logger.error("❌ FINALIZATION: complete_task failed", task_id=task_id, error=str(e), error_type=type(e).__name__)
+                raise
 
             logger.info(
                 "Webpage parsing completed successfully",
@@ -199,8 +234,9 @@ class WebParserService:
     ) -> WebPageParseResponse:
         """Perform the actual webpage parsing with progress updates."""
         
+        parsing_start_time = datetime.utcnow()
         page = await context.new_page()
-        
+
         try:
             # Navigate to the page
             await page.goto(url, wait_until='domcontentloaded', timeout=30000)
@@ -277,24 +313,42 @@ class WebParserService:
             
             # Create content hash
             content_hash = self._generate_content_hash(metadata, interactive_elements, content_blocks)
-            
-            # Build the response
-            response = WebPageParseResponse(
-                task_id=task_id,
+
+            # Calculate parsing duration
+            parsing_duration_ms = int((datetime.utcnow() - parsing_start_time).total_seconds() * 1000)
+
+            # Build the WebPage object
+            from app.schemas.web_page import WebPage
+            web_page = WebPage(
+                id=0,  # Temporary ID for response
                 url=url,
                 canonical_url=metadata.get('canonical_url', url),
                 title=metadata.get('title', ''),
                 domain=urlparse(url).netloc,
                 content_hash=content_hash,
-                interactive_elements=interactive_elements,
-                content_blocks=content_blocks,
-                action_capabilities=action_capabilities,
-                metadata=metadata,
-                screenshot_path=screenshot_path,
-                parsing_duration_ms=int((datetime.utcnow() - datetime.utcnow()).total_seconds() * 1000),
-                success=True
+                interactive_elements_count=len(interactive_elements),
+                form_count=metadata.get('form_count', 0),
+                link_count=metadata.get('link_count', 0),
+                image_count=metadata.get('image_count', 0),
+                semantic_data=metadata,
+                parsed_at=datetime.utcnow(),
+                parsing_duration_ms=parsing_duration_ms,
+                success=True,
+                interactive_elements=[],  # Will be populated separately if needed
+                content_blocks=[],       # Will be populated separately if needed
+                action_capabilities=[]   # Will be populated separately if needed
             )
-            
+
+            # Build the response
+            response = WebPageParseResponse(
+                web_page=web_page,
+                processing_time_ms=parsing_duration_ms,
+                cache_hit=False,
+                screenshots=[screenshot_path] if screenshot_path else [],
+                warnings=[],
+                errors=[]
+            )
+
             return response
             
         finally:
