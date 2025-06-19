@@ -107,4 +107,3 @@ async def get_webpage_capabilities(page_id: int):
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Capability retrieval not yet implemented"
     )
-EOF < /dev/null

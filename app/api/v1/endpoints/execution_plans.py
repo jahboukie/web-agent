@@ -34,4 +34,3 @@ async def validate_execution_plan(plan_id: int, validation_request: PlanValidati
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Execution plan validation not yet implemented"
     )
-EOF < /dev/null

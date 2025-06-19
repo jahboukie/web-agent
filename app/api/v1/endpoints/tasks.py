@@ -168,4 +168,3 @@ async def get_task_stats():
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Task statistics not yet implemented"
     )
-EOF < /dev/null

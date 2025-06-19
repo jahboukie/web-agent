@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text
 import structlog
 
 from app.core.config import settings
@@ -139,7 +139,7 @@ async def check_database_health(db: AsyncSession) -> dict:
     """
     try:
         # Test basic query
-        result = await db.execute("SELECT 1")
+        result = await db.execute(text("SELECT 1"))
         result.scalar()
         
         # Count users

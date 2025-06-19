@@ -39,4 +39,3 @@ async def update_user_preferences(preferences: UserPreferences):
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User preferences update not yet implemented"
     )
-EOF < /dev/null

@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
+from sqlalchemy import text
 import structlog
 
 from app.core.config import settings
@@ -123,14 +124,14 @@ async def drop_tables() -> None:
 async def check_database_connection() -> bool:
     """
     Check if database connection is working.
-    
+
     Returns:
         bool: True if connection is successful, False otherwise
     """
     try:
-        async with get_async_session() as session:
+        async for session in get_async_session():
             # Simple query to test connection
-            result = await session.execute("SELECT 1")
+            result = await session.execute(text("SELECT 1"))
             result.scalar()
             logger.info("Database connection check successful")
             return True

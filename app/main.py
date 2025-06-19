@@ -174,8 +174,9 @@ async def startup_event():
             logger.info("Database connection successful")
 
             # Initialize database with required data
-            async with get_async_session() as db:
+            async for db in get_async_session():
                 await init_db(db)
+                break
         else:
             logger.error("Database connection failed")
 
@@ -224,12 +225,13 @@ async def health_check():
         from app.db.session import get_async_session
         from app.db.init_db import check_database_health
 
-        async with get_async_session() as db:
+        async for db in get_async_session():
             db_health = await check_database_health(db)
             health_status["database"] = db_health
 
             if not db_health.get("database_connection", False):
                 health_status["status"] = "degraded"
+            break
 
     except Exception as e:
         health_status["database"] = {"status": "error", "error": str(e)}
