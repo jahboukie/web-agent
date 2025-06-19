@@ -17,7 +17,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: test_password_ci
           POSTGRES_DB: webagent_test
           POSTGRES_USER: webagent
         options: >-
@@ -82,7 +82,7 @@ jobs:
     - name: Run tests
       run: poetry run pytest tests/ -v --cov=app --cov-report=xml
       env:
-        DATABASE_URL: postgresql://webagent:password@localhost:5432/webagent_test
+        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
         REDIS_URL: redis://localhost:6379/0
         SECRET_KEY: test-secret-key-for-ci-only
     

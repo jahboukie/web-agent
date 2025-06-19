@@ -1,6 +1,12 @@
 version: '3.8'
 
+# WebAgent Docker Compose - Supporting Services Only
+# Development is done on host machine, not in containers
+# Use: docker-compose up -d postgres redis
+
 services:
+  # Optional: App container for production deployment only
+  # For development, run the app directly on host machine
   app:
     build:
       context: .
@@ -9,26 +15,29 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=true
-      - DATABASE_URL=postgresql://webagent:password@db:5432/webagent
-      - ASYNC_DATABASE_URL=postgresql+asyncpg://webagent:password@db:5432/webagent
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-webagent}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-webagent}
+      - ASYNC_DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-webagent}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-webagent}
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - .:/app
       - uploads:/app/uploads
       - screenshots:/app/screenshots
     depends_on:
-      - db
+      - postgres
       - redis
     restart: unless-stopped
     networks:
       - webagent-network
+    profiles:
+      - production  # Only start with --profile production
 
-  db:
+  # PostgreSQL Database - Supporting Service
+  postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=webagent
-      - POSTGRES_USER=webagent
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB:-webagent}
+      - POSTGRES_USER=${POSTGRES_USER:-webagent}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -37,6 +46,7 @@ services:
     networks:
       - webagent-network
 
+  # Redis Cache - Supporting Service
   redis:
     image: redis:7-alpine
     command: redis-server --appendonly yes
@@ -52,12 +62,12 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@webagent.com
-      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@webagent.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-changeme}
     ports:
       - "5050:80"
     depends_on:
-      - db
+      - postgres
     restart: unless-stopped
     networks:
       - webagent-network

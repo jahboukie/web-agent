@@ -125,6 +125,29 @@ async def create_task(
     # Implementation needed
 ```
 
+## 🔒 **Security Configuration**
+
+**✅ SECURITY ISSUE RESOLVED:** All hardcoded credentials have been removed from the repository.
+
+### **Environment Variables Setup**
+```bash
+# 1. Copy the environment template
+cp .env.example .env
+
+# 2. Update with your secure values (required)
+# Edit .env and set:
+# - POSTGRES_PASSWORD=your-secure-password
+# - WEBAGENT_ADMIN_PASSWORD=your-admin-password
+# - SECRET_KEY=your-secret-key (generate with: openssl rand -hex 32)
+```
+
+### **Current Credentials (Development)**
+- **Database:** `webagent` / `changeme` (configurable via POSTGRES_PASSWORD)
+- **Admin User:** `admin@webagent.com` / `Admin123!` (configurable via WEBAGENT_ADMIN_PASSWORD)
+- **Test Users:** `Testpass123!` (configurable via WEBAGENT_TEST_PASSWORD)
+
+**⚠️ Important:** See `SECURITY.md` for complete security configuration details.
+
 ## 🛠 **Development Environment Setup**
 
 ### **Running the Application**
@@ -132,12 +155,41 @@ async def create_task(
 # Install dependencies (already done)
 pip install -r requirements.txt  # or use pyproject.toml
 
-# Run database migrations
+# Start supporting services with Docker (PostgreSQL, Redis, etc.)
+docker-compose up -d postgres redis  # Only supporting services
+
+# Run database migrations (on host machine)
 python -m alembic upgrade head
 
-# Start the application
+# Start the application (on host machine)
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+
+**Note:** Development is done directly on the host machine. Docker is only used for supporting services like PostgreSQL and Redis.
+
+### **Docker Usage (Supporting Services Only)**
+```bash
+# Start only supporting services (PostgreSQL, Redis)
+docker-compose up -d postgres redis
+
+# Check service status
+docker-compose ps
+
+# View service logs
+docker-compose logs -f postgres
+docker-compose logs -f redis
+
+# Stop services
+docker-compose down
+
+# For production deployment only (not for development)
+docker-compose --profile production up -d
+```
+
+**Development Philosophy:**
+- ✅ Use Docker for: PostgreSQL, Redis, other supporting services
+- ❌ Don't use Docker for: Application development, testing, debugging
+- 🎯 Benefit: Direct access to code, faster iteration, easier debugging
 
 ### **Testing Endpoints**
 - **API Docs:** http://127.0.0.1:8000/docs (when debug enabled)

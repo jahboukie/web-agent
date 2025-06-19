@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 import structlog
+import os
 
 from app.core.config import settings
 from app.models.user import User
@@ -50,11 +51,12 @@ async def create_superuser(db: AsyncSession) -> User:
         return existing_superuser
     
     # Create default superuser
+    default_admin_password = os.getenv("WEBAGENT_ADMIN_PASSWORD", "Admin123!")
     superuser_data = UserCreate(
         email="admin@webagent.com",
         username="admin",
-        password="Admin123!",  # Change this in production!
-        confirm_password="Admin123!",
+        password=default_admin_password,
+        confirm_password=default_admin_password,
         full_name="WebAgent Administrator",
         is_active=True
     )
@@ -85,17 +87,18 @@ async def create_test_data(db: AsyncSession) -> None:
     logger.info("Creating test data for development")
     
     # Create test users
+    default_test_password = os.getenv("WEBAGENT_TEST_PASSWORD", "Testpass123!")
     test_users = [
         {
             "email": "test1@example.com",
             "username": "testuser1",
-            "password": "Testpass123!",
+            "password": default_test_password,
             "full_name": "Test User One"
         },
         {
-            "email": "test2@example.com", 
+            "email": "test2@example.com",
             "username": "testuser2",
-            "password": "Testpass123!",
+            "password": default_test_password,
             "full_name": "Test User Two"
         }
     ]

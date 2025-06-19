@@ -549,16 +549,18 @@ poetry run black .
 poetry run isort .
 ```
 
-### Docker Development:
+### Docker for Supporting Services Only:
 ```bash
-# Start all services
-docker-compose up -d
+# Start supporting services (PostgreSQL, Redis, etc.)
+docker-compose up -d postgres redis
 
-# View logs
-docker-compose logs -f app
+# View service logs
+docker-compose logs -f postgres
 
-# Run tests in container
-docker-compose exec app poetry run pytest
+# Development and testing done on host machine
+poetry run pytest
 ```
+
+**Important:** Docker is used only for supporting services. All development, testing, and application execution is done directly on the host machine.
 
 This specification provides a clear roadmap for implementing the core WebAgent functionality while maintaining high quality standards and following established architectural patterns.

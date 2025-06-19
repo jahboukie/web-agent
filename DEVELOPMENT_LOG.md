@@ -132,10 +132,11 @@ WebAgent is an AI system that executes natural language goals on websites throug
 - Set up test database and fixtures
 
 **P4 - Infrastructure and Deployment**
-- Set up Docker development environment
-- Configure PostgreSQL for production
+- Set up Docker containers for supporting services (PostgreSQL, Redis)
+- Configure PostgreSQL for production (using Docker)
 - Add CI/CD pipeline with GitHub Actions
 - Create deployment documentation
+- Note: Development is done on host machine, Docker only for services
 
 ### Phase 2: Core Intelligence (Week 4-7) - PLANNED
 
