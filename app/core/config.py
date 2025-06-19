@@ -86,6 +86,14 @@ class Settings(BaseSettings):
     REQUIRE_2FA_FOR_SENSITIVE: bool = False
     MAX_SESSION_DURATION_HOURS: int = 24
     
+    # Additional environment variables for Docker and initialization
+    POSTGRES_DB: Optional[str] = None
+    POSTGRES_USER: Optional[str] = None
+    POSTGRES_PASSWORD: Optional[str] = None
+    WEBAGENT_ADMIN_PASSWORD: Optional[str] = None
+    WEBAGENT_TEST_PASSWORD: Optional[str] = None
+    TRUSTED_HOSTS: Optional[str] = None
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
