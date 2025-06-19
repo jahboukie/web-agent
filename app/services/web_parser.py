@@ -100,9 +100,41 @@ class WebParserService:
                 progress_percentage=10,
                 current_step="acquiring_browser_context"
             )
-            
-            # Acquire browser context
-            context = await browser_pool.acquire_context(task_id)
+
+            # Acquire browser context with timeout and fallback
+            context = None
+            use_fallback = False
+
+            try:
+                logger.info("🔍 Attempting to acquire browser context from pool", task_id=task_id)
+                context = await asyncio.wait_for(
+                    browser_pool.acquire_context(task_id),
+                    timeout=30.0  # 30 second timeout
+                )
+                logger.info("✅ Browser context acquired from pool", task_id=task_id)
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.warning("⚠️ Pool acquisition failed, trying direct browser creation", task_id=task_id, error=str(e))
+                use_fallback = True
+
+                # Fallback: Create browser context directly
+                try:
+                    from playwright.async_api import async_playwright
+
+                    logger.info("🔄 Creating direct browser context", task_id=task_id)
+                    playwright = await async_playwright().start()
+                    browser = await playwright.chromium.launch(headless=True)
+                    context = await browser.new_context(
+                        viewport={'width': 1920, 'height': 1080}
+                    )
+                    logger.info("✅ Direct browser context created", task_id=task_id)
+
+                    # Store references for cleanup
+                    context._playwright = playwright
+                    context._browser = browser
+
+                except Exception as fallback_error:
+                    logger.error("❌ Direct browser creation also failed", task_id=task_id, error=str(fallback_error))
+                    raise Exception(f"Both pool and direct browser creation failed: {str(fallback_error)}")
             
             await TaskStatusService.update_task_progress(
                 db, task_id,
@@ -142,7 +174,20 @@ class WebParserService:
             raise
         finally:
             if context:
-                await browser_pool.release_context(task_id, context)
+                if use_fallback:
+                    # Cleanup direct browser context
+                    try:
+                        await context.close()
+                        if hasattr(context, '_browser'):
+                            await context._browser.close()
+                        if hasattr(context, '_playwright'):
+                            await context._playwright.stop()
+                        logger.info("🧹 Direct browser context cleaned up", task_id=task_id)
+                    except Exception as cleanup_error:
+                        logger.error("❌ Error cleaning up direct browser context", task_id=task_id, error=str(cleanup_error))
+                else:
+                    # Release context back to pool
+                    await browser_pool.release_context(task_id, context)
     
     async def _perform_parsing(
         self,
