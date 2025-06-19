@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/dev/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - DATABASE_URL=postgresql://webagent:password@db:5432/webagent
+      - ASYNC_DATABASE_URL=postgresql+asyncpg://webagent:password@db:5432/webagent
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+      - screenshots:/app/screenshots
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - webagent-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=webagent
+      - POSTGRES_USER=webagent
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - webagent-network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - webagent-network
+
+  # Optional: Database admin interface
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@webagent.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - webagent-network
+    profiles:
+      - tools
+
+  # Optional: Redis admin interface
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - webagent-network
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:
+  screenshots:
+
+networks:
+  webagent-network:
+    driver: bridge

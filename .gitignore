@@ -1,0 +1,160 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter
+.ipynb_checkpoints
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Database
+*.db
+*.sqlite3
+*.sql
+
+# Logs
+logs/
+*.log
+log/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# FastAPI
+instance/
+
+# Uploads and generated files
+uploads/
+screenshots/
+temp/
+tmp/
+
+# Security
+secrets/
+*.pem
+*.key
+*.crt
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Alembic
+alembic/versions/*.py
+!alembic/versions/README
+
+# Chrome/Browser profiles
+browser_profiles/
+user_data/
+
+# AI model cache
+.cache/
+models/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Development
+.env.dev
+.env.docker
+docker-compose.override.yml
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Monitoring and metrics
+prometheus_data/
+grafana_data/
+
+# Local configuration
+local_settings.py
+local_config.yml
+
+# Package managers
+package-lock.json
+yarn.lock
+Pipfile.lock
+
+# Cloud provider configs
+.aws/
+.gcp/
+.azure/
+
+# Browser automation artifacts
+playwright-report/
+test-results/
+
+# Redis dump
+dump.rdb
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Sentry
+.sentryclirc
