@@ -18,31 +18,64 @@ logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
-async def _process_webpage_parsing(
+async def _process_webpage_parsing_async(
     task_id: int,
     url: str,
     options: WebPageParseRequest
 ):
-    """Background task function for webpage parsing."""
+    """Async background task function for webpage parsing."""
+
+    logger.info("🚀 BACKGROUND TASK STARTED", task_id=task_id, url=url)
 
     # Get database session
     async for db in get_async_session():
         try:
+            logger.info("📊 Processing webpage parsing", task_id=task_id, url=url)
+
             # Process the webpage
             result = await web_parser_service.parse_webpage_async(
                 db, task_id, url, options
             )
 
-            logger.info("Background webpage parsing completed", task_id=task_id, url=url)
+            logger.info("✅ Background webpage parsing completed", task_id=task_id, url=url)
 
         except Exception as e:
-            logger.error("Background webpage parsing failed", task_id=task_id, url=url, error=str(e))
+            logger.error("❌ Background webpage parsing failed", task_id=task_id, url=url, error=str(e))
 
             # Update task status to failed
             await TaskStatusService.fail_task(db, task_id, e)
 
         # Always break after first iteration since we only need one session
         break
+
+
+def _process_webpage_parsing(
+    task_id: int,
+    url: str,
+    options: WebPageParseRequest
+):
+    """Sync wrapper for background task function (required by FastAPI BackgroundTasks)."""
+
+    logger.info("🎯 SYNC WRAPPER CALLED", task_id=task_id, url=url)
+
+    import asyncio
+
+    # Run the async function in the event loop
+    try:
+        # Get or create event loop
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        # Run the async function
+        loop.run_until_complete(_process_webpage_parsing_async(task_id, url, options))
+
+        logger.info("🎉 BACKGROUND TASK COMPLETED", task_id=task_id, url=url)
+
+    except Exception as e:
+        logger.error("💥 BACKGROUND TASK FAILED", task_id=task_id, url=url, error=str(e))
 
 
 @router.post("/parse")
