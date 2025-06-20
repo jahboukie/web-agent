@@ -18,7 +18,7 @@ from app.models.security import ABACPolicy, AccessSession
 from app.models.user import User
 from app.schemas.enterprise import ABACPolicyCreate, ABACPolicyUpdate
 from app.security.rbac_engine import AccessRequest, AccessDecision, AccessContext
-# from app.security.zero_trust import ZeroTrustEngine  # Temporarily disabled
+from app.security.zero_trust import zero_trust_engine
 from app.core.config import settings
 
 logger = get_logger(__name__)
@@ -33,7 +33,7 @@ class ABACPolicyEngine:
     """
     
     def __init__(self):
-        # self.zero_trust_engine = ZeroTrustEngine()  # Temporarily disabled
+        self.zero_trust_engine = zero_trust_engine
         self._policy_cache = {}
         self._cache_ttl = 300  # 5 minutes
         self._last_cache_update = {}
@@ -334,11 +334,30 @@ class ABACPolicyEngine:
                 f"env.{key}": value for key, value in context.items()
                 if key not in ["session_id"]
             }
-            
+
+            # Add Zero Trust attributes if available
+            zero_trust_attributes = {}
+            if settings.ENABLE_ZERO_TRUST and context.get("access_context"):
+                try:
+                    access_context = context["access_context"]
+                    trust_assessment = await self.zero_trust_engine.calculate_trust_score(
+                        user_id, access_context
+                    )
+                    zero_trust_attributes = {
+                        "env.trust_score": trust_assessment.trust_score,
+                        "env.trust_level": trust_assessment.trust_level.value,
+                        "env.risk_score": trust_assessment.risk_score,
+                        "env.confidence_score": trust_assessment.confidence_score,
+                        "env.risk_factors_count": len(trust_assessment.risk_factors)
+                    }
+                except Exception as e:
+                    logger.warning(f"Zero Trust assessment failed: {str(e)}")
+
             return {
                 **session_attributes,
                 **time_attributes,
-                **context_attributes
+                **context_attributes,
+                **zero_trust_attributes
             }
             
         except Exception as e:

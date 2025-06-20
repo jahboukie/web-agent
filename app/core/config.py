@@ -151,7 +151,29 @@ class Settings(BaseSettings):
     PAGERDUTY_INTEGRATION_KEY: Optional[str] = None
     AUTO_EXECUTE_PLAYBOOKS: bool = False
     INCIDENT_RETENTION_DAYS: int = 2555  # 7 years
-    
+
+    # SIEM Integration
+    ENABLE_SIEM_INTEGRATION: bool = True
+    SIEM_INTEGRATION_URL: Optional[str] = None
+    SIEM_API_KEY: Optional[str] = None
+    SIEM_USERNAME: Optional[str] = None
+    SIEM_PASSWORD: Optional[str] = None
+    SIEM_PROVIDER: str = "splunk"  # "splunk", "qradar", "microsoft_sentinel", "elastic_security"
+    SIEM_BATCH_SIZE: int = 100
+    SIEM_BATCH_TIMEOUT: int = 30
+    SIEM_RETRY_ATTEMPTS: int = 3
+
+    # Splunk Configuration
+    SPLUNK_HEC_TOKEN: Optional[str] = None
+    SPLUNK_INDEX: str = "security"
+
+    # QRadar Configuration
+    QRADAR_API_VERSION: str = "12.0"
+
+    # Microsoft Sentinel Configuration
+    AZURE_LOG_ANALYTICS_WORKSPACE_ID: Optional[str] = None
+    AZURE_LOG_ANALYTICS_SHARED_KEY: Optional[str] = None
+
     # Compliance Framework
     COMPLIANCE_FRAMEWORKS: List[str] = ["SOC2", "GDPR"]
     ENABLE_SOC2_MONITORING: bool = True

@@ -24,6 +24,7 @@ from app.schemas.enterprise import (
 )
 from app.schemas.user import UserTenantRoleAssignment
 from app.security.rbac_engine import Permission, RBACEngine, enterprise_access_control
+from app.security.zero_trust import zero_trust_engine
 from app.core.config import settings
 
 logger = get_logger(__name__)
@@ -457,7 +458,54 @@ class EnterpriseRBACService:
         user_id: int,
         session_data: Dict[str, Any]
     ) -> float:
-        """Calculate initial trust score for new session."""
+        """Calculate initial trust score for new session using Zero Trust engine."""
+
+        try:
+            if settings.ENABLE_ZERO_TRUST:
+                # Create AccessContext from session data
+                from app.schemas.user import AccessContext, DeviceInfo
+
+                device_info = None
+                if session_data.get("device_fingerprint"):
+                    device_info = DeviceInfo(
+                        device_id=session_data.get("device_fingerprint"),
+                        device_type=session_data.get("device_type", "unknown"),
+                        user_agent=session_data.get("user_agent", ""),
+                        encrypted=session_data.get("device_encrypted", False)
+                    )
+
+                access_context = AccessContext(
+                    timestamp=datetime.utcnow(),
+                    source_ip=session_data.get("ip_address"),
+                    user_agent=session_data.get("user_agent"),
+                    device_info=device_info,
+                    geolocation=session_data.get("geolocation", {}),
+                    network_type=session_data.get("network_type", "unknown"),
+                    mfa_verified=session_data.get("mfa_verified", False),
+                    risk_score=0.0  # Will be calculated by Zero Trust engine
+                )
+
+                # Get Zero Trust assessment
+                trust_assessment = await zero_trust_engine.calculate_trust_score(
+                    user_id, access_context
+                )
+
+                return trust_assessment.trust_score
+
+            else:
+                # Fallback to simple calculation
+                return await self._fallback_trust_calculation(user_id, session_data)
+
+        except Exception as e:
+            logger.warning(f"Zero Trust calculation failed, using fallback: {str(e)}")
+            return await self._fallback_trust_calculation(user_id, session_data)
+
+    async def _fallback_trust_calculation(
+        self,
+        user_id: int,
+        session_data: Dict[str, Any]
+    ) -> float:
+        """Fallback trust score calculation when Zero Trust is unavailable."""
 
         base_score = 1.0
 
