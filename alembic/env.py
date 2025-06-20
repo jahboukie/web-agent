@@ -20,7 +20,11 @@ from app.models.task import Task
 from app.models.web_page import WebPage
 from app.models.interactive_element import InteractiveElement
 from app.models.execution_plan import ExecutionPlan, AtomicAction
-from app.models.security import UserCredential, UserPermission, AuditLog, SecurityPolicy
+from app.models.security import (
+    UserCredential, UserPermission, AuditLog, SecurityPolicy,
+    EnterpriseTenant, EnterpriseRole, EnterprisePermission,
+    SSOConfiguration, ABACPolicy, AccessSession
+)
 from app.models.browser_session import BrowserSession
 from app.models.task_execution import TaskExecution, ContentBlock, ActionCapability
 

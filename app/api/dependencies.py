@@ -208,3 +208,89 @@ async def get_http_client():
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="HTTP client service unavailable"
         )
+
+
+# Enterprise Access Control Dependencies
+
+async def get_current_user_with_tenant(
+    tenant_id: Optional[int] = None,
+    current_user = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get current user with tenant context for enterprise access control.
+
+    Args:
+        tenant_id: Optional tenant ID for context
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        tuple: (user, tenant_id, user_permissions)
+    """
+    try:
+        # Import here to avoid circular imports
+        from app.services.rbac_service import enterprise_rbac_service
+
+        # Get user permissions in tenant context
+        user_permissions = await enterprise_rbac_service.get_user_permissions(
+            db, current_user.id, tenant_id
+        )
+
+        return current_user, tenant_id, user_permissions
+
+    except Exception as e:
+        logger.error(f"Failed to get user tenant context: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load user context"
+        )
+
+
+def require_enterprise_permission(permission: str, tenant_id: Optional[int] = None):
+    """
+    Dependency factory for requiring specific enterprise permissions.
+
+    Args:
+        permission: Required permission string
+        tenant_id: Optional tenant ID for scoped permissions
+
+    Returns:
+        Dependency function that checks permission
+    """
+    async def check_permission(
+        current_user = Depends(get_current_active_user),
+        db: AsyncSession = Depends(get_db)
+    ):
+        try:
+            # Import here to avoid circular imports
+            from app.services.rbac_service import enterprise_rbac_service
+
+            has_permission = await enterprise_rbac_service.check_user_permission(
+                db, current_user.id, permission, tenant_id
+            )
+
+            if not has_permission:
+                logger.warning(
+                    "Permission denied",
+                    user_id=current_user.id,
+                    permission=permission,
+                    tenant_id=tenant_id
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Permission '{permission}' required"
+                )
+
+            return current_user
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Permission check failed: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Permission check failed"
+            )
+
+    return check_permission

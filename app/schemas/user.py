@@ -63,6 +63,21 @@ class User(UserBase):
     preferences: Dict[str, Any] = {}
     api_rate_limit: int = 100
 
+    # Enterprise features
+    employee_id: Optional[str] = None
+    department: Optional[str] = None
+    job_title: Optional[str] = None
+    manager_user_id: Optional[int] = None
+    sso_provider: Optional[str] = None
+    sso_user_id: Optional[str] = None
+    sso_attributes: Dict[str, Any] = {}
+    mfa_enabled: bool = False
+    trust_score: Dict[str, Any] = {}
+    risk_profile: Dict[str, Any] = {}
+    data_classification: str = "internal"
+    consent_given_at: Optional[datetime] = None
+    gdpr_consent: bool = False
+
     class Config:
         from_attributes = True
 
@@ -149,6 +164,58 @@ class UserRegistrationRequest(UserCreate):
         if not v:
             raise ValueError('You must accept the terms of service')
         return v
+
+
+class EnterpriseUserCreate(UserBase):
+    """Enterprise user creation with SSO and organizational data."""
+    password: Optional[str] = Field(None, min_length=8, max_length=128)
+    employee_id: Optional[str] = Field(None, max_length=100)
+    department: Optional[str] = Field(None, max_length=255)
+    job_title: Optional[str] = Field(None, max_length=255)
+    manager_user_id: Optional[int] = None
+    sso_provider: Optional[str] = Field(None, max_length=100)
+    sso_user_id: Optional[str] = Field(None, max_length=255)
+    sso_attributes: Dict[str, Any] = Field(default_factory=dict)
+    data_classification: str = Field(default="internal", max_length=50)
+    gdpr_consent: bool = False
+    tenant_id: Optional[int] = None
+    role_ids: List[int] = Field(default_factory=list)
+
+
+class EnterpriseUserUpdate(BaseModel):
+    """Enterprise user update with organizational and security fields."""
+    full_name: Optional[str] = Field(None, max_length=255)
+    is_active: Optional[bool] = None
+    employee_id: Optional[str] = Field(None, max_length=100)
+    department: Optional[str] = Field(None, max_length=255)
+    job_title: Optional[str] = Field(None, max_length=255)
+    manager_user_id: Optional[int] = None
+    preferences: Optional[Dict[str, Any]] = None
+    api_rate_limit: Optional[int] = Field(None, ge=1)
+    mfa_enabled: Optional[bool] = None
+    data_classification: Optional[str] = Field(None, max_length=50)
+    gdpr_consent: Optional[bool] = None
+
+
+class UserTenantRole(BaseModel):
+    """User-tenant-role association."""
+    user_id: int
+    tenant_id: int
+    role_id: int
+    assigned_at: datetime
+    assigned_by: Optional[int] = None
+    expires_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserTenantRoleAssignment(BaseModel):
+    """Request to assign roles to user in tenant."""
+    user_id: int
+    tenant_id: int
+    role_ids: List[int]
+    expires_at: Optional[datetime] = None
 
 
 # Enterprise Security Enhancements

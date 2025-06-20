@@ -1,7 +1,8 @@
 from .user import (
     User, UserCreate, UserUpdate, UserPublic, UserLogin, UserLoginResponse,
     Token, TokenRefresh, UserProfile, UserPreferences, UserApiUsage,
-    UserRegistrationRequest, UserPasswordUpdate
+    UserRegistrationRequest, UserPasswordUpdate, EnterpriseUserCreate,
+    EnterpriseUserUpdate, UserTenantRole, UserTenantRoleAssignment
 )
 from .task import (
     Task, TaskCreate, TaskUpdate, TaskExecutionRequest, TaskExecutionResponse,
@@ -25,12 +26,22 @@ from .webhook import (
     WebhookDeliveryStatus, WebhookEventPayload, WebhookExecutionCompletedData,
     WebhookExecutionProgressData
 )
+from .enterprise import (
+    ThreatLevel, ComplianceLevel, SSOProtocol, SSOProvider,
+    EnterpriseTenant, EnterpriseTenantCreate, EnterpriseTenantUpdate,
+    EnterpriseRole, EnterpriseRoleCreate, EnterpriseRoleUpdate,
+    EnterprisePermission, EnterprisePermissionCreate,
+    SSOConfiguration, SSOConfigurationCreate, SSOConfigurationUpdate,
+    ABACPolicy, ABACPolicyCreate, ABACPolicyUpdate,
+    AccessSession, AccessSessionCreate
+)
 
 __all__ = [
     # User schemas
     "User", "UserCreate", "UserUpdate", "UserPublic", "UserLogin", "UserLoginResponse",
     "Token", "TokenRefresh", "UserProfile", "UserPreferences", "UserApiUsage",
-    "UserRegistrationRequest", "UserPasswordUpdate",
+    "UserRegistrationRequest", "UserPasswordUpdate", "EnterpriseUserCreate",
+    "EnterpriseUserUpdate", "UserTenantRole", "UserTenantRoleAssignment",
     
     # Task schemas
     "Task", "TaskCreate", "TaskUpdate", "TaskExecutionRequest", "TaskExecutionResponse",
@@ -53,4 +64,13 @@ __all__ = [
     "WebhookConfigRequest", "WebhookConfigResponse", "WebhookTestRequest", "WebhookTestResponse",
     "WebhookDeliveryStatus", "WebhookEventPayload", "WebhookExecutionCompletedData",
     "WebhookExecutionProgressData",
+
+    # Enterprise schemas
+    "ThreatLevel", "ComplianceLevel", "SSOProtocol", "SSOProvider",
+    "EnterpriseTenant", "EnterpriseTenantCreate", "EnterpriseTenantUpdate",
+    "EnterpriseRole", "EnterpriseRoleCreate", "EnterpriseRoleUpdate",
+    "EnterprisePermission", "EnterprisePermissionCreate",
+    "SSOConfiguration", "SSOConfigurationCreate", "SSOConfigurationUpdate",
+    "ABACPolicy", "ABACPolicyCreate", "ABACPolicyUpdate",
+    "AccessSession", "AccessSessionCreate",
 ]
