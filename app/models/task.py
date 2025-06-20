@@ -39,9 +39,13 @@ class Task(Base):
     progress_percentage = Column(Integer, default=0)
 
     # Execution data
-    execution_plan_id = Column(Integer, ForeignKey("execution_plans.id"), nullable=True)
     current_step = Column(Integer, default=0)
     total_steps = Column(Integer, default=0)
+    
+    # Phase 2C: AI Planning Integration
+    user_goal = Column(Text, nullable=True)  # Store user's natural language goal for planning
+    planning_status = Column(String(50), nullable=True)  # Status of plan generation process
+    requires_approval = Column(Boolean, default=True)  # Whether generated plans need approval
 
     # Results and errors
     result_data = Column(JSON, default=dict)
@@ -85,6 +89,6 @@ class Task(Base):
 
     # Relationships
     user = relationship("User", back_populates="tasks")
-    execution_plan = relationship("ExecutionPlan", back_populates="task")
+    execution_plans = relationship("ExecutionPlan", back_populates="task", cascade="all, delete-orphan")
     executions = relationship("TaskExecution", back_populates="task", cascade="all, delete-orphan")
     browser_sessions = relationship("BrowserSession", back_populates="task")
