@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://webagentapp.com/sitemap.xml

@@ -76,6 +76,8 @@ class Permission(str, Enum):
     ADMIN_COMPLIANCE_MANAGE = "admin:compliance:manage"
     ADMIN_SECURITY_CONFIG = "admin:security:config"
     ADMIN_BACKUP_RESTORE = "admin:backup:restore"
+    SYSTEM_CONFIGURE = "system:configure"
+    SYSTEM_MONITOR = "system:monitor"
     
     # Compliance and Audit
     COMPLIANCE_READ = "compliance:read"

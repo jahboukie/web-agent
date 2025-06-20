@@ -135,6 +135,22 @@ async def get_current_superuser(
 # Import enterprise token blacklist
 from app.security.token_blacklist import enterprise_token_blacklist
 
+# Create a simple token blacklist for basic auth functionality
+class SimpleTokenBlacklist:
+    def __init__(self):
+        self._blacklisted_tokens = set()
+
+    def add_token(self, token: str):
+        """Add token to blacklist."""
+        self._blacklisted_tokens.add(token)
+
+    def is_blacklisted(self, token: str) -> bool:
+        """Check if token is blacklisted."""
+        return token in self._blacklisted_tokens
+
+# Create global token blacklist instance
+token_blacklist = SimpleTokenBlacklist()
+
 
 async def verify_token_not_blacklisted(
     token: str = Depends(oauth2_scheme)

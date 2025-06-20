@@ -247,5 +247,50 @@ class SAMLHandler:
             )
 
 
+class EnterpriseSSO:
+    """Enterprise SSO management service."""
+
+    def __init__(self):
+        self.configurations: Dict[str, SSOConfiguration] = {}
+        self.active_sessions: Dict[str, SSOUser] = {}
+        logger.info("Enterprise SSO service initialized")
+
+    def add_configuration(self, config: SSOConfiguration) -> bool:
+        """Add SSO provider configuration."""
+        try:
+            self.configurations[config.provider.value] = config
+            logger.info("SSO configuration added", provider=config.provider.value)
+            return True
+        except Exception as e:
+            logger.error("Failed to add SSO configuration", error=str(e))
+            return False
+
+    def get_configuration(self, provider: str) -> Optional[SSOConfiguration]:
+        """Get SSO provider configuration."""
+        return self.configurations.get(provider)
+
+    def authenticate_user(self, provider: str, auth_data: Dict[str, Any]) -> SSOAuthResult:
+        """Authenticate user via SSO provider."""
+        config = self.get_configuration(provider)
+        if not config:
+            return SSOAuthResult(
+                success=False,
+                error_message=f"SSO provider {provider} not configured"
+            )
+
+        # For now, return a basic success result
+        # In production, this would integrate with actual SSO providers
+        return SSOAuthResult(
+            success=True,
+            user=SSOUser(
+                provider_user_id="test_user",
+                email="test@example.com",
+                username="test_user",
+                first_name="Test",
+                last_name="User"
+            )
+        )
+
+
 # Global enterprise SSO instance
 enterprise_sso = EnterpriseSSO()

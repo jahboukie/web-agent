@@ -368,3 +368,17 @@ export interface SecurityPreferences {
   log_security_events: boolean;
   trust_score_notifications: boolean;
 }
+
+// Demo Mode
+export interface DemoUser {
+  id: number;
+  email: string;
+  full_name: string;
+  security_role: string;
+  trust_score: number;
+  mfa_enabled: boolean;
+  tenant_id: string;
+}
+
+// Export pricing types
+export * from './pricing';

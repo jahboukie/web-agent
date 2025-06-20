@@ -35,6 +35,11 @@ from .enterprise import (
     ABACPolicy, ABACPolicyCreate, ABACPolicyUpdate,
     AccessSession, AccessSessionCreate
 )
+from .analytics import (
+    SubscriptionTier, UsageMetrics, PlatformAnalytics, UpgradeOpportunity,
+    SuccessMetric, RevenueMetrics, ConversionMetrics, UserSubscription,
+    BillingInfo, AnalyticsDashboard, ComponentMetrics, ROICalculation
+)
 
 __all__ = [
     # User schemas
@@ -73,4 +78,9 @@ __all__ = [
     "SSOConfiguration", "SSOConfigurationCreate", "SSOConfigurationUpdate",
     "ABACPolicy", "ABACPolicyCreate", "ABACPolicyUpdate",
     "AccessSession", "AccessSessionCreate",
+
+    # Analytics and subscription schemas
+    "SubscriptionTier", "UsageMetrics", "PlatformAnalytics", "UpgradeOpportunity",
+    "SuccessMetric", "RevenueMetrics", "ConversionMetrics", "UserSubscription",
+    "BillingInfo", "AnalyticsDashboard", "ComponentMetrics", "ROICalculation",
 ]

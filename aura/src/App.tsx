@@ -13,7 +13,9 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { TrustScoreIndicator } from './components/security/TrustScoreIndicator';
 import { Dashboard } from './components/Dashboard';
+import { EnhancedDashboard } from './components/EnhancedDashboard';
 import { Navigation } from './components/Navigation';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { Shield, Moon, Sun, Menu, X } from 'lucide-react';
 import { cn } from './lib/utils';
 
@@ -161,8 +163,10 @@ function AppLayout() {
         <main className="flex-1 lg:ml-64">
           <div className="p-6">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/" element={<EnhancedDashboard />} />
+              <Route path="/dashboard" element={<EnhancedDashboard />} />
+              <Route path="/dashboard-old" element={<Dashboard />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </div>

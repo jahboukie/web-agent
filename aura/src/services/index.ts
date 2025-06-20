@@ -6,6 +6,8 @@
 
 export { apiService, type LoginCredentials, type RegisterData, type User, type AuthResponse } from './apiService';
 export { cryptoService, type KeyPair, type EncryptedData } from './cryptoService';
+export { demoService } from './demoService';
+export { analyticsService } from './analyticsService';
 
 // Re-export for convenience
 export { default as api } from './apiService';

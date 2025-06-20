@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, tasks, web_pages, execution_plans, plans, execute, webhooks, enterprise, security
+from app.api.v1.endpoints import auth, users, tasks, web_pages, execution_plans, plans, execute, webhooks, enterprise, security, analytics
 
 api_router = APIRouter()
 
@@ -62,4 +62,10 @@ api_router.include_router(
     security.router,
     prefix="/security",
     tags=["Security Management"]
+)
+
+api_router.include_router(
+    analytics.router,
+    prefix="/analytics",
+    tags=["Analytics & Billing"]
 )
