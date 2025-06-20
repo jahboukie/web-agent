@@ -48,9 +48,6 @@ class PlanningService:
             self.planning_agent = PlanningAgent()
             await self.planning_agent.initialize()
             
-            # Initialize planning memory
-            await self.planning_memory.initialize()
-            
             self._initialized = True
             logger.info("Planning service initialized successfully")
             
@@ -144,11 +141,11 @@ class PlanningService:
             )
             
             # Validate generated plan
-            validation_result = await self.validate_plan(execution_plan)
-            execution_plan.validation_passed = validation_result['is_valid']
-            execution_plan.validation_warnings = validation_result.get('warnings', [])
-            execution_plan.validation_errors = validation_result.get('errors', [])
-            execution_plan.plan_quality_score = validation_result.get('confidence_score', 0.0)
+            validation_result = await self.validate_plan(execution_plan, agent_context)
+            execution_plan.validation_passed = validation_result.get('overall_status') == 'approved'
+            execution_plan.validation_warnings = validation_result.get('findings', {}).get('warnings', [])
+            execution_plan.validation_errors = validation_result.get('findings', {}).get('critical_issues', [])
+            execution_plan.plan_quality_score = validation_result.get('scores', {}).get('confidence_score', 0.0)
             
             # Update progress: Finalizing plan
             await TaskStatusService.update_task_progress(
@@ -156,7 +153,9 @@ class PlanningService:
             )
             
             # Determine plan status based on validation and requirements
-            if execution_plan.requires_approval or not validation_result['is_valid']:
+            if (execution_plan.requires_approval or
+                validation_result.get('overall_status') != 'approved' or
+                validation_result.get('approval_status', {}).get('requires_human_approval', False)):
                 execution_plan.status = PlanStatus.PENDING_APPROVAL
             else:
                 execution_plan.status = PlanStatus.APPROVED
@@ -358,9 +357,9 @@ class PlanningService:
                 complexity_score=plan_data.get('complexity_score', 0.5),
                 
                 # AI metadata
-                llm_model_used=agent_result.get('llm_model', 'claude-3-5-sonnet-20241022'),
-                agent_iterations=agent_result.get('iterations_used', 0),
-                planning_tokens_used=agent_result.get('tokens_used', 0),
+                llm_model_used=plan_data.get('llm_model_used', 'claude-3-5-sonnet-20241022'),
+                agent_iterations=agent_result.get('agent_iterations', 0),
+                planning_tokens_used=plan_data.get('planning_tokens_used', 0),
                 planning_duration_ms=planning_duration_ms,
                 planning_temperature=planning_options.get('planning_temperature', 0.1),
                 
@@ -435,7 +434,7 @@ class PlanningService:
             logger.error("Failed to parse agent output", error=str(e))
             raise ValueError(f"Failed to parse agent output: {str(e)}")
     
-    async def validate_plan(self, execution_plan: ExecutionPlan) -> Dict[str, Any]:
+    async def validate_plan(self, execution_plan: ExecutionPlan, webpage_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Validate execution plan for safety, feasibility, and quality.
         
@@ -447,22 +446,59 @@ class PlanningService:
         """
         
         try:
+            # Convert execution plan to dict format for validation
+            plan_dict = {
+                'execution_plan': {
+                    'title': execution_plan.title,
+                    'description': execution_plan.description,
+                    'original_goal': execution_plan.original_goal,
+                    'confidence_score': execution_plan.confidence_score,
+                    'complexity_score': execution_plan.complexity_score,
+                    'requires_sensitive_actions': execution_plan.requires_sensitive_actions
+                },
+                'action_steps': [
+                    {
+                        'step_number': action.step_number,
+                        'step_name': action.step_name,
+                        'description': action.description,
+                        'action_type': action.action_type.value if hasattr(action.action_type, 'value') else str(action.action_type),
+                        'target_selector': action.target_selector,
+                        'confidence_score': action.confidence_score,
+                        'timeout_seconds': action.timeout_seconds,
+                        'is_critical': action.is_critical,
+                        'requires_confirmation': action.requires_confirmation
+                    }
+                    for action in execution_plan.atomic_actions
+                ]
+            }
+
             # Use plan validator to check all aspects
-            validation_result = await self.plan_validator.validate_plan(execution_plan)
-            
+            validation_result = await self.plan_validator.validate_execution_plan(
+                plan_dict,
+                webpage_data or execution_plan.source_webpage_data
+            )
+
             return validation_result
             
         except Exception as e:
             logger.error("Plan validation failed", plan_id=execution_plan.id, error=str(e))
             return {
-                'is_valid': False,
-                'confidence_score': 0.0,
-                'warnings': [],
-                'errors': [f"Validation failed: {str(e)}"],
-                'element_validation': {},
-                'sequence_validation': {},
-                'safety_validation': {},
-                'recommendations': ['Review plan manually before execution']
+                'overall_status': 'rejected',
+                'scores': {
+                    'safety_score': 0.0,
+                    'feasibility_score': 0.0,
+                    'quality_score': 0.0,
+                    'confidence_score': 0.0
+                },
+                'findings': {
+                    'critical_issues': [f"Validation failed: {str(e)}"],
+                    'warnings': [],
+                    'recommendations': ['Review plan manually before execution']
+                },
+                'approval_status': {
+                    'requires_human_approval': True,
+                    'risk_level': 'high'
+                }
             }
     
     async def get_planning_metrics(

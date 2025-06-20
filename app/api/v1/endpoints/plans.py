@@ -364,7 +364,8 @@ async def approve_execution_plan(
         if approval_request.approval_decision == "approve":
             execution_plan.status = PlanStatus.APPROVED
             execution_plan.approved_by_user = True
-            execution_plan.approved_at = func.now()
+            from datetime import datetime
+            execution_plan.approved_at = datetime.utcnow()
             execution_plan.approval_feedback = approval_request.feedback
             
             # Override confidence if provided
@@ -456,18 +457,18 @@ async def validate_execution_plan(
         validation_result = await planning_service.validate_plan(execution_plan)
         
         # Update plan validation status
-        execution_plan.validation_passed = validation_result['is_valid']
-        execution_plan.validation_warnings = validation_result['warnings']
-        execution_plan.validation_errors = validation_result['errors']
-        execution_plan.plan_quality_score = validation_result['confidence_score']
+        execution_plan.validation_passed = validation_result.get('overall_status') == 'approved'
+        execution_plan.validation_warnings = validation_result.get('findings', {}).get('warnings', [])
+        execution_plan.validation_errors = validation_result.get('findings', {}).get('critical_issues', [])
+        execution_plan.plan_quality_score = validation_result.get('scores', {}).get('confidence_score', 0.0)
         
         await db.commit()
         
         logger.info(
             "Plan validation completed",
             plan_id=plan_id,
-            is_valid=validation_result['is_valid'],
-            confidence=validation_result['confidence_score']
+            is_valid=validation_result.get('overall_status') == 'approved',
+            confidence=validation_result.get('scores', {}).get('confidence_score', 0.0)
         )
         
         return PlanValidationResult(**validation_result)
