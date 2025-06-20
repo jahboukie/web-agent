@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, tasks, web_pages, execution_plans, plans
+from app.api.v1.endpoints import auth, users, tasks, web_pages, execution_plans, plans, execute, webhooks
 
 api_router = APIRouter()
 
@@ -38,4 +38,16 @@ api_router.include_router(
     plans.router,
     prefix="/plans",
     tags=["AI Planning"]
+)
+
+api_router.include_router(
+    execute.router,
+    prefix="/execute",
+    tags=["Action Execution"]
+)
+
+api_router.include_router(
+    webhooks.router,
+    prefix="/webhooks",
+    tags=["Webhooks"]
 )

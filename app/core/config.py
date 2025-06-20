@@ -80,6 +80,17 @@ class Settings(BaseSettings):
     MAX_CONCURRENT_TASKS: int = 10
     TASK_TIMEOUT_SECONDS: int = 1800  # 30 minutes
     MAX_RETRY_ATTEMPTS: int = 3
+
+    # Action Execution
+    DISABLE_IMAGES_FOR_EXECUTION: bool = False
+    EXECUTION_SCREENSHOT_QUALITY: int = 80  # JPEG quality 1-100
+
+    # HTTP Client Configuration
+    HTTP_CLIENT_TIMEOUT_TOTAL: int = 30  # Total timeout in seconds
+    HTTP_CLIENT_TIMEOUT_CONNECT: int = 10  # Connection timeout in seconds
+    HTTP_CLIENT_TIMEOUT_READ: int = 30  # Read timeout in seconds
+    HTTP_CLIENT_CONNECTION_POOL_SIZE: int = 100  # Total connection pool size
+    HTTP_CLIENT_CONNECTION_POOL_SIZE_PER_HOST: int = 30  # Per-host connection pool size
     
     # Security Policies
     ENABLE_RATE_LIMITING: bool = True

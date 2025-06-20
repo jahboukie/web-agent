@@ -190,6 +190,22 @@ async def startup_event():
     except Exception as e:
         logger.error("Database initialization failed", error=str(e))
 
+    # Initialize HTTP client manager
+    try:
+        from app.core.http_client import http_client_manager
+        await http_client_manager.initialize()
+        logger.info("HTTP client manager initialized")
+    except Exception as e:
+        logger.error("HTTP client manager initialization failed", error=str(e))
+
+    # Initialize webhook service (depends on HTTP client)
+    try:
+        from app.services.webhook_service import webhook_service
+        await webhook_service.initialize()
+        logger.info("Webhook service initialized")
+    except Exception as e:
+        logger.error("Webhook service initialization failed", error=str(e))
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -203,6 +219,22 @@ async def shutdown_event():
         logger.info("Database connections closed")
     except Exception as e:
         logger.error("Error closing database connections", error=str(e))
+
+    # Shutdown webhook service
+    try:
+        from app.services.webhook_service import webhook_service
+        await webhook_service.shutdown()
+        logger.info("Webhook service shutdown complete")
+    except Exception as e:
+        logger.error("Error shutting down webhook service", error=str(e))
+
+    # Shutdown HTTP client manager (after all services that use it)
+    try:
+        from app.core.http_client import http_client_manager
+        await http_client_manager.shutdown()
+        logger.info("HTTP client manager shutdown complete")
+    except Exception as e:
+        logger.error("Error shutting down HTTP client manager", error=str(e))
 
 
 @app.get("/", tags=["Health"])

@@ -6,6 +6,7 @@ import structlog
 
 from app.core.config import settings
 from app.core.security import verify_token
+from app.core.http_client import get_http_session
 from app.db.session import get_async_session
 
 logger = structlog.get_logger(__name__)
@@ -183,3 +184,27 @@ async def verify_token_not_blacklisted(
         )
     
     return token
+
+
+# HTTP Session Dependencies
+async def get_http_client():
+    """
+    HTTP client session dependency.
+
+    Provides the shared aiohttp.ClientSession for making HTTP requests.
+    This ensures proper resource management and connection pooling.
+
+    Returns:
+        aiohttp.ClientSession: Shared HTTP client session
+
+    Raises:
+        HTTPException: If HTTP client is not initialized
+    """
+    try:
+        return await get_http_session()
+    except RuntimeError as e:
+        logger.error("HTTP client not available", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="HTTP client service unavailable"
+        )

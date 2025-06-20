@@ -16,6 +16,15 @@ from .execution_plan import (
     ExecutionPlanResponse, AtomicAction, AtomicActionCreate, AtomicActionUpdate,
     PlanValidationRequest, PlanValidationResponse
 )
+from .execution import (
+    ExecutionRequest, ExecutionResponse, ExecutionStatusResponse,
+    ExecutionResultResponse, ExecutionControlResponse, ActionResult
+)
+from .webhook import (
+    WebhookConfigRequest, WebhookConfigResponse, WebhookTestRequest, WebhookTestResponse,
+    WebhookDeliveryStatus, WebhookEventPayload, WebhookExecutionCompletedData,
+    WebhookExecutionProgressData
+)
 
 __all__ = [
     # User schemas
@@ -35,4 +44,13 @@ __all__ = [
     "ExecutionPlan", "ExecutionPlanCreate", "ExecutionPlanUpdate", "ExecutionPlanRequest",
     "ExecutionPlanResponse", "AtomicAction", "AtomicActionCreate", "AtomicActionUpdate",
     "PlanValidationRequest", "PlanValidationResponse",
+
+    # Execution schemas
+    "ExecutionRequest", "ExecutionResponse", "ExecutionStatusResponse",
+    "ExecutionResultResponse", "ExecutionControlResponse", "ActionResult",
+
+    # Webhook schemas
+    "WebhookConfigRequest", "WebhookConfigResponse", "WebhookTestRequest", "WebhookTestResponse",
+    "WebhookDeliveryStatus", "WebhookEventPayload", "WebhookExecutionCompletedData",
+    "WebhookExecutionProgressData",
 ]
