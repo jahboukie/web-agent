@@ -13,7 +13,7 @@ class ExecutionRequest(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "plan_id": 123,
                 "execution_options": {
@@ -42,7 +42,7 @@ class ExecutionResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "plan_id": 123,
@@ -81,7 +81,7 @@ class ExecutionStatusResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "plan_id": 123,
@@ -113,7 +113,7 @@ class ExecutionControlResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "action": "pause",
@@ -156,7 +156,7 @@ class ActionResult(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "step_number": 1,
                 "action_type": "click",
@@ -205,7 +205,7 @@ class ExecutionResultResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "plan_id": 123,

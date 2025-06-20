@@ -25,7 +25,7 @@ class WebhookConfigRequest(BaseModel):
         return v
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "webhook_urls": [
                     "https://hooks.zapier.com/hooks/catch/123456/abcdef/",
@@ -49,7 +49,7 @@ class WebhookConfigResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "user_id": 123,
                 "webhook_urls": [
@@ -68,7 +68,7 @@ class WebhookTestRequest(BaseModel):
     webhook_url: str = Field(description="Webhook URL to test")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "webhook_url": "https://hooks.zapier.com/hooks/catch/123456/abcdef/"
             }
@@ -99,7 +99,7 @@ class WebhookTestResponse(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "webhook_url": "https://hooks.zapier.com/hooks/catch/123456/abcdef/",
                 "success": True,
@@ -139,7 +139,7 @@ class WebhookDeliveryStatus(BaseModel):
     status: str = Field(description="Overall delivery status")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "webhook_id": "550e8400-e29b-41d4-a716-446655440000",
                 "url": "https://hooks.zapier.com/hooks/catch/123456/abcdef/",
@@ -164,7 +164,7 @@ class WebhookEventPayload(BaseModel):
     webhook_version: str = Field(default="1.0", description="Webhook payload version")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "event": "execution_completed",
                 "timestamp": "2025-06-20T10:30:00Z",
@@ -197,7 +197,7 @@ class WebhookExecutionCompletedData(BaseModel):
     execution_results: Dict[str, Any] = Field(description="Detailed execution results")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "plan_id": 123,
@@ -227,7 +227,7 @@ class WebhookExecutionProgressData(BaseModel):
     status: str = Field(description="Current execution status")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "execution_id": "550e8400-e29b-41d4-a716-446655440000",
                 "plan_id": 123,
