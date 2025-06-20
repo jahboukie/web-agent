@@ -1,0 +1,21 @@
+{
+  "name": "WebAgent - The Agentic Web is Here",
+  "short_name": "WebAgent",
+  "description": "WebAgent is a fully autonomous AI agent that can understand any website, create a plan, and execute complex tasks on your behalf.",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}

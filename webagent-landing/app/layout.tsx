@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#2563eb',
+}
+
 export const metadata: Metadata = {
   title: 'WebAgent - The Agentic Web is Here',
   description: 'WebAgent is a fully autonomous AI agent that can understand any website, create a plan, and execute complex tasks on your behalf.',
@@ -23,8 +29,7 @@ export const metadata: Metadata = {
     description: 'WebAgent is a fully autonomous AI agent that can understand any website, create a plan, and execute complex tasks on your behalf.',
     creator: '@webagentapp',
   },
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#2563eb',
+
 }
 
 export default function RootLayout({

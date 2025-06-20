@@ -240,7 +240,7 @@ export default function LandingPage() {
             </p>
 
             {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+              <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <input
