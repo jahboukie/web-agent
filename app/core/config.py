@@ -104,6 +104,70 @@ class Settings(BaseSettings):
     WEBAGENT_ADMIN_PASSWORD: Optional[str] = None
     WEBAGENT_TEST_PASSWORD: Optional[str] = None
     TRUSTED_HOSTS: Optional[str] = None
+    
+    # Enterprise Security Configuration
+    
+    # Zero-Knowledge Encryption
+    ENABLE_ZERO_KNOWLEDGE: bool = True
+    ZK_KEY_DERIVATION_ITERATIONS: int = 100000
+    ZK_ENCRYPTION_ALGORITHM: str = "ChaCha20Poly1305"
+    ZK_SIGNING_ALGORITHM: str = "Ed25519"
+    
+    # HSM/KMS Configuration
+    HSM_PROVIDER: Optional[str] = None  # "aws_cloudhsm", "azure_keyvault", "google_hsm"
+    HSM_CLUSTER_ID: Optional[str] = None
+    AWS_KMS_KEY_ID: Optional[str] = None
+    AZURE_KEY_VAULT_URL: Optional[str] = None
+    GCP_KMS_PROJECT_ID: Optional[str] = None
+    
+    # Zero Trust Configuration
+    ENABLE_ZERO_TRUST: bool = True
+    ZERO_TRUST_POLICY: str = "standard_access"  # "critical_systems", "sensitive_data", "standard_access", "public_access"
+    CONTINUOUS_VERIFICATION_INTERVAL: int = 1800  # seconds
+    DEVICE_TRUST_REQUIRED: bool = True
+    LOCATION_VERIFICATION_REQUIRED: bool = True
+    
+    # Multi-Factor Authentication
+    REQUIRE_MFA: bool = True
+    MFA_ISSUER: str = "WebAgent"
+    MFA_BACKUP_CODES_COUNT: int = 10
+    TOTP_VALIDITY_WINDOW: int = 1  # windows of 30 seconds
+    
+    # Cloud Security (CSPM)
+    ENABLE_CSPM: bool = True
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_DEFAULT_REGION: str = "us-east-1"
+    AZURE_CLIENT_ID: Optional[str] = None
+    AZURE_CLIENT_SECRET: Optional[str] = None
+    AZURE_TENANT_ID: Optional[str] = None
+    GCP_PROJECT_ID: Optional[str] = None
+    GCP_SERVICE_ACCOUNT_KEY: Optional[str] = None
+    
+    # Incident Response
+    ENABLE_INCIDENT_RESPONSE: bool = True
+    INCIDENT_RESPONSE_EMAIL: Optional[str] = None
+    SLACK_WEBHOOK_URL: Optional[str] = None
+    PAGERDUTY_INTEGRATION_KEY: Optional[str] = None
+    AUTO_EXECUTE_PLAYBOOKS: bool = False
+    INCIDENT_RETENTION_DAYS: int = 2555  # 7 years
+    
+    # Compliance Framework
+    COMPLIANCE_FRAMEWORKS: List[str] = ["SOC2", "GDPR"]
+    ENABLE_SOC2_MONITORING: bool = True
+    ENABLE_GDPR_COMPLIANCE: bool = True
+    ENABLE_HIPAA_COMPLIANCE: bool = False
+    ENABLE_FEDRAMP_COMPLIANCE: bool = False
+    DATA_RETENTION_DAYS: int = 2555  # 7 years default
+    
+    # Enterprise SSO
+    ENABLE_SSO: bool = False
+    OKTA_DOMAIN: Optional[str] = None
+    OKTA_CLIENT_ID: Optional[str] = None
+    OKTA_CLIENT_SECRET: Optional[str] = None
+    AZURE_AD_TENANT_ID: Optional[str] = None
+    AZURE_AD_CLIENT_ID: Optional[str] = None
+    AZURE_AD_CLIENT_SECRET: Optional[str] = None
 
     class Config:
         env_file = ".env"
@@ -121,6 +185,21 @@ class Settings(BaseSettings):
         if len(v) < 32:
             raise ValueError("Secret key must be at least 32 characters long")
         return v
+    
+    @validator("ZK_KEY_DERIVATION_ITERATIONS")
+    def validate_kdf_iterations(cls, v):
+        if v < 100000:
+            raise ValueError("Key derivation iterations must be at least 100,000 for security")
+        return v
+    
+    @property
+    def is_enterprise_mode(self) -> bool:
+        """Check if running in enterprise security mode."""
+        return (
+            self.ENABLE_ZERO_KNOWLEDGE and
+            self.ENABLE_ZERO_TRUST and
+            self.REQUIRE_MFA
+        )
 
     @property
     def database_url_sync(self) -> str:

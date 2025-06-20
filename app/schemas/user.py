@@ -1,5 +1,6 @@
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
+from enum import Enum
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
@@ -148,3 +149,199 @@ class UserRegistrationRequest(UserCreate):
         if not v:
             raise ValueError('You must accept the terms of service')
         return v
+
+
+# Enterprise Security Enhancements
+
+class SecurityRole(str, Enum):
+    """Enterprise security roles with hierarchical permissions."""
+    SYSTEM_ADMIN = "SYSTEM_ADMIN"
+    TENANT_ADMIN = "TENANT_ADMIN"
+    AUTOMATION_MANAGER = "AUTOMATION_MANAGER"
+    ANALYST = "ANALYST"
+    AUDITOR = "AUDITOR"
+    END_USER = "END_USER"
+
+
+class ComplianceLevel(str, Enum):
+    """Data classification levels for compliance."""
+    PUBLIC = "PUBLIC"
+    INTERNAL = "INTERNAL"
+    CONFIDENTIAL = "CONFIDENTIAL"
+    SECRET = "SECRET"
+    TOP_SECRET = "TOP_SECRET"
+
+
+class ThreatLevel(str, Enum):
+    """Risk assessment threat levels."""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class EnterpriseUserCreate(UserCreate):
+    """Enterprise user creation with security enhancements."""
+    
+    tenant_id: Optional[str] = None
+    security_role: SecurityRole = SecurityRole.END_USER
+    department: Optional[str] = None
+    manager_email: Optional[EmailStr] = None
+    requires_2fa: bool = True
+    compliance_level: ComplianceLevel = ComplianceLevel.INTERNAL
+    allowed_ip_ranges: List[str] = []
+    
+    # Zero-knowledge encryption keys (generated client-side)
+    encryption_public_key: Optional[bytes] = None
+    signing_public_key: Optional[bytes] = None
+    key_derivation_salt: Optional[bytes] = None
+    
+    # Enterprise onboarding
+    employment_start_date: Optional[datetime] = None
+    security_clearance_level: Optional[str] = None
+    background_check_completed: bool = False
+
+
+class DeviceInfo(BaseModel):
+    """Device information for Zero Trust verification."""
+    
+    device_id: str
+    device_type: Literal["desktop", "mobile", "tablet", "server"]
+    os_name: str
+    os_version: str
+    browser_name: Optional[str] = None
+    browser_version: Optional[str] = None
+    is_managed: bool = False
+    is_encrypted: bool = False
+    last_security_scan: Optional[datetime] = None
+    trust_level: ThreatLevel = ThreatLevel.MEDIUM
+    device_fingerprint: str
+    
+
+class AccessContext(BaseModel):
+    """Zero Trust access context for continuous verification."""
+    
+    ip_address: str
+    geolocation: Dict[str, Any]
+    device_info: DeviceInfo
+    network_type: Literal["corporate", "home", "public", "vpn"]
+    time_of_access: datetime
+    user_agent: str
+    session_duration: int  # seconds
+    previous_login_location: Optional[Dict[str, Any]] = None
+    risk_score: float = 0.0
+    threat_indicators: List[str] = []
+    
+
+class MFAMethod(BaseModel):
+    """Multi-factor authentication method."""
+    
+    method_type: Literal["totp", "sms", "email", "hardware_key", "biometric"]
+    is_primary: bool
+    is_backup: bool
+    created_at: datetime
+    last_used_at: Optional[datetime] = None
+    failure_count: int = 0
+    is_compromised: bool = False
+    
+
+class SecurityEvent(BaseModel):
+    """Security event for continuous monitoring."""
+    
+    event_id: str
+    event_type: str
+    user_id: int
+    tenant_id: Optional[str] = None
+    severity: ThreatLevel
+    description: str
+    source_ip: str
+    user_agent: str
+    access_context: AccessContext
+    automated_response: Optional[str] = None
+    requires_investigation: bool = False
+    mitigated: bool = False
+    created_at: datetime
+    
+
+class EnterpriseUserProfile(UserProfile):
+    """Enhanced user profile with enterprise security features."""
+    
+    tenant_id: Optional[str] = None
+    security_role: SecurityRole = SecurityRole.END_USER
+    department: Optional[str] = None
+    manager_id: Optional[int] = None
+    
+    # Zero Trust Security
+    trust_score: float = 0.5  # 0.0 = no trust, 1.0 = full trust
+    last_risk_assessment: Optional[datetime] = None
+    current_threat_level: ThreatLevel = ThreatLevel.LOW
+    failed_login_attempts: int = 0
+    account_locked_until: Optional[datetime] = None
+    
+    # MFA and Authentication
+    mfa_enabled: bool = True
+    mfa_methods: List[MFAMethod] = []
+    requires_password_change: bool = False
+    password_last_changed: Optional[datetime] = None
+    
+    # Access Controls
+    allowed_ip_ranges: List[str] = []
+    session_timeout_minutes: int = 30
+    max_concurrent_sessions: int = 3
+    
+    # Compliance and Audit
+    compliance_level: ComplianceLevel = ComplianceLevel.INTERNAL
+    data_retention_days: int = 2555  # 7 years default
+    consent_given_at: Optional[datetime] = None
+    gdpr_consent: bool = False
+    hipaa_consent: bool = False
+    
+    # Zero-Knowledge Encryption
+    encryption_key_id: Optional[str] = None
+    signing_key_id: Optional[str] = None
+    key_rotation_required: bool = False
+    last_key_rotation: Optional[datetime] = None
+    
+    # Security Monitoring
+    recent_security_events: List[SecurityEvent] = []
+    suspicious_activity_score: float = 0.0
+    last_security_scan: Optional[datetime] = None
+    
+    # Enterprise Features
+    provisioned_by: Optional[str] = None
+    deprovisioned_at: Optional[datetime] = None
+    employment_status: Literal["active", "suspended", "terminated"] = "active"
+    security_clearance_level: Optional[str] = None
+    
+
+class ZeroTrustVerification(BaseModel):
+    """Zero Trust continuous verification result."""
+    
+    user_id: int
+    verification_id: str
+    access_granted: bool
+    trust_score: float
+    risk_factors: List[str] = []
+    required_actions: List[str] = []  # e.g., ["require_mfa", "verify_device"]
+    session_restrictions: Dict[str, Any] = {}  # time limits, IP restrictions, etc.
+    next_verification_in: int = 3600  # seconds until next verification
+    verified_at: datetime
+    
+
+class IncidentResponse(BaseModel):
+    """Security incident response tracking."""
+    
+    incident_id: str
+    incident_type: str
+    severity: ThreatLevel
+    affected_users: List[int] = []
+    affected_resources: List[str] = []
+    detected_at: datetime
+    response_initiated_at: Optional[datetime] = None
+    contained_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
+    root_cause: Optional[str] = None
+    lessons_learned: Optional[str] = None
+    notification_sent: bool = False
+    customer_impact: bool = False
+    regulatory_reporting_required: bool = False
