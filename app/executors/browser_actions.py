@@ -247,12 +247,22 @@ class TypeExecutor(BaseActionExecutor):
 
     def _contains_unsafe_content(self, value: str) -> bool:
         """Check if input value contains potentially unsafe content."""
-        unsafe_patterns = [
-            '<script', '</script>', 'javascript:', 'data:text/html',
-            'vbscript:', 'onload=', 'onerror=', 'onclick='
-        ]
-        value_lower = value.lower()
-        return any(pattern in value_lower for pattern in unsafe_patterns)
+        try:
+            from app.security.input_sanitization import enterprise_sanitizer
+            
+            # Use comprehensive sanitization
+            malicious_patterns = enterprise_sanitizer.detect_malicious_patterns(value)
+            return len(malicious_patterns) > 0
+            
+        except Exception as e:
+            logger.error(f"Security check failed: {str(e)}")
+            # Fallback to basic patterns
+            unsafe_patterns = [
+                '<script', '</script>', 'javascript:', 'data:text/html',
+                'vbscript:', 'onload=', 'onerror=', 'onclick='
+            ]
+            value_lower = value.lower()
+            return any(pattern in value_lower for pattern in unsafe_patterns)
 
 
 class NavigateExecutor(BaseActionExecutor):

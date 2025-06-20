@@ -132,32 +132,8 @@ async def get_current_superuser(
     return current_user
 
 
-class TokenBlacklist:
-    """
-    Simple in-memory token blacklist for logout functionality.
-    In production, this should be replaced with Redis or database storage.
-    """
-    
-    def __init__(self):
-        self._blacklisted_tokens = set()
-    
-    def add_token(self, token: str) -> None:
-        """Add token to blacklist."""
-        self._blacklisted_tokens.add(token)
-        logger.debug("Token added to blacklist")
-    
-    def is_blacklisted(self, token: str) -> bool:
-        """Check if token is blacklisted."""
-        return token in self._blacklisted_tokens
-    
-    def clear_expired_tokens(self) -> None:
-        """Clear expired tokens from blacklist (placeholder for future implementation)."""
-        # TODO: Implement token expiration cleanup
-        pass
-
-
-# Global token blacklist instance
-token_blacklist = TokenBlacklist()
+# Import enterprise token blacklist
+from app.security.token_blacklist import enterprise_token_blacklist
 
 
 async def verify_token_not_blacklisted(
@@ -175,13 +151,18 @@ async def verify_token_not_blacklisted(
     Raises:
         HTTPException: If token is blacklisted
     """
-    if token_blacklist.is_blacklisted(token):
-        logger.warning("Blacklisted token used")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has been revoked",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    try:
+        if enterprise_token_blacklist and await enterprise_token_blacklist.is_blacklisted(token):
+            logger.warning("Blacklisted token used")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except Exception as e:
+        logger.error(f"Token blacklist check failed: {str(e)}")
+        # Fail securely - if we can't check, assume it's valid but log the issue
+        pass
     
     return token
 

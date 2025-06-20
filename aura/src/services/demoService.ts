@@ -119,9 +119,34 @@ class DemoService {
   private currentUser: any = null;
   private isDemo = import.meta.env.VITE_DEV_MODE === 'true';
 
+  constructor() {
+    // Restore current user from storage if available
+    this.restoreCurrentUser();
+  }
+
   // Check if demo mode is enabled
   isDemoMode(): boolean {
     return this.isDemo;
+  }
+
+  // Restore current user from localStorage
+  private restoreCurrentUser(): void {
+    if (!this.isDemo) return;
+    
+    try {
+      const storedUserData = localStorage.getItem('webagent_user_data');
+      if (storedUserData) {
+        const userData = JSON.parse(storedUserData);
+        // Find the full user data from DEMO_USERS
+        const fullUser = DEMO_USERS.find(u => u.id === userData.id);
+        if (fullUser) {
+          this.currentUser = fullUser;
+          console.log('🎭 Demo user restored:', fullUser.email);
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to restore demo user:', error);
+    }
   }
 
   // Demo login
@@ -229,8 +254,34 @@ class DemoService {
 
   // Demo trust assessment
   async getDemoTrustAssessment(): Promise<any> {
-    if (!this.isDemo || !this.currentUser) {
-      throw new Error('Demo mode not enabled or user not logged in');
+    if (!this.isDemo) {
+      throw new Error('Demo mode not enabled');
+    }
+
+    // Try to restore current user if not available
+    if (!this.currentUser) {
+      this.restoreCurrentUser();
+    }
+
+    // If still no user, try to get from stored user data
+    if (!this.currentUser) {
+      try {
+        const storedUserData = localStorage.getItem('webagent_user_data');
+        if (storedUserData) {
+          const userData = JSON.parse(storedUserData);
+          const fullUser = DEMO_USERS.find(u => u.id === userData.id);
+          if (fullUser) {
+            this.currentUser = fullUser;
+          }
+        }
+      } catch (error) {
+        // Ignore error and fall back to default user
+      }
+    }
+
+    // If still no user, use default admin user for demo
+    if (!this.currentUser) {
+      this.currentUser = DEMO_USERS[0]; // Default to admin user
     }
 
     return generateTrustAssessment(this.currentUser);

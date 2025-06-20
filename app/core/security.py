@@ -40,7 +40,7 @@ def password_hash(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     """
-    Verify a password against its hash.
+    Verify a password against its hash using constant-time comparison.
     
     Args:
         password: Plain text password to verify
@@ -50,9 +50,12 @@ def verify_password(password: str, hashed: str) -> bool:
         True if password matches, False otherwise
     """
     try:
+        # Use passlib's built-in constant-time verification
+        # passlib already implements timing-safe password verification
         is_valid = pwd_context.verify(password, hashed)
         logger.debug("Password verification completed", is_valid=is_valid)
         return is_valid
+        
     except Exception as e:
         logger.error("Failed to verify password", error=str(e))
         return False

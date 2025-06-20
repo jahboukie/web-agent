@@ -21,7 +21,7 @@ from app.schemas.enterprise import (
     SSOConfigurationCreate, SSOConfigurationUpdate
 )
 from app.schemas.user import EnterpriseUserCreate, UserTenantRoleAssignment
-# from app.security.sso_integration import enterprise_sso, SSOUser, SSOAuthResult  # Temporarily disabled
+from app.security.sso_integration import enterprise_sso, SSOUser, SSOAuthResult
 from app.services.rbac_service import enterprise_rbac_service
 from app.services.tenant_service import enterprise_tenant_service
 from app.core.config import settings
