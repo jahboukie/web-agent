@@ -1,0 +1,53 @@
+{
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "success_rate": 100.0
+  },
+  "results": [
+    {
+      "test": "User Registration",
+      "success": true,
+      "details": "User registered: dashboard_test_1750453808@webagent.com",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.119901"
+    },
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Login successful, token acquired",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.386810"
+    },
+    {
+      "test": "Analytics Dashboard",
+      "success": true,
+      "details": "Dashboard data loaded with components: Subscription Info, Usage Metrics, Upgrade Opportunities, Success Metrics, ROI Calculator",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.469635"
+    },
+    {
+      "test": "Usage Metrics",
+      "success": true,
+      "details": "Usage data: Parses: 0, Plans: 0, Executions: 0",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.500363"
+    },
+    {
+      "test": "Upgrade Opportunities",
+      "success": true,
+      "details": "Found 1 upgrade opportunities",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.533294"
+    },
+    {
+      "test": "Complete Dashboard Workflow",
+      "success": true,
+      "details": "Full user workflow completed successfully",
+      "error": "",
+      "timestamp": "2025-06-20T17:10:09.533294"
+    }
+  ],
+  "timestamp": "2025-06-20T17:10:09.534763"
+}

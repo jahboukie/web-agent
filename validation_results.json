@@ -1,0 +1,90 @@
+{
+  "total_tests": 10,
+  "passed": 6,
+  "failed": 3,
+  "skipped": 1,
+  "success_rate": 60.0,
+  "duration": 23.414378,
+  "results": [
+    {
+      "test_name": "Backend Health Check",
+      "status": "PASS",
+      "details": "Backend operational, version: 0.1.0",
+      "duration": 0.007444143295288086,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:18.885409"
+    },
+    {
+      "test_name": "API Endpoint: API Documentation",
+      "status": "PASS",
+      "details": "Endpoint accessible (HTTP 200)",
+      "duration": 0.0040302276611328125,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:18.889439"
+    },
+    {
+      "test_name": "API Endpoint: Auth Registration Endpoint",
+      "status": "FAIL",
+      "details": "Endpoint not accessible",
+      "duration": 0.004393577575683594,
+      "error": "HTTP 405",
+      "timestamp": "2025-06-20T17:10:18.893833"
+    },
+    {
+      "test_name": "API Endpoint: Analytics Dashboard Endpoint",
+      "status": "PASS",
+      "details": "Endpoint accessible (HTTP 401)",
+      "duration": 0.00499725341796875,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:18.898830"
+    },
+    {
+      "test_name": "API Endpoint: Tasks Endpoint",
+      "status": "PASS",
+      "details": "Endpoint accessible (HTTP 401)",
+      "duration": 0.004740476608276367,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:18.903570"
+    },
+    {
+      "test_name": "API Endpoint: Web Pages Endpoint",
+      "status": "FAIL",
+      "details": "Endpoint not accessible",
+      "duration": 0.0043256282806396484,
+      "error": "HTTP 404",
+      "timestamp": "2025-06-20T17:10:18.907896"
+    },
+    {
+      "test_name": "User Registration",
+      "status": "PASS",
+      "details": "User registered successfully: test_1750453818@webagent.com",
+      "duration": 0.25678229331970215,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:19.164679"
+    },
+    {
+      "test_name": "Analytics Dashboard API",
+      "status": "SKIP",
+      "details": "No auth token available",
+      "duration": 0,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:19.164679"
+    },
+    {
+      "test_name": "Frontend Loading",
+      "status": "PASS",
+      "details": "Frontend loaded successfully: Vite + React + TS",
+      "duration": 0.44164347648620605,
+      "error": "",
+      "timestamp": "2025-06-20T17:10:19.606322"
+    },
+    {
+      "test_name": "Dashboard Components",
+      "status": "FAIL",
+      "details": "Dashboard components test failed",
+      "duration": 20.76371932029724,
+      "error": "Message: \nStacktrace:\n\tGetHandleVerifier [0x0x7ff6a640cda5+78885]\n\tGetHandleVerifier [0x0x7ff6a640ce00+78976]\n\t(No symbol) [0x0x7ff6a61c9bca]\n\t(No symbol) [0x0x7ff6a6220766]\n\t(No symbol) [0x0x7ff6a6220a1c]\n\t(No symbol) [0x0x7ff6a6274467]\n\t(No symbol) [0x0x7ff6a6248bcf]\n\t(No symbol) [0x0x7ff6a627122f]\n\t(No symbol) [0x0x7ff6a6248963]\n\t(No symbol) [0x0x7ff6a62116b1]\n\t(No symbol) [0x0x7ff6a6212443]\n\tGetHandleVerifier [0x0x7ff6a66e4eed+3061101]\n\tGetHandleVerifier [0x0x7ff6a66df33d+3037629]\n\tGetHandleVerifier [0x0x7ff6a66fe592+3165202]\n\tGetHandleVerifier [0x0x7ff6a642730e+186766]\n\tGetHandleVerifier [0x0x7ff6a642eb3f+217535]\n\tGetHandleVerifier [0x0x7ff6a64159b4+114740]\n\tGetHandleVerifier [0x0x7ff6a6415b69+115177]\n\tGetHandleVerifier [0x0x7ff6a63fc368+10728]\n\tBaseThreadInitThunk [0x0x7ffc7189e8d7+23]\n\tRtlUserThreadStart [0x0x7ffc723bc34c+44]\n",
+      "timestamp": "2025-06-20T17:10:40.370041"
+    }
+  ]
+}

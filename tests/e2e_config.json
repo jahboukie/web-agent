@@ -1,0 +1,328 @@
+{
+  "test_environment": {
+    "name": "e2e_testing",
+    "description": "Isolated environment for E2E testing",
+    "database_url": "postgresql://webagent_test:test_password@localhost:5432/webagent_e2e_test",
+    "redis_url": "redis://localhost:6379/15",
+    "api_base_url": "http://localhost:8000",
+    "frontend_url": "http://localhost:3000"
+  },
+  
+  "test_execution": {
+    "parallel_execution": true,
+    "max_workers": 4,
+    "timeout_seconds": 3600,
+    "retry_failed_tests": true,
+    "max_retries": 2,
+    "fail_fast": false,
+    "generate_screenshots": true,
+    "record_videos": true
+  },
+  
+  "test_data": {
+    "cleanup_after_tests": true,
+    "preserve_on_failure": true,
+    "seed_data_file": "tests/data/seed_data.json",
+    "test_users": {
+      "admin": {
+        "email": "admin@e2e.webagent.com",
+        "password": "E2EAdmin123!",
+        "roles": ["system_admin"],
+        "tenant": "e2e-enterprise"
+      },
+      "manager": {
+        "email": "manager@e2e.webagent.com", 
+        "password": "E2EManager123!",
+        "roles": ["tenant_admin"],
+        "tenant": "e2e-enterprise"
+      },
+      "user": {
+        "email": "user@e2e.webagent.com",
+        "password": "E2EUser123!",
+        "roles": ["basic_user"],
+        "tenant": "e2e-basic"
+      },
+      "auditor": {
+        "email": "auditor@e2e.webagent.com",
+        "password": "E2EAuditor123!",
+        "roles": ["security_manager"],
+        "tenant": "e2e-compliance"
+      }
+    }
+  },
+  
+  "performance_thresholds": {
+    "api_response_time_ms": {
+      "p50": 500,
+      "p95": 2000,
+      "p99": 5000
+    },
+    "page_load_time_ms": {
+      "p50": 2000,
+      "p95": 5000,
+      "p99": 10000
+    },
+    "concurrent_users": {
+      "baseline": 50,
+      "target": 500,
+      "maximum": 1000
+    },
+    "throughput_rps": {
+      "minimum": 10,
+      "target": 100,
+      "maximum": 500
+    },
+    "error_rates": {
+      "api_errors": 0.02,
+      "browser_errors": 0.05,
+      "timeout_errors": 0.01
+    }
+  },
+  
+  "security_testing": {
+    "enable_penetration_tests": true,
+    "enable_vulnerability_scans": true,
+    "test_payloads": {
+      "xss_vectors": [
+        "<script>alert('XSS')</script>",
+        "javascript:alert('XSS')",
+        "<img src=x onerror=alert('XSS')>",
+        "';alert('XSS');//",
+        "<svg onload=alert('XSS')>",
+        "\"onmouseover=\"alert('XSS')\""
+      ],
+      "sql_injection_vectors": [
+        "' OR '1'='1",
+        "'; DROP TABLE users; --",
+        "' UNION SELECT * FROM users --",
+        "admin'--",
+        "' OR 1=1 --",
+        "1' AND '1'='1"
+      ],
+      "path_traversal_vectors": [
+        "../../../etc/passwd",
+        "..\\..\\..\\windows\\system32\\drivers\\etc\\hosts",
+        "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+        "....//....//....//etc/passwd",
+        "..%252f..%252f..%252fetc%252fpasswd"
+      ]
+    },
+    "authentication_tests": {
+      "test_session_fixation": true,
+      "test_csrf_protection": true,
+      "test_jwt_validation": true,
+      "test_mfa_bypass": true,
+      "test_privilege_escalation": true
+    }
+  },
+  
+  "browser_testing": {
+    "browsers": ["chromium", "firefox", "webkit"],
+    "viewport_sizes": [
+      {"width": 1920, "height": 1080},
+      {"width": 1366, "height": 768},
+      {"width": 375, "height": 667}
+    ],
+    "device_emulation": [
+      "Desktop Chrome",
+      "iPhone 12",
+      "iPad Pro",
+      "Samsung Galaxy S21"
+    ],
+    "network_conditions": [
+      "fast3g",
+      "slow3g",
+      "offline"
+    ]
+  },
+  
+  "monitoring_integration": {
+    "enable_metrics_collection": true,
+    "datadog_api_key": "${DATADOG_API_KEY}",
+    "prometheus_endpoint": "http://localhost:9090",
+    "grafana_dashboard_url": "http://localhost:3001",
+    "alert_webhooks": [
+      "${SLACK_WEBHOOK_URL}",
+      "${TEAMS_WEBHOOK_URL}"
+    ]
+  },
+  
+  "reporting": {
+    "generate_html_reports": true,
+    "generate_json_reports": true,
+    "generate_junit_xml": true,
+    "upload_to_s3": false,
+    "s3_bucket": "webagent-test-reports",
+    "retention_days": 30,
+    "email_reports": {
+      "enabled": false,
+      "recipients": [
+        "qa-team@webagent.com",
+        "dev-team@webagent.com"
+      ],
+      "send_on_failure_only": true
+    }
+  },
+  
+  "chaos_engineering": {
+    "enable_chaos_tests": false,
+    "scenarios": [
+      {
+        "name": "database_failure",
+        "type": "database",
+        "action": "disconnect",
+        "duration_seconds": 30,
+        "probability": 0.1
+      },
+      {
+        "name": "high_cpu_load",
+        "type": "resource",
+        "action": "cpu_stress",
+        "intensity": 90,
+        "duration_seconds": 60,
+        "probability": 0.05
+      },
+      {
+        "name": "network_latency",
+        "type": "network",
+        "action": "add_latency",
+        "delay_ms": 2000,
+        "duration_seconds": 45,
+        "probability": 0.15
+      },
+      {
+        "name": "memory_pressure",
+        "type": "resource",
+        "action": "memory_stress",
+        "intensity": 85,
+        "duration_seconds": 90,
+        "probability": 0.08
+      }
+    ]
+  },
+  
+  "compliance_testing": {
+    "enable_gdpr_tests": true,
+    "enable_hipaa_tests": false,
+    "enable_soc2_tests": true,
+    "enable_fedramp_tests": false,
+    "data_retention_tests": true,
+    "encryption_tests": true,
+    "audit_trail_tests": true
+  },
+  
+  "load_testing": {
+    "ramp_up_duration_seconds": 300,
+    "steady_state_duration_seconds": 600,
+    "ramp_down_duration_seconds": 180,
+    "user_scenarios": [
+      {
+        "name": "reader_workflow",
+        "weight": 40,
+        "actions": [
+          "login",
+          "parse_webpage",
+          "view_results",
+          "logout"
+        ]
+      },
+      {
+        "name": "planner_workflow", 
+        "weight": 30,
+        "actions": [
+          "login",
+          "parse_webpage",
+          "generate_plan",
+          "review_plan",
+          "logout"
+        ]
+      },
+      {
+        "name": "actor_workflow",
+        "weight": 20,
+        "actions": [
+          "login",
+          "parse_webpage",
+          "generate_plan",
+          "execute_plan",
+          "monitor_execution",
+          "logout"
+        ]
+      },
+      {
+        "name": "analytics_workflow",
+        "weight": 10,
+        "actions": [
+          "login",
+          "view_dashboard",
+          "view_analytics",
+          "export_data",
+          "logout"
+        ]
+      }
+    ]
+  },
+  
+  "test_websites": {
+    "simple_form": {
+      "url": "https://httpbin.org/forms/post",
+      "type": "form_submission",
+      "complexity": "low",
+      "expected_elements": ["input", "button", "form"],
+      "timeout_seconds": 30
+    },
+    "spa_application": {
+      "url": "https://react-shopping-cart-67954.firebaseapp.com/",
+      "type": "single_page_app",
+      "complexity": "high",
+      "expected_elements": ["button", "div", "img"],
+      "timeout_seconds": 60
+    },
+    "authentication_required": {
+      "url": "https://the-internet.herokuapp.com/login",
+      "type": "authentication",
+      "complexity": "medium",
+      "expected_elements": ["input[type=text]", "input[type=password]", "button"],
+      "timeout_seconds": 45
+    },
+    "complex_navigation": {
+      "url": "https://demo.opencart.com/",
+      "type": "e_commerce",
+      "complexity": "high",
+      "expected_elements": ["nav", "menu", "product", "cart"],
+      "timeout_seconds": 90
+    },
+    "dynamic_content": {
+      "url": "https://jsonplaceholder.typicode.com/",
+      "type": "api_driven",
+      "complexity": "medium",
+      "expected_elements": ["link", "code", "pre"],
+      "timeout_seconds": 30
+    }
+  },
+  
+  "notification_settings": {
+    "slack": {
+      "enabled": false,
+      "webhook_url": "${SLACK_WEBHOOK_URL}",
+      "channel": "#qa-alerts",
+      "notify_on_failure": true,
+      "notify_on_success": false
+    },
+    "email": {
+      "enabled": false,
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "username": "${EMAIL_USERNAME}",
+      "password": "${EMAIL_PASSWORD}",
+      "recipients": ["qa-team@webagent.com"]
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "${WEBHOOK_URL}",
+      "headers": {
+        "Authorization": "Bearer ${WEBHOOK_TOKEN}"
+      }
+    }
+  }
+}
