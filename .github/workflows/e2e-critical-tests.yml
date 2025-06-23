@@ -2,9 +2,10 @@ name: WebAgent Critical E2E Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'fix/*', 'feature/*', 'hotfix/*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     # Run critical tests daily at 2 AM UTC
     - cron: '0 2 * * *'

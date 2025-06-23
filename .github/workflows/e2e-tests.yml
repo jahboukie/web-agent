@@ -2,9 +2,10 @@ name: E2E Tests - WebAgent Enterprise
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'fix/*', 'feature/*', 'hotfix/*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     # Run full E2E suite daily at 2 AM UTC
     - cron: '0 2 * * *'
