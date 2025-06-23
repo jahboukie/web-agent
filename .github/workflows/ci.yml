@@ -81,6 +81,13 @@ jobs:
     - name: Run type checking
       run: poetry run mypy app/
 
+    - name: Run database migrations
+      run: poetry run alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+        SECRET_KEY: test-secret-key-for-ci-only
+        ENVIRONMENT: test
+
     - name: Run unit tests
       run: poetry run pytest tests/unit/ -v --cov=app --cov-report=xml
       env:
@@ -143,9 +150,38 @@ jobs:
         name: bandit-report
         path: bandit-report.json
 
+  frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'aura/package-lock.json'
+        
+    - name: Install frontend dependencies
+      working-directory: ./aura
+      run: npm ci
+      
+    - name: Run frontend linting
+      working-directory: ./aura
+      run: npm run lint
+      
+    - name: Run frontend type check
+      working-directory: ./aura
+      run: npx tsc --noEmit
+      
+    - name: Build frontend
+      working-directory: ./aura
+      run: npm run build
+
   build:
     runs-on: ubuntu-latest
-    needs: [test, security]
+    needs: [test, security, frontend]
 
     steps:
     - uses: actions/checkout@v4
