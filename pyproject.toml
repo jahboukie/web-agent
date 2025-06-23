@@ -13,7 +13,7 @@ packages = [{include = "app"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 # Core FastAPI stack
-fastapi = "^0.104.1"
+fastapi = "^0.115.0"
 starlette = "^0.40.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 pydantic = "^2.5.0"
