@@ -2,10 +2,8 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -13,27 +11,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 # Import our application configuration and models
 from app.core.config import settings
 from app.db.base import Base
-
-# Import all models to ensure they are registered with SQLAlchemy
-from app.models.user import User
-from app.models.task import Task
-from app.models.web_page import WebPage
+from app.models.browser_session import BrowserSession
+from app.models.execution_plan import AtomicAction, ExecutionPlan
 from app.models.interactive_element import InteractiveElement
-from app.models.execution_plan import ExecutionPlan, AtomicAction
 from app.models.security import (
-    UserCredential,
-    UserPermission,
-    AuditLog,
-    SecurityPolicy,
-    EnterpriseTenant,
-    EnterpriseRole,
-    EnterprisePermission,
-    SSOConfiguration,
     ABACPolicy,
     AccessSession,
+    AuditLog,
+    EnterprisePermission,
+    EnterpriseRole,
+    EnterpriseTenant,
+    SecurityPolicy,
+    SSOConfiguration,
+    UserCredential,
+    UserPermission,
 )
-from app.models.browser_session import BrowserSession
-from app.models.task_execution import TaskExecution, ContentBlock, ActionCapability
+from app.models.task import Task
+from app.models.task_execution import ActionCapability, ContentBlock, TaskExecution
+from app.models.user import User
+from app.models.web_page import WebPage
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
