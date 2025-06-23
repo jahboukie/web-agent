@@ -12,7 +12,7 @@ git commit -m "Fix LangChain dependency conflict in CI/CD pipeline
 
 - Updated LangChain packages to compatible versions (0.3.x series)
 - langchain: ^0.3.26 (was ^0.2.0)
-- langchain-anthropic: ^0.3.15 (was ^0.1.0)  
+- langchain-anthropic: ^0.3.15 (was ^0.1.0)
 - langchain-openai: ^0.3.25 (was ^0.1.0)
 - langchain-community: ^0.3.26 (was ^0.2.0)
 - langchain-experimental: ^0.3.4 (was ^0.0.50)
