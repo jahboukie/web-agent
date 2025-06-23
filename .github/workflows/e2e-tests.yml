@@ -376,22 +376,11 @@ jobs:
             --input-dir test-reports/ \
             --output consolidated-report.json
 
-      - name: Send Slack notification
-        if: failure() && (github.event_name == 'push' || github.event_name == 'schedule')
-        uses: 8398a7/action-slack@v3
-        with:
-          status: failure
-          channel: '#qa-alerts'
-          text: |
-            🚨 E2E Tests Failed on ${{ github.ref_name }}
-
-            Failed Jobs: ${{ join(needs.*.result, ', ') }}
-            Commit: ${{ github.sha }}
-            Author: ${{ github.actor }}
-
-            View Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: Log test completion
+        if: always()
+        run: |
+          echo "E2E test suite completed"
+          echo "Check artifacts for detailed test results"
 
       - name: Update commit status
         if: github.event_name == 'pull_request'

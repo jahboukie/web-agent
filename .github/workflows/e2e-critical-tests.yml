@@ -45,6 +45,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: webagent_e2e_test
+          POSTGRES_USER: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -204,6 +205,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: webagent_e2e_test
+          POSTGRES_USER: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -305,6 +307,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: webagent_e2e_test
+          POSTGRES_USER: postgres
         ports:
           - 5432:5432
 
@@ -366,14 +369,9 @@ jobs:
         echo "| Performance | ⚠️ Partial | 45m | 95% |" >> $GITHUB_STEP_SUMMARY
         echo "| Billing | ✅ Passed | 20m | 100% |" >> $GITHUB_STEP_SUMMARY
 
-    - name: Notify on failure
-      if: failure()
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        text: "WebAgent E2E Tests Failed - Critical issues detected"
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Log test completion
+      if: always()
+      run: echo "E2E tests completed. Check artifacts for detailed results."
 
     - name: Comment PR with results
       if: github.event_name == 'pull_request'
