@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.execution_plan import (
-    ExecutionPlan, ExecutionPlanCreate, ExecutionPlanUpdate,
-    ExecutionPlanRequest, ExecutionPlanResponse,
-    PlanValidationRequest, PlanValidationResponse
+    ExecutionPlan,
+    ExecutionPlanRequest,
+    ExecutionPlanResponse,
+    PlanValidationRequest,
+    PlanValidationResponse,
 )
 
 router = APIRouter()
@@ -14,7 +16,7 @@ async def create_execution_plan(plan_request: ExecutionPlanRequest):
     """Create an execution plan from a natural language goal."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Execution plan creation not yet implemented"
+        detail="Execution plan creation not yet implemented",
     )
 
 
@@ -23,14 +25,16 @@ async def get_execution_plan(plan_id: int):
     """Get detailed execution plan with all atomic actions."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Execution plan retrieval not yet implemented"
+        detail="Execution plan retrieval not yet implemented",
     )
 
 
 @router.post("/{plan_id}/validate", response_model=PlanValidationResponse)
-async def validate_execution_plan(plan_id: int, validation_request: PlanValidationRequest):
+async def validate_execution_plan(
+    plan_id: int, validation_request: PlanValidationRequest
+):
     """Validate an execution plan before execution."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Execution plan validation not yet implemented"
+        detail="Execution plan validation not yet implemented",
     )

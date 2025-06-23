@@ -1,8 +1,14 @@
-from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
-from sqlalchemy import text
+from collections.abc import AsyncGenerator
+
 import structlog
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
@@ -16,37 +22,40 @@ _async_session_factory: async_sessionmaker[AsyncSession] | None = None
 def get_async_engine() -> AsyncEngine:
     """
     Get or create the async database engine.
-    
+
     Returns:
         AsyncEngine: SQLAlchemy async engine
     """
     global _async_engine
-    
+
     if _async_engine is None:
-        logger.info("Creating async database engine", url=settings.ASYNC_DATABASE_URL.split('@')[0] + '@***')
-        
+        logger.info(
+            "Creating async database engine",
+            url=settings.ASYNC_DATABASE_URL.split("@")[0] + "@***",
+        )
+
         _async_engine = create_async_engine(
             settings.ASYNC_DATABASE_URL,
             echo=settings.DEBUG,  # Log SQL queries in debug mode
-            pool_pre_ping=True,   # Verify connections before use
-            pool_recycle=3600,    # Recycle connections after 1 hour
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=3600,  # Recycle connections after 1 hour
             poolclass=NullPool if "sqlite" in settings.ASYNC_DATABASE_URL else None,
         )
-        
+
         logger.info("Async database engine created successfully")
-    
+
     return _async_engine
 
 
 def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
     """
     Get or create the async session factory.
-    
+
     Returns:
         async_sessionmaker: SQLAlchemy async session factory
     """
     global _async_session_factory
-    
+
     if _async_session_factory is None:
         engine = get_async_engine()
         _async_session_factory = async_sessionmaker(
@@ -57,7 +66,7 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
             autocommit=False,
         )
         logger.info("Async session factory created successfully")
-    
+
     return _async_session_factory
 
 
@@ -91,14 +100,14 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 async def create_tables() -> None:
     """
     Create all database tables.
-    
+
     This is primarily used for testing purposes.
     In production, use Alembic migrations instead.
     """
     from app.db.base import Base
-    
+
     engine = get_async_engine()
-    
+
     async with engine.begin() as conn:
         logger.info("Creating database tables")
         await conn.run_sync(Base.metadata.create_all)
@@ -108,14 +117,14 @@ async def create_tables() -> None:
 async def drop_tables() -> None:
     """
     Drop all database tables.
-    
+
     This is primarily used for testing purposes.
     Use with caution in production environments.
     """
     from app.db.base import Base
-    
+
     engine = get_async_engine()
-    
+
     async with engine.begin() as conn:
         logger.warning("Dropping all database tables")
         await conn.run_sync(Base.metadata.drop_all)
@@ -144,11 +153,11 @@ async def check_database_connection() -> bool:
 async def close_async_engine() -> None:
     """
     Close the async database engine.
-    
+
     This should be called during application shutdown.
     """
     global _async_engine
-    
+
     if _async_engine is not None:
         logger.info("Closing async database engine")
         await _async_engine.dispose()

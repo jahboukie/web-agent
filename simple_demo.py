@@ -14,36 +14,38 @@ from pathlib import Path
 # Add the app directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent / "app"))
 
+
 async def demo_action_executor_service():
     """Demonstrate the ActionExecutor service functionality."""
     print("🤖 Testing ActionExecutor Service Components")
-    
+
     try:
         from app.services.action_executor import action_executor_service
-        from app.models.execution_plan import ActionType
-        
+
         print("   ✅ ActionExecutor service imported successfully")
-        
+
         # Test action executor initialization
-        if hasattr(action_executor_service, 'action_executors'):
+        if hasattr(action_executor_service, "action_executors"):
             executor_count = len(action_executor_service.action_executors)
             print(f"   ✅ Action executors initialized: {executor_count} types")
-            
+
             # List available action types
             action_types = list(action_executor_service.action_executors.keys())
             print(f"   ✅ Available actions: {[at.value for at in action_types]}")
-            
+
             # Test ExecutionResult class
             from app.services.action_executor import ExecutionResult
+
             result = ExecutionResult("test-123", 456)
             result_dict = result.to_dict()
             print(f"   ✅ ExecutionResult working: {result_dict['execution_id']}")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"   ❌ ActionExecutor service test failed: {str(e)}")
         return False
+
 
 async def demo_http_client_manager():
     """Demonstrate the HTTP client manager functionality."""
@@ -75,13 +77,14 @@ async def demo_http_client_manager():
         print(f"   ❌ HTTP client manager test failed: {str(e)}")
         return False
 
+
 async def demo_webhook_service():
     """Demonstrate the webhook service functionality."""
     print("\n🔗 Testing Webhook Service Components")
 
     try:
-        from app.services.webhook_service import webhook_service, WebhookDelivery
         from app.core.http_client import http_client_manager
+        from app.services.webhook_service import WebhookDelivery, webhook_service
 
         print("   ✅ Webhook service imported successfully")
 
@@ -106,7 +109,9 @@ async def demo_webhook_service():
             print("   ❌ URL validation not working correctly")
 
         # Test WebhookDelivery class
-        delivery = WebhookDelivery("test-webhook", "https://example.com", {"test": True})
+        delivery = WebhookDelivery(
+            "test-webhook", "https://example.com", {"test": True}
+        )
         print(f"   ✅ WebhookDelivery created: {delivery.webhook_id}")
 
         return True
@@ -115,17 +120,25 @@ async def demo_webhook_service():
         print(f"   ❌ Webhook service test failed: {str(e)}")
         return False
 
+
 async def demo_browser_actions():
     """Demonstrate browser action executors."""
     print("\n🌐 Testing Browser Action Executors")
-    
+
     try:
         from app.executors.browser_actions import (
-            ClickExecutor, TypeExecutor, NavigateExecutor, WaitExecutor,
-            ScrollExecutor, SelectExecutor, SubmitExecutor, ScreenshotExecutor,
-            HoverExecutor, KeyPressExecutor
+            ClickExecutor,
+            HoverExecutor,
+            KeyPressExecutor,
+            NavigateExecutor,
+            ScreenshotExecutor,
+            ScrollExecutor,
+            SelectExecutor,
+            SubmitExecutor,
+            TypeExecutor,
+            WaitExecutor,
         )
-        
+
         # Test action executor instantiation
         executors = {
             "ClickExecutor": ClickExecutor(),
@@ -139,58 +152,55 @@ async def demo_browser_actions():
             "HoverExecutor": HoverExecutor(),
             "KeyPressExecutor": KeyPressExecutor(),
         }
-        
-        print(f"   ✅ All {len(executors)} browser action executors created successfully:")
+
+        print(
+            f"   ✅ All {len(executors)} browser action executors created successfully:"
+        )
         for name in executors.keys():
             print(f"      - {name}")
-        
+
         # Test base functionality
         click_executor = executors["ClickExecutor"]
-        if hasattr(click_executor, '_validate_element_safety'):
+        if hasattr(click_executor, "_validate_element_safety"):
             print("   ✅ Safety validation methods available")
-        
-        if hasattr(click_executor, '_handle_element_not_found'):
+
+        if hasattr(click_executor, "_handle_element_not_found"):
             print("   ✅ Error handling methods available")
-        
+
         # Test TypeExecutor safety features
         type_executor = executors["TypeExecutor"]
-        if hasattr(type_executor, '_contains_unsafe_content'):
-            unsafe_test = type_executor._contains_unsafe_content("<script>alert('xss')</script>")
+        if hasattr(type_executor, "_contains_unsafe_content"):
+            unsafe_test = type_executor._contains_unsafe_content(
+                "<script>alert('xss')</script>"
+            )
             safe_test = type_executor._contains_unsafe_content("normal text input")
             if unsafe_test and not safe_test:
                 print("   ✅ XSS protection working correctly")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"   ❌ Browser action executors test failed: {str(e)}")
         return False
 
+
 async def demo_execution_schemas():
     """Demonstrate execution schemas."""
     print("\n📋 Testing Execution Schemas")
-    
+
     try:
-        from app.schemas.execution import (
-            ExecutionRequest, ExecutionResponse, ExecutionStatusResponse,
-            ExecutionResultResponse, ExecutionControlResponse, ActionResult
-        )
-        from app.schemas.webhook import (
-            WebhookConfigRequest, WebhookConfigResponse, WebhookTestRequest,
-            WebhookTestResponse, WebhookDeliveryStatus
-        )
-        
+        from app.schemas.execution import ActionResult, ExecutionRequest
+        from app.schemas.webhook import WebhookConfigRequest
+
         # Test schema creation
         execution_request = ExecutionRequest(
-            plan_id=123,
-            execution_options={"take_screenshots": True}
+            plan_id=123, execution_options={"take_screenshots": True}
         )
-        
+
         webhook_config = WebhookConfigRequest(
-            webhook_urls=["https://example.com/webhook"],
-            events=["execution_completed"]
+            webhook_urls=["https://example.com/webhook"], events=["execution_completed"]
         )
-        
+
         action_result = ActionResult(
             step_number=1,
             action_type="click",
@@ -198,47 +208,50 @@ async def demo_execution_schemas():
             success=True,
             started_at="2025-06-20T10:00:00Z",
             completed_at="2025-06-20T10:00:02Z",
-            duration_ms=2000
+            duration_ms=2000,
         )
-        
+
         print("   ✅ Execution schemas created successfully:")
         print(f"      - ExecutionRequest: plan_id={execution_request.plan_id}")
         print(f"      - WebhookConfigRequest: {len(webhook_config.webhook_urls)} URLs")
-        print(f"      - ActionResult: step {action_result.step_number}, success={action_result.success}")
-        
+        print(
+            f"      - ActionResult: step {action_result.step_number}, success={action_result.success}"
+        )
+
         return True
-        
+
     except Exception as e:
         print(f"   ❌ Execution schemas test failed: {str(e)}")
         return False
 
+
 async def demo_api_integration():
     """Demonstrate API integration is available."""
     print("\n🔌 Testing API Integration")
-    
+
     try:
         # Test that the endpoints are importable
-        from app.api.v1.endpoints import execute, webhooks
-        
+
         print("   ✅ Execution API endpoints imported successfully")
         print("   ✅ Webhook API endpoints imported successfully")
-        
+
         # Test router integration
         from app.api.v1.router import api_router
-        
+
         # Check if our routes are registered
         routes = [route.path for route in api_router.routes]
-        execution_routes = [r for r in routes if '/execute' in r]
-        webhook_routes = [r for r in routes if '/webhooks' in r]
-        
+        execution_routes = [r for r in routes if "/execute" in r]
+        webhook_routes = [r for r in routes if "/webhooks" in r]
+
         print(f"   ✅ Execution routes registered: {len(execution_routes)} endpoints")
         print(f"   ✅ Webhook routes registered: {len(webhook_routes)} endpoints")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"   ❌ API integration test failed: {str(e)}")
         return False
+
 
 async def main():
     """Run WebAgent Phase 2D simple demonstration."""
@@ -247,10 +260,10 @@ async def main():
     print("Testing: Eyes + Brain + Hands = Complete AI Agent")
     print(f"Timestamp: {datetime.now().isoformat()}")
     print()
-    
+
     # Test Phase 2D components
     results = []
-    
+
     # Test core services
     executor_result = await demo_action_executor_service()
     results.append(("ActionExecutor Service", executor_result))
@@ -260,34 +273,34 @@ async def main():
 
     webhook_result = await demo_webhook_service()
     results.append(("Webhook Service", webhook_result))
-    
+
     browser_result = await demo_browser_actions()
     results.append(("Browser Actions", browser_result))
-    
+
     schema_result = await demo_execution_schemas()
     results.append(("Execution Schemas", schema_result))
-    
+
     api_result = await demo_api_integration()
     results.append(("API Integration", api_result))
-    
+
     # Summary
     print("\n" + "=" * 60)
     print("🎉 WEBAGENT PHASE 2D COMPONENT TEST RESULTS")
     print("=" * 60)
-    
+
     for component, success in results:
         status = "✅ WORKING" if success else "❌ FAILED"
         print(f"{status} {component}")
-    
+
     all_success = all(result for _, result in results)
-    
+
     print()
     print("🤖 WebAgent Complete AI Agent Status:")
     print("   👁️ Phase 2B: Eyes (Semantic Understanding) - IMPLEMENTED")
     print("   🧠 Phase 2C: Brain (AI Planning) - IMPLEMENTED")
     print("   🤲 Phase 2D: Hands (Action Execution) - IMPLEMENTED")
     print()
-    
+
     if all_success:
         print("✅ ALL PHASE 2D COMPONENTS WORKING!")
         print("🎯 WebAgent is now a COMPLETE AI AGENT!")
@@ -310,10 +323,11 @@ async def main():
         print("   • Handle errors gracefully")
     else:
         print("⚠️  Some components need attention")
-    
+
     # Clean up HTTP client if it was initialized
     try:
         from app.core.http_client import http_client_manager
+
         if http_client_manager.is_initialized:
             await http_client_manager.shutdown()
             print("\n🧹 HTTP client manager cleaned up")
@@ -321,6 +335,7 @@ async def main():
         print(f"\n⚠️ HTTP client cleanup warning: {e}")
 
     return all_success
+
 
 if __name__ == "__main__":
     try:

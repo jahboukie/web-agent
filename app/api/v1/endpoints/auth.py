@@ -1,15 +1,27 @@
+from typing import Annotated
+
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated
-import structlog
 
-from app.schemas.user import UserLogin, UserLoginResponse, Token, TokenRefresh, UserRegistrationRequest, UserPublic
-from app.models.user import User
-from app.api.dependencies import get_db, get_current_user, token_blacklist, verify_token_not_blacklisted
-from app.services.user_service import create_user, authenticate_user, update_last_login
-from app.core.security import create_access_token, create_refresh_token, verify_token
+from app.api.dependencies import (
+    get_current_user,
+    get_db,
+    token_blacklist,
+    verify_token_not_blacklisted,
+)
 from app.core.config import settings
+from app.core.security import create_access_token, create_refresh_token, verify_token
+from app.models.user import User
+from app.schemas.user import (
+    Token,
+    TokenRefresh,
+    UserLoginResponse,
+    UserPublic,
+    UserRegistrationRequest,
+)
+from app.services.user_service import authenticate_user, create_user, update_last_login
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -17,10 +29,11 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 
-@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED
+)
 async def register(
-    user_data: UserRegistrationRequest,
-    db: AsyncSession = Depends(get_db)
+    user_data: UserRegistrationRequest, db: AsyncSession = Depends(get_db)
 ):
     """
     Register a new user account.
@@ -28,35 +41,36 @@ async def register(
     Creates a new user with the provided information and returns the user profile.
     Validates password strength and email uniqueness.
     """
-    logger.info("User registration attempt", email=user_data.email, username=user_data.username)
+    logger.info(
+        "User registration attempt", email=user_data.email, username=user_data.username
+    )
 
     try:
         # Create user in database
         user = await create_user(db, user_data)
 
-        logger.info("User registered successfully", user_id=user.id, username=user.username)
+        logger.info(
+            "User registered successfully", user_id=user.id, username=user.username
+        )
 
         # Return user profile (excluding sensitive data)
-        return UserPublic.from_orm(user)
+        return UserPublic.model_validate(user)
 
     except ValueError as e:
         logger.warning("User registration validation error", error=str(e))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("Unexpected error during user registration", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed due to server error"
+            detail="Registration failed due to server error",
         )
 
 
 @router.post("/login", response_model=UserLoginResponse)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Authenticate user and return access tokens.
@@ -90,15 +104,12 @@ async def login(
         refresh_token=refresh_token,
         token_type="bearer",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
-        user=UserPublic.from_orm(user)
+        user=UserPublic.model_validate(user),
     )
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(
-    refresh_data: TokenRefresh,
-    db: AsyncSession = Depends(get_db)
-):
+async def refresh_token(refresh_data: TokenRefresh, db: AsyncSession = Depends(get_db)):
     """
     Refresh access token using refresh token.
 
@@ -128,9 +139,12 @@ async def refresh_token(
 
     # Verify user still exists and is active
     from app.services.user_service import get_user_by_id
+
     user = await get_user_by_id(db, int(user_id))
     if not user or not user.is_active:
-        logger.warning("User not found or inactive during token refresh", user_id=user_id)
+        logger.warning(
+            "User not found or inactive during token refresh", user_id=user_id
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
@@ -148,14 +162,14 @@ async def refresh_token(
         access_token=new_access_token,
         refresh_token=new_refresh_token,
         token_type="bearer",
-        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
 
 
 @router.post("/logout")
 async def logout(
     token: Annotated[str, Depends(verify_token_not_blacklisted)],
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
     Logout user and invalidate tokens.
@@ -165,20 +179,28 @@ async def logout(
     # Add token to blacklist
     token_blacklist.add_token(token)
 
-    logger.info("User logged out successfully", user_id=current_user.id, username=current_user.username)
+    logger.info(
+        "User logged out successfully",
+        user_id=current_user.id,
+        username=current_user.username,
+    )
 
     return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserPublic)
 async def get_current_user_profile(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
     Get current authenticated user profile.
 
     Returns user information based on the provided JWT token.
     """
-    logger.debug("User profile requested", user_id=current_user.id, username=current_user.username)
+    logger.debug(
+        "User profile requested",
+        user_id=current_user.id,
+        username=current_user.username,
+    )
 
-    return UserPublic.from_orm(current_user)
+    return UserPublic.model_validate(current_user)

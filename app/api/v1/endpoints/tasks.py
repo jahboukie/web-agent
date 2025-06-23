@@ -1,14 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import get_current_user, get_db
 from app.schemas.task import (
-    Task, TaskCreate, TaskUpdate, TaskExecutionRequest, TaskExecutionResponse,
-    TaskResult, TaskList, TaskFilters, TaskStats
+    Task,
+    TaskCreate,
+    TaskExecutionRequest,
+    TaskExecutionResponse,
+    TaskFilters,
+    TaskList,
+    TaskResult,
+    TaskStats,
+    TaskUpdate,
 )
 from app.schemas.user import User
 from app.services.task_service import TaskService
-from app.api.dependencies import get_db, get_current_user
 
 router = APIRouter()
 
@@ -17,7 +23,7 @@ router = APIRouter()
 async def create_task(
     task_data: TaskCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Create a new automation task.
@@ -30,13 +36,12 @@ async def create_task(
         return task
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create task"
+            detail="Failed to create task",
         )
 
 
@@ -44,10 +49,10 @@ async def create_task(
 async def list_tasks(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    status: Optional[str] = None,
-    priority: Optional[str] = None,
+    status: str | None = None,
+    priority: str | None = None,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     List user's tasks with pagination and filtering.
@@ -77,12 +82,12 @@ async def list_tasks(
             page=page,
             page_size=page_size,
             has_next=has_next,
-            has_previous=has_previous
+            has_previous=has_previous,
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve tasks"
+            detail="Failed to retrieve tasks",
         )
 
 
@@ -90,7 +95,7 @@ async def list_tasks(
 async def get_task(
     task_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get detailed information about a specific task.
@@ -101,16 +106,15 @@ async def get_task(
         task = await TaskService.get_task(db, task_id, current_user.id)
         if not task:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
             )
         return task
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve task"
+            detail="Failed to retrieve task",
         )
 
 
@@ -119,7 +123,7 @@ async def update_task(
     task_id: int,
     task_update: TaskUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update an existing task.
@@ -131,21 +135,19 @@ async def update_task(
         task = await TaskService.update_task(db, task_id, current_user.id, task_update)
         if not task:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
             )
         return task
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update task"
+            detail="Failed to update task",
         )
 
 
@@ -153,7 +155,7 @@ async def update_task(
 async def delete_task(
     task_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Delete a task.
@@ -165,21 +167,19 @@ async def delete_task(
         success = await TaskService.delete_task(db, task_id, current_user.id)
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
             )
         return None
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
         )
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete task"
+            detail="Failed to delete task",
         )
 
 
@@ -187,7 +187,7 @@ async def delete_task(
 async def get_task_stats(
     days: int = Query(30, ge=1, le=365),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Get task statistics for the current user.
@@ -198,10 +198,10 @@ async def get_task_stats(
     try:
         stats = await TaskService.get_task_stats(db, current_user.id, days)
         return stats
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve task statistics"
+            detail="Failed to retrieve task statistics",
         )
 
 
@@ -209,7 +209,7 @@ async def get_task_stats(
 async def delete_task(task_id: int):
     """
     Delete a task.
-    
+
     Cancels execution if running and removes from database.
     """
     # TODO: Implement task deletion
@@ -224,7 +224,7 @@ async def delete_task(task_id: int):
 async def execute_task(task_id: int, execution_request: TaskExecutionRequest):
     """
     Execute a task.
-    
+
     Starts task execution with the configured execution plan.
     """
     # TODO: Implement task execution
@@ -234,7 +234,7 @@ async def execute_task(task_id: int, execution_request: TaskExecutionRequest):
     # - Return execution response
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Task execution not yet implemented"
+        detail="Task execution not yet implemented",
     )
 
 
@@ -242,7 +242,7 @@ async def execute_task(task_id: int, execution_request: TaskExecutionRequest):
 async def cancel_task(task_id: int):
     """
     Cancel a running task.
-    
+
     Stops task execution and cleans up resources.
     """
     # TODO: Implement task cancellation
@@ -257,7 +257,7 @@ async def cancel_task(task_id: int):
 async def get_task_result(task_id: int):
     """
     Get task execution result.
-    
+
     Returns the final result and extracted data from task execution.
     """
     # TODO: Implement result retrieval
@@ -266,7 +266,7 @@ async def get_task_result(task_id: int):
     # - Return result data
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Task result retrieval not yet implemented"
+        detail="Task result retrieval not yet implemented",
     )
 
 
@@ -274,7 +274,7 @@ async def get_task_result(task_id: int):
 async def get_task_stats():
     """
     Get user's task execution statistics.
-    
+
     Returns success rates, common domains, and activity metrics.
     """
     # TODO: Implement stats calculation
@@ -283,5 +283,5 @@ async def get_task_stats():
     # - Return stats
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Task statistics not yet implemented"
+        detail="Task statistics not yet implemented",
     )

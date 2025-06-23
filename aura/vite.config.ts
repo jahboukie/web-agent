@@ -1,13 +1,13 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
+      "@": resolve(__dirname, "./src"),
     },
   },
   server: {
@@ -16,15 +16,15 @@ export default defineConfig({
     cors: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['lucide-react', '@heroicons/react'],
-          crypto: ['axios'],
+          vendor: ["react", "react-dom"],
+          router: ["react-router-dom"],
+          ui: ["lucide-react", "@heroicons/react"],
+          crypto: ["axios"],
         },
       },
     },
@@ -33,11 +33,11 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
   },
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || "1.0.0"),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   // PWA and security optimizations
   esbuild: {
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
   },
-})
+});

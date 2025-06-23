@@ -1,22 +1,23 @@
 /**
  * API Service for WebAgent Aura Frontend
- * 
+ *
  * Handles JWT authentication, secure API communication, and integration
  * with WebAgent's enterprise security backend.
  */
 
-import axios from 'axios';
-import { cryptoService } from './cryptoService';
-import { demoService } from './demoService';
+import axios from "axios";
+import { cryptoService } from "./cryptoService";
+import { demoService } from "./demoService";
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 const API_TIMEOUT = 30000; // 30 seconds
 
 // Token storage keys
-const ACCESS_TOKEN_KEY = 'webagent_access_token';
-const REFRESH_TOKEN_KEY = 'webagent_refresh_token';
-const USER_DATA_KEY = 'webagent_user_data';
+const ACCESS_TOKEN_KEY = "webagent_access_token";
+const REFRESH_TOKEN_KEY = "webagent_refresh_token";
+const USER_DATA_KEY = "webagent_user_data";
 
 // Types
 export interface LoginCredentials {
@@ -75,9 +76,9 @@ class ApiService {
       baseURL: API_BASE_URL,
       timeout: API_TIMEOUT,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Client-Version': '1.0.0',
-        'X-Client-Platform': 'web',
+        "Content-Type": "application/json",
+        "X-Client-Version": "1.0.0",
+        "X-Client-Platform": "web",
       },
     });
 
@@ -94,18 +95,18 @@ class ApiService {
         }
 
         // Add security headers
-        config.headers['X-Requested-With'] = 'XMLHttpRequest';
-        config.headers['X-Client-Timestamp'] = Date.now().toString();
-        
+        config.headers["X-Requested-With"] = "XMLHttpRequest";
+        config.headers["X-Client-Timestamp"] = Date.now().toString();
+
         // Add device fingerprint if available
         const deviceFingerprint = this.getDeviceFingerprint();
         if (deviceFingerprint) {
-          config.headers['X-Device-Fingerprint'] = deviceFingerprint;
+          config.headers["X-Device-Fingerprint"] = deviceFingerprint;
         }
 
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Response interceptor - Handle token refresh and errors
@@ -118,12 +119,14 @@ class ApiService {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
-            }).then((token) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              return this.axiosInstance(originalRequest);
-            }).catch((err) => {
-              return Promise.reject(err);
-            });
+            })
+              .then((token) => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return this.axiosInstance(originalRequest);
+              })
+              .catch((err) => {
+                return Promise.reject(err);
+              });
           }
 
           originalRequest._retry = true;
@@ -144,7 +147,7 @@ class ApiService {
         }
 
         return Promise.reject(this.handleApiError(error));
-      }
+      },
     );
   }
 
@@ -164,21 +167,24 @@ class ApiService {
     if (error.response) {
       // Server responded with error status
       return {
-        message: error.response.data?.detail || error.response.data?.message || 'Server error',
+        message:
+          error.response.data?.detail ||
+          error.response.data?.message ||
+          "Server error",
         code: error.response.data?.code,
         details: error.response.data,
       };
     } else if (error.request) {
       // Network error
       return {
-        message: 'Network error - please check your connection',
-        code: 'NETWORK_ERROR',
+        message: "Network error - please check your connection",
+        code: "NETWORK_ERROR",
       };
     } else {
       // Other error
       return {
-        message: error.message || 'An unexpected error occurred',
-        code: 'UNKNOWN_ERROR',
+        message: error.message || "An unexpected error occurred",
+        code: "UNKNOWN_ERROR",
       };
     }
   }
@@ -188,8 +194,11 @@ class ApiService {
     try {
       // Check if demo mode is enabled
       if (demoService.isDemoMode()) {
-        console.log('🎭 Demo Mode: Using demo authentication');
-        const authData = await demoService.demoLogin(credentials.email, credentials.password);
+        console.log("🎭 Demo Mode: Using demo authentication");
+        const authData = await demoService.demoLogin(
+          credentials.email,
+          credentials.password,
+        );
         this.setTokens(authData.access_token, authData.refresh_token);
         this.setUserData(authData.user);
         return authData;
@@ -198,10 +207,13 @@ class ApiService {
       // Production login
       const deviceFingerprint = await this.generateDeviceFingerprint();
 
-      const response = await this.axiosInstance.post<AuthResponse>('/auth/login', {
-        ...credentials,
-        device_fingerprint: deviceFingerprint,
-      });
+      const response = await this.axiosInstance.post<AuthResponse>(
+        "/auth/login",
+        {
+          ...credentials,
+          device_fingerprint: deviceFingerprint,
+        },
+      );
 
       const authData = response.data;
       this.setTokens(authData.access_token, authData.refresh_token);
@@ -217,14 +229,17 @@ class ApiService {
     try {
       // Check if demo mode is enabled
       if (demoService.isDemoMode()) {
-        console.log('🎭 Demo Mode: Using demo registration');
+        console.log("🎭 Demo Mode: Using demo registration");
         const authData = await demoService.demoRegister(data);
         this.setTokens(authData.access_token, authData.refresh_token);
         this.setUserData(authData.user);
 
         // Generate and store demo keys
         const keyPair = await cryptoService.generateKeyPair();
-        await cryptoService.storePrivateKeys(keyPair.privateKey, keyPair.signingPrivateKey);
+        await cryptoService.storePrivateKeys(
+          keyPair.privateKey,
+          keyPair.signingPrivateKey,
+        );
 
         return authData;
       }
@@ -232,18 +247,24 @@ class ApiService {
       // Production registration
       const keyPair = await cryptoService.generateKeyPair();
 
-      const response = await this.axiosInstance.post<AuthResponse>('/auth/register', {
-        ...data,
-        encryption_public_key: keyPair.publicKey,
-        signing_public_key: keyPair.signingPublicKey,
-      });
+      const response = await this.axiosInstance.post<AuthResponse>(
+        "/auth/register",
+        {
+          ...data,
+          encryption_public_key: keyPair.publicKey,
+          signing_public_key: keyPair.signingPublicKey,
+        },
+      );
 
       const authData = response.data;
       this.setTokens(authData.access_token, authData.refresh_token);
       this.setUserData(authData.user);
 
       // Store private keys securely
-      await cryptoService.storePrivateKeys(keyPair.privateKey, keyPair.signingPrivateKey);
+      await cryptoService.storePrivateKeys(
+        keyPair.privateKey,
+        keyPair.signingPrivateKey,
+      );
 
       return authData;
     } catch (error) {
@@ -254,17 +275,20 @@ class ApiService {
   async refreshToken(): Promise<string> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
 
     try {
-      const response = await this.axiosInstance.post<AuthResponse>('/auth/refresh', {
-        refresh_token: refreshToken,
-      });
+      const response = await this.axiosInstance.post<AuthResponse>(
+        "/auth/refresh",
+        {
+          refresh_token: refreshToken,
+        },
+      );
 
       const authData = response.data;
       this.setTokens(authData.access_token, authData.refresh_token);
-      
+
       return authData.access_token;
     } catch (error) {
       this.logout();
@@ -328,7 +352,7 @@ class ApiService {
 
   private getDeviceFingerprint(): string | null {
     // This would be stored after first generation
-    return localStorage.getItem('device_fingerprint');
+    return localStorage.getItem("device_fingerprint");
   }
 
   // Generic API Methods
@@ -356,12 +380,12 @@ class ApiService {
   async getTrustAssessment(): Promise<any> {
     // Check if demo mode is enabled
     if (demoService.isDemoMode()) {
-      console.log('🎭 Demo Mode: Using demo trust assessment');
+      console.log("🎭 Demo Mode: Using demo trust assessment");
       return await demoService.getDemoTrustAssessment();
     }
 
     // Production trust assessment
-    return this.post('/security/zero-trust/assess', {
+    return this.post("/security/zero-trust/assess", {
       timestamp: new Date().toISOString(),
       source_ip: await this.getClientIP(),
       user_agent: navigator.userAgent,
@@ -371,11 +395,11 @@ class ApiService {
 
   private async getClientIP(): Promise<string> {
     try {
-      const response = await fetch('https://api.ipify.org?format=json');
+      const response = await fetch("https://api.ipify.org?format=json");
       const data = await response.json();
       return data.ip;
     } catch {
-      return 'unknown';
+      return "unknown";
     }
   }
 }

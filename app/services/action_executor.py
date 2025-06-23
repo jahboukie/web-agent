@@ -1,82 +1,98 @@
 import asyncio
-import json
 import uuid
-from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List, Tuple
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from playwright.async_api import Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from sqlalchemy import select, update
-from playwright.async_api import Page, BrowserContext, TimeoutError as PlaywrightTimeoutError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.models.execution_plan import ExecutionPlan, AtomicAction, PlanStatus, ActionType, StepStatus
-from app.models.task import Task, TaskStatus
-from app.schemas.execution_plan import ExecutionPlan as ExecutionPlanSchema
-from app.services.task_status_service import TaskStatusService
-from app.utils.browser_pool import browser_pool
 from app.executors.browser_actions import (
-    ClickExecutor, TypeExecutor, NavigateExecutor, WaitExecutor,
-    ScrollExecutor, SelectExecutor, SubmitExecutor, ScreenshotExecutor,
-    HoverExecutor, KeyPressExecutor
+    ClickExecutor,
+    HoverExecutor,
+    KeyPressExecutor,
+    NavigateExecutor,
+    ScreenshotExecutor,
+    ScrollExecutor,
+    SelectExecutor,
+    SubmitExecutor,
+    TypeExecutor,
+    WaitExecutor,
+)
+from app.models.execution_plan import (
+    ActionType,
+    AtomicAction,
+    ExecutionPlan,
+    PlanStatus,
+    StepStatus,
 )
 from app.services.webhook_service import webhook_service
+from app.utils.browser_pool import browser_pool
 
 logger = get_logger(__name__)
 
 
 class ExecutionResult:
     """Result of executing an ExecutionPlan."""
-    
+
     def __init__(self, execution_id: str, plan_id: int):
         self.execution_id = execution_id
         self.plan_id = plan_id
         self.started_at = datetime.utcnow()
-        self.completed_at: Optional[datetime] = None
+        self.completed_at: datetime | None = None
         self.status = "executing"
         self.current_step = 0
         self.total_steps = 0
         self.success = False
-        self.error_message: Optional[str] = None
-        self.executed_actions: List[Dict[str, Any]] = []
-        self.screenshots: List[str] = []
-        self.execution_logs: List[Dict[str, Any]] = []
-        
-    def to_dict(self) -> Dict[str, Any]:
+        self.error_message: str | None = None
+        self.executed_actions: list[dict[str, Any]] = []
+        self.screenshots: list[str] = []
+        self.execution_logs: list[dict[str, Any]] = []
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "execution_id": self.execution_id,
             "plan_id": self.plan_id,
             "status": self.status,
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "current_step": self.current_step,
             "total_steps": self.total_steps,
-            "progress_percentage": int((self.current_step / self.total_steps) * 100) if self.total_steps > 0 else 0,
+            "progress_percentage": (
+                int((self.current_step / self.total_steps) * 100)
+                if self.total_steps > 0
+                else 0
+            ),
             "success": self.success,
             "error_message": self.error_message,
             "executed_actions": len(self.executed_actions),
             "screenshots_captured": len(self.screenshots),
             "execution_duration_seconds": (
                 (self.completed_at or datetime.utcnow()) - self.started_at
-            ).total_seconds()
+            ).total_seconds(),
         }
 
 
 class ActionExecutorService:
     """
     Phase 2D: ActionExecutor service that executes approved ExecutionPlans.
-    
+
     This service takes approved plans from Phase 2C and executes them using
     browser automation, providing real-time progress tracking and comprehensive
     error handling.
     """
-    
+
     def __init__(self):
-        self.active_executions: Dict[str, ExecutionResult] = {}
-        self.paused_executions: Dict[str, bool] = {}
-        
+        self.active_executions: dict[str, ExecutionResult] = {}
+        self.paused_executions: dict[str, bool] = {}
+
         # Action executors
         self.action_executors = {
             ActionType.CLICK: ClickExecutor(),
@@ -90,105 +106,107 @@ class ActionExecutorService:
             ActionType.HOVER: HoverExecutor(),
             ActionType.KEY_PRESS: KeyPressExecutor(),
         }
-        
+
         # Screenshot directory
         self.screenshot_dir = Path(settings.SCREENSHOT_DIR)
         self.screenshot_dir.mkdir(exist_ok=True)
-        
+
         logger.info("ActionExecutor service initialized")
-    
+
     async def execute_plan_async(
         self,
         db: AsyncSession,
         plan_id: int,
         user_id: int,
-        execution_options: Optional[Dict[str, Any]] = None
+        execution_options: dict[str, Any] | None = None,
     ) -> str:
         """
         Execute an approved ExecutionPlan asynchronously.
-        
+
         Args:
             db: Database session
             plan_id: ID of the ExecutionPlan to execute
             user_id: ID of the user requesting execution
             execution_options: Optional execution configuration
-            
+
         Returns:
             execution_id: Unique identifier for tracking this execution
         """
         execution_id = str(uuid.uuid4())
         execution_options = execution_options or {}
-        
+
         try:
             # Validate plan exists and is approved
             plan = await self._get_and_validate_plan(db, plan_id, user_id)
             if not plan:
-                raise ValueError(f"Plan {plan_id} not found or not approved for execution")
-            
+                raise ValueError(
+                    f"Plan {plan_id} not found or not approved for execution"
+                )
+
             # Create execution result tracker
             result = ExecutionResult(execution_id, plan_id)
             result.total_steps = len(plan.atomic_actions)
             self.active_executions[execution_id] = result
-            
+
             # Update plan status to executing
             await self._update_plan_status(db, plan_id, PlanStatus.EXECUTING)
-            
+
             # Start background execution
             asyncio.create_task(
                 self._execute_plan_background(db, plan, execution_id, execution_options)
             )
-            
+
             logger.info(
                 "Plan execution started",
                 execution_id=execution_id,
                 plan_id=plan_id,
                 user_id=user_id,
-                total_steps=result.total_steps
+                total_steps=result.total_steps,
             )
-            
+
             return execution_id
-            
+
         except Exception as e:
             logger.error(
                 "Failed to start plan execution",
                 plan_id=plan_id,
                 user_id=user_id,
-                error=str(e)
+                error=str(e),
             )
             # Clean up if execution was created
             if execution_id in self.active_executions:
                 del self.active_executions[execution_id]
             raise
-    
-    async def get_execution_status(self, execution_id: str) -> Optional[Dict[str, Any]]:
+
+    async def get_execution_status(self, execution_id: str) -> dict[str, Any] | None:
         """Get current status of an execution."""
         if execution_id not in self.active_executions:
             return None
-        
+
         return self.active_executions[execution_id].to_dict()
-    
+
     async def pause_execution(self, execution_id: str) -> bool:
         """Pause an active execution."""
         if execution_id not in self.active_executions:
             return False
-        
+
         self.paused_executions[execution_id] = True
         self.active_executions[execution_id].status = "paused"
-        
+
         logger.info("Execution paused", execution_id=execution_id)
         return True
-    
+
     async def resume_execution(self, execution_id: str) -> bool:
         """Resume a paused execution."""
         if execution_id not in self.active_executions:
             return False
-        
+
         self.paused_executions[execution_id] = False
         self.active_executions[execution_id].status = "executing"
-        
+
         logger.info("Execution resumed", execution_id=execution_id)
         return True
-    
+
     async def cancel_execution(self, execution_id: str) -> bool:
         """Cancel an active execution."""
         if execution_id not in self.active_executions:
@@ -201,28 +219,22 @@ class ActionExecutorService:
         return True
 
     async def _get_and_validate_plan(
-        self,
-        db: AsyncSession,
-        plan_id: int,
-        user_id: int
-    ) -> Optional[ExecutionPlan]:
+        self, db: AsyncSession, plan_id: int, user_id: int
+    ) -> ExecutionPlan | None:
         """Get and validate that a plan is ready for execution."""
         try:
             result = await db.execute(
-                select(ExecutionPlan)
-                .where(
+                select(ExecutionPlan).where(
                     ExecutionPlan.id == plan_id,
                     ExecutionPlan.user_id == user_id,
-                    ExecutionPlan.status == PlanStatus.APPROVED
+                    ExecutionPlan.status == PlanStatus.APPROVED,
                 )
             )
             plan = result.scalar_one_or_none()
 
             if not plan:
                 logger.warning(
-                    "Plan not found or not approved",
-                    plan_id=plan_id,
-                    user_id=user_id
+                    "Plan not found or not approved", plan_id=plan_id, user_id=user_id
                 )
                 return None
 
@@ -238,18 +250,12 @@ class ActionExecutorService:
 
         except Exception as e:
             logger.error(
-                "Failed to get plan",
-                plan_id=plan_id,
-                user_id=user_id,
-                error=str(e)
+                "Failed to get plan", plan_id=plan_id, user_id=user_id, error=str(e)
             )
             return None
 
     async def _update_plan_status(
-        self,
-        db: AsyncSession,
-        plan_id: int,
-        status: PlanStatus
+        self, db: AsyncSession, plan_id: int, status: PlanStatus
     ) -> None:
         """Update plan status in database."""
         try:
@@ -259,8 +265,14 @@ class ActionExecutorService:
                 .values(
                     status=status,
                     updated_at=datetime.utcnow(),
-                    started_at=datetime.utcnow() if status == PlanStatus.EXECUTING else None,
-                    completed_at=datetime.utcnow() if status in [PlanStatus.COMPLETED, PlanStatus.FAILED] else None
+                    started_at=(
+                        datetime.utcnow() if status == PlanStatus.EXECUTING else None
+                    ),
+                    completed_at=(
+                        datetime.utcnow()
+                        if status in [PlanStatus.COMPLETED, PlanStatus.FAILED]
+                        else None
+                    ),
                 )
             )
             await db.commit()
@@ -270,7 +282,7 @@ class ActionExecutorService:
                 "Failed to update plan status",
                 plan_id=plan_id,
                 status=status,
-                error=str(e)
+                error=str(e),
             )
             await db.rollback()
 
@@ -279,7 +291,7 @@ class ActionExecutorService:
         db: AsyncSession,
         plan: ExecutionPlan,
         execution_id: str,
-        execution_options: Dict[str, Any]
+        execution_options: dict[str, Any],
     ) -> None:
         """Execute the plan in the background."""
         result = self.active_executions[execution_id]
@@ -314,12 +326,14 @@ class ActionExecutorService:
 
                 # Monitor execution health before each step
                 health_data = await self._monitor_execution_health(page, execution_id)
-                result.execution_logs.append({
-                    "type": "health_check",
-                    "step_number": action.step_number,
-                    "data": health_data,
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                result.execution_logs.append(
+                    {
+                        "type": "health_check",
+                        "step_number": action.step_number,
+                        "data": health_data,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
                 # Execute the action with retry logic
                 success = False
@@ -339,14 +353,16 @@ class ActionExecutorService:
                                 execution_id=execution_id,
                                 step_number=action.step_number,
                                 retry_count=retry_count,
-                                max_retries=max_retries
+                                max_retries=max_retries,
                             )
 
                             # Wait before retry
                             await asyncio.sleep(action.retry_delay_seconds or 2)
 
                             # Update action retry count in database
-                            await self._update_action_retry_count(db, action.id, retry_count)
+                            await self._update_action_retry_count(
+                                db, action.id, retry_count
+                            )
                         else:
                             break
 
@@ -356,7 +372,7 @@ class ActionExecutorService:
                             execution_id=execution_id,
                             step_number=action.step_number,
                             retry_count=retry_count,
-                            error=str(e)
+                            error=str(e),
                         )
                         if retry_count >= max_retries:
                             break
@@ -372,29 +388,34 @@ class ActionExecutorService:
                         "Critical step failed, aborting execution",
                         execution_id=execution_id,
                         step_number=action.step_number,
-                        description=action.description
+                        description=action.description,
                     )
                     break
 
                 # Log step completion
-                result.execution_logs.append({
-                    "type": "step_completed",
-                    "step_number": action.step_number,
-                    "success": success,
-                    "retry_count": retry_count,
-                    "timestamp": datetime.utcnow().isoformat()
-                })
+                result.execution_logs.append(
+                    {
+                        "type": "step_completed",
+                        "step_number": action.step_number,
+                        "success": success,
+                        "retry_count": retry_count,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
 
                 # Send progress webhook notification
                 await self._send_execution_progress_webhook(
-                    plan.user_id, execution_id, plan.id,
-                    action.step_number, result.total_steps
+                    plan.user_id,
+                    execution_id,
+                    plan.id,
+                    action.step_number,
+                    result.total_steps,
                 )
 
             # Determine overall success
             result.success = (
-                result.current_step == result.total_steps and
-                result.status != "cancelled"
+                result.current_step == result.total_steps
+                and result.status != "cancelled"
             )
 
             # Update final status and report results to planning system
@@ -424,7 +445,7 @@ class ActionExecutorService:
                 "Plan execution failed",
                 execution_id=execution_id,
                 plan_id=plan.id,
-                error=str(e)
+                error=str(e),
             )
             result.status = "failed"
             result.error_message = str(e)
@@ -442,7 +463,9 @@ class ActionExecutorService:
 
             if context:
                 try:
-                    await browser_pool.release_context(context, f"execution-{execution_id}")
+                    await browser_pool.release_context(
+                        context, f"execution-{execution_id}"
+                    )
                 except:
                     pass
 
@@ -452,9 +475,8 @@ class ActionExecutorService:
                 plan_id=plan.id,
                 success=result.success,
                 steps_completed=result.current_step,
-                total_steps=result.total_steps
+                total_steps=result.total_steps,
             )
-
 
     async def _configure_page_for_execution(self, page: Page) -> None:
         """Configure page settings for reliable automation."""
@@ -463,13 +485,17 @@ class ActionExecutorService:
             await page.set_viewport_size({"width": 1920, "height": 1080})
 
             # Set user agent
-            await page.set_extra_http_headers({
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            })
+            await page.set_extra_http_headers(
+                {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+            )
 
             # Disable images for faster loading (optional)
             if settings.DISABLE_IMAGES_FOR_EXECUTION:
-                await page.route("**/*.{png,jpg,jpeg,gif,webp,svg}", lambda route: route.abort())
+                await page.route(
+                    "**/*.{png,jpg,jpeg,gif,webp,svg}", lambda route: route.abort()
+                )
 
         except Exception as e:
             logger.warning("Failed to configure page", error=str(e))
@@ -480,7 +506,7 @@ class ActionExecutorService:
         page: Page,
         action: AtomicAction,
         execution_id: str,
-        execution_options: Dict[str, Any]
+        execution_options: dict[str, Any],
     ) -> bool:
         """Execute a single atomic action."""
         result = self.active_executions[execution_id]
@@ -500,19 +526,20 @@ class ActionExecutorService:
                 "action_type": action.action_type.value,
                 "description": action.description,
                 "started_at": datetime.utcnow().isoformat(),
-                "target_selector": action.target_selector
+                "target_selector": action.target_selector,
             }
             result.execution_logs.append(action_log)
 
             # Get the appropriate executor
             executor = self.action_executors.get(action.action_type)
             if not executor:
-                raise ValueError(f"No executor found for action type: {action.action_type}")
+                raise ValueError(
+                    f"No executor found for action type: {action.action_type}"
+                )
 
             # Execute the action with timeout
             success = await asyncio.wait_for(
-                executor.execute(page, action),
-                timeout=action.timeout_seconds
+                executor.execute(page, action), timeout=action.timeout_seconds
             )
 
             # Take after screenshot
@@ -530,7 +557,7 @@ class ActionExecutorService:
                     logger.warning(
                         "Action validation failed",
                         execution_id=execution_id,
-                        step_number=action.step_number
+                        step_number=action.step_number,
                     )
 
             # Update action in database
@@ -545,7 +572,7 @@ class ActionExecutorService:
                 "success": success,
                 "completed_at": datetime.utcnow().isoformat(),
                 "before_screenshot": before_screenshot,
-                "after_screenshot": after_screenshot
+                "after_screenshot": after_screenshot,
             }
             result.executed_actions.append(action_result)
 
@@ -554,12 +581,12 @@ class ActionExecutorService:
                 execution_id=execution_id,
                 step_number=action.step_number,
                 action_type=action.action_type.value,
-                success=success
+                success=success,
             )
 
             return success
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error_msg = f"Action timed out after {action.timeout_seconds} seconds"
             await self._handle_action_failure(db, action, error_msg, execution_id, page)
             return False
@@ -570,10 +597,7 @@ class ActionExecutorService:
             return False
 
     async def _update_action_status(
-        self,
-        db: AsyncSession,
-        action_id: int,
-        status: StepStatus
+        self, db: AsyncSession, action_id: int, status: StepStatus
     ) -> None:
         """Update action status in database."""
         try:
@@ -583,14 +607,22 @@ class ActionExecutorService:
                 .values(
                     status=status,
                     updated_at=datetime.utcnow(),
-                    executed_at=datetime.utcnow() if status == StepStatus.EXECUTING else None,
-                    completed_at=datetime.utcnow() if status in [StepStatus.COMPLETED, StepStatus.FAILED] else None
+                    executed_at=(
+                        datetime.utcnow() if status == StepStatus.EXECUTING else None
+                    ),
+                    completed_at=(
+                        datetime.utcnow()
+                        if status in [StepStatus.COMPLETED, StepStatus.FAILED]
+                        else None
+                    ),
                 )
             )
             await db.commit()
 
         except Exception as e:
-            logger.error("Failed to update action status", action_id=action_id, error=str(e))
+            logger.error(
+                "Failed to update action status", action_id=action_id, error=str(e)
+            )
             await db.rollback()
 
     async def _update_action_result(
@@ -598,9 +630,9 @@ class ActionExecutorService:
         db: AsyncSession,
         action_id: int,
         success: bool,
-        error_message: Optional[str],
-        before_screenshot: Optional[str],
-        after_screenshot: Optional[str]
+        error_message: str | None,
+        before_screenshot: str | None,
+        after_screenshot: str | None,
     ) -> None:
         """Update action execution result in database."""
         try:
@@ -614,35 +646,33 @@ class ActionExecutorService:
                     before_screenshot_path=before_screenshot,
                     after_screenshot_path=after_screenshot,
                     completed_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.utcnow(),
                 )
             )
             await db.commit()
 
         except Exception as e:
-            logger.error("Failed to update action result", action_id=action_id, error=str(e))
+            logger.error(
+                "Failed to update action result", action_id=action_id, error=str(e)
+            )
             await db.rollback()
 
     async def _update_action_retry_count(
-        self,
-        db: AsyncSession,
-        action_id: int,
-        retry_count: int
+        self, db: AsyncSession, action_id: int, retry_count: int
     ) -> None:
         """Update action retry count in database."""
         try:
             await db.execute(
                 update(AtomicAction)
                 .where(AtomicAction.id == action_id)
-                .values(
-                    retry_count=retry_count,
-                    updated_at=datetime.utcnow()
-                )
+                .values(retry_count=retry_count, updated_at=datetime.utcnow())
             )
             await db.commit()
 
         except Exception as e:
-            logger.error("Failed to update action retry count", action_id=action_id, error=str(e))
+            logger.error(
+                "Failed to update action retry count", action_id=action_id, error=str(e)
+            )
             await db.rollback()
 
     async def _handle_action_failure(
@@ -651,7 +681,7 @@ class ActionExecutorService:
         action: AtomicAction,
         error_message: str,
         execution_id: str,
-        page: Optional[Page] = None
+        page: Page | None = None,
     ) -> None:
         """Handle action failure with comprehensive error logging and recovery."""
         result = self.active_executions[execution_id]
@@ -671,18 +701,20 @@ class ActionExecutorService:
             "input_value": action.input_value,
             "timeout_seconds": action.timeout_seconds,
             "is_critical": action.is_critical,
-            "retry_count": getattr(action, 'retry_count', 0),
-            "timestamp": datetime.utcnow().isoformat()
+            "retry_count": getattr(action, "retry_count", 0),
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         # Add page context if available
         if page:
             try:
-                error_context.update({
-                    "page_url": page.url,
-                    "page_title": await page.title(),
-                    "viewport": page.viewport_size
-                })
+                error_context.update(
+                    {
+                        "page_url": page.url,
+                        "page_title": await page.title(),
+                        "viewport": page.viewport_size,
+                    }
+                )
             except:
                 pass
 
@@ -697,7 +729,7 @@ class ActionExecutorService:
             "step_number": action.step_number,
             "error_context": error_context,
             "recovery_attempted": False,
-            "screenshot": error_screenshot
+            "screenshot": error_screenshot,
         }
         result.execution_logs.append(failure_log)
 
@@ -715,7 +747,7 @@ class ActionExecutorService:
             execution_id=execution_id,
             step_number=action.step_number,
             error_context=error_context,
-            recovery_attempted=recovery_success
+            recovery_attempted=recovery_success,
         )
 
     async def _attempt_error_recovery(
@@ -724,7 +756,7 @@ class ActionExecutorService:
         action: AtomicAction,
         error_message: str,
         execution_id: str,
-        page: Optional[Page] = None
+        page: Page | None = None,
     ) -> bool:
         """Attempt to recover from action failure."""
         try:
@@ -733,14 +765,18 @@ class ActionExecutorService:
 
             # Recovery strategy 1: Page refresh for stale element errors
             if "stale" in error_message.lower() or "detached" in error_message.lower():
-                logger.info(f"Attempting page refresh recovery for step {action.step_number}")
+                logger.info(
+                    f"Attempting page refresh recovery for step {action.step_number}"
+                )
                 await page.reload(wait_until="domcontentloaded")
                 await asyncio.sleep(2)
                 return True
 
             # Recovery strategy 2: Wait and retry for timeout errors
             if "timeout" in error_message.lower():
-                logger.info(f"Attempting timeout recovery for step {action.step_number}")
+                logger.info(
+                    f"Attempting timeout recovery for step {action.step_number}"
+                )
                 await asyncio.sleep(5)
                 return True
 
@@ -758,11 +794,8 @@ class ActionExecutorService:
             return False
 
     async def _take_screenshot(
-        self,
-        page: Page,
-        execution_id: str,
-        name: str
-    ) -> Optional[str]:
+        self, page: Page, execution_id: str, name: str
+    ) -> str | None:
         """Take a screenshot and return the file path."""
         try:
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
@@ -782,10 +815,7 @@ class ActionExecutorService:
             return None
 
     async def _validate_action_success(
-        self,
-        page: Page,
-        action: AtomicAction,
-        execution_id: str
+        self, page: Page, action: AtomicAction, execution_id: str
     ) -> bool:
         """Validate that an action was successful based on validation criteria."""
         try:
@@ -800,7 +830,7 @@ class ActionExecutorService:
                         "URL validation failed",
                         execution_id=execution_id,
                         expected=expected_url,
-                        actual=current_url
+                        actual=current_url,
                     )
                     return False
 
@@ -808,12 +838,14 @@ class ActionExecutorService:
             if "expected_element_visible" in validation_criteria:
                 selector = validation_criteria["expected_element_visible"]
                 try:
-                    await page.wait_for_selector(selector, state="visible", timeout=5000)
+                    await page.wait_for_selector(
+                        selector, state="visible", timeout=5000
+                    )
                 except PlaywrightTimeoutError:
                     logger.warning(
                         "Element visibility validation failed",
                         execution_id=execution_id,
-                        selector=selector
+                        selector=selector,
                     )
                     return False
 
@@ -826,7 +858,7 @@ class ActionExecutorService:
                     logger.warning(
                         "Text visibility validation failed",
                         execution_id=execution_id,
-                        text=text
+                        text=text,
                     )
                     return False
 
@@ -839,7 +871,7 @@ class ActionExecutorService:
                     logger.warning(
                         "Element hidden validation failed",
                         execution_id=execution_id,
-                        selector=selector
+                        selector=selector,
                     )
                     return False
 
@@ -854,7 +886,7 @@ class ActionExecutorService:
             logger.info(
                 "Action validation passed",
                 execution_id=execution_id,
-                step_number=action.step_number
+                step_number=action.step_number,
             )
             return True
 
@@ -863,19 +895,18 @@ class ActionExecutorService:
                 "Action validation error",
                 execution_id=execution_id,
                 step_number=action.step_number,
-                error=str(e)
+                error=str(e),
             )
             return False
 
     async def _monitor_execution_health(
-        self,
-        page: Page,
-        execution_id: str
-    ) -> Dict[str, Any]:
+        self, page: Page, execution_id: str
+    ) -> dict[str, Any]:
         """Monitor execution health and performance metrics."""
         try:
             # Get page performance metrics
-            metrics = await page.evaluate("""
+            metrics = await page.evaluate(
+                """
                 () => {
                     const navigation = performance.getEntriesByType('navigation')[0];
                     return {
@@ -885,7 +916,8 @@ class ActionExecutorService:
                         timestamp: Date.now()
                     };
                 }
-            """)
+            """
+            )
 
             # Get viewport and page info
             viewport = page.viewport_size
@@ -899,7 +931,7 @@ class ActionExecutorService:
                 "page_title": title,
                 "viewport": viewport,
                 "performance": metrics,
-                "status": "healthy"
+                "status": "healthy",
             }
 
             # Check for common issues
@@ -913,16 +945,16 @@ class ActionExecutorService:
             logger.warning(
                 "Failed to collect execution health metrics",
                 execution_id=execution_id,
-                error=str(e)
+                error=str(e),
             )
             return {
                 "execution_id": execution_id,
                 "timestamp": datetime.utcnow().isoformat(),
                 "status": "monitoring_error",
-                "error": str(e)
+                "error": str(e),
             }
 
-    async def get_execution_results(self, execution_id: str) -> Optional[Dict[str, Any]]:
+    async def get_execution_results(self, execution_id: str) -> dict[str, Any] | None:
         """Get detailed execution results after completion."""
         if execution_id not in self.active_executions:
             return None
@@ -938,7 +970,7 @@ class ActionExecutorService:
             "total_screenshots": len(result.screenshots),
             "total_execution_logs": len(result.execution_logs),
             "average_step_duration_ms": 0,
-            "browser_memory_peak_mb": 0
+            "browser_memory_peak_mb": 0,
         }
 
         if result.executed_actions:
@@ -946,26 +978,30 @@ class ActionExecutorService:
                 action.get("duration_ms", 0) for action in result.executed_actions
             )
             performance_metrics["average_step_duration_ms"] = (
-                total_duration / len(result.executed_actions) if result.executed_actions else 0
+                total_duration / len(result.executed_actions)
+                if result.executed_actions
+                else 0
             )
 
         # Convert executed actions to ActionResult format
         action_results = []
         for action_data in result.executed_actions:
-            action_results.append({
-                "step_number": action_data.get("step_number", 0),
-                "action_type": action_data.get("action_type", "unknown"),
-                "description": action_data.get("description", ""),
-                "success": action_data.get("success", False),
-                "started_at": action_data.get("started_at", ""),
-                "completed_at": action_data.get("completed_at", ""),
-                "duration_ms": action_data.get("duration_ms", 0),
-                "error_message": action_data.get("error_message"),
-                "before_screenshot": action_data.get("before_screenshot"),
-                "after_screenshot": action_data.get("after_screenshot"),
-                "target_selector": action_data.get("target_selector"),
-                "input_value": action_data.get("input_value")
-            })
+            action_results.append(
+                {
+                    "step_number": action_data.get("step_number", 0),
+                    "action_type": action_data.get("action_type", "unknown"),
+                    "description": action_data.get("description", ""),
+                    "success": action_data.get("success", False),
+                    "started_at": action_data.get("started_at", ""),
+                    "completed_at": action_data.get("completed_at", ""),
+                    "duration_ms": action_data.get("duration_ms", 0),
+                    "error_message": action_data.get("error_message"),
+                    "before_screenshot": action_data.get("before_screenshot"),
+                    "after_screenshot": action_data.get("after_screenshot"),
+                    "target_selector": action_data.get("target_selector"),
+                    "input_value": action_data.get("input_value"),
+                }
+            )
 
         return {
             "execution_id": execution_id,
@@ -973,18 +1009,24 @@ class ActionExecutorService:
             "status": result.status,
             "success": result.success,
             "started_at": result.started_at.isoformat(),
-            "completed_at": result.completed_at.isoformat() if result.completed_at else None,
+            "completed_at": (
+                result.completed_at.isoformat() if result.completed_at else None
+            ),
             "total_duration_seconds": (
                 (result.completed_at or datetime.utcnow()) - result.started_at
             ).total_seconds(),
             "steps_completed": result.current_step,
             "total_steps": result.total_steps,
-            "success_rate": (result.current_step / result.total_steps * 100) if result.total_steps > 0 else 0,
+            "success_rate": (
+                (result.current_step / result.total_steps * 100)
+                if result.total_steps > 0
+                else 0
+            ),
             "error_message": result.error_message,
             "action_results": action_results,
             "screenshots": result.screenshots,
             "performance_metrics": performance_metrics,
-            "execution_logs": result.execution_logs
+            "execution_logs": result.execution_logs,
         }
 
     async def _report_execution_results_to_planning_system(
@@ -992,12 +1034,16 @@ class ActionExecutorService:
         db: AsyncSession,
         plan: ExecutionPlan,
         result: ExecutionResult,
-        execution_id: str
+        execution_id: str,
     ) -> None:
         """Report execution results back to the planning system for learning."""
         try:
             # Calculate execution metrics
-            success_rate = (result.current_step / result.total_steps) * 100 if result.total_steps > 0 else 0
+            success_rate = (
+                (result.current_step / result.total_steps) * 100
+                if result.total_steps > 0
+                else 0
+            )
             execution_duration = (
                 (result.completed_at or datetime.utcnow()) - result.started_at
             ).total_seconds()
@@ -1011,7 +1057,7 @@ class ActionExecutorService:
                     execution_success_rate=success_rate,
                     actual_duration_seconds=int(execution_duration),
                     execution_notes=f"Execution {execution_id}: {result.current_step}/{result.total_steps} steps completed",
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.utcnow(),
                 )
             )
 
@@ -1022,7 +1068,7 @@ class ActionExecutorService:
                 execution_id=execution_id,
                 plan_id=plan.id,
                 success_rate=success_rate,
-                duration_seconds=execution_duration
+                duration_seconds=execution_duration,
             )
 
         except Exception as e:
@@ -1030,16 +1076,12 @@ class ActionExecutorService:
                 "Failed to report execution results to planning system",
                 execution_id=execution_id,
                 plan_id=plan.id,
-                error=str(e)
+                error=str(e),
             )
             await db.rollback()
 
     async def _send_execution_completion_webhook(
-        self,
-        user_id: int,
-        execution_id: str,
-        plan_id: int,
-        result: ExecutionResult
+        self, user_id: int, execution_id: str, plan_id: int, result: ExecutionResult
     ) -> None:
         """Send webhook notification for execution completion."""
         try:
@@ -1052,7 +1094,7 @@ class ActionExecutorService:
                     execution_id=execution_id,
                     plan_id=plan_id,
                     success=result.success,
-                    execution_results=execution_results
+                    execution_results=execution_results,
                 )
 
                 logger.info(
@@ -1060,7 +1102,7 @@ class ActionExecutorService:
                     execution_id=execution_id,
                     plan_id=plan_id,
                     user_id=user_id,
-                    success=result.success
+                    success=result.success,
                 )
 
         except Exception as e:
@@ -1069,7 +1111,7 @@ class ActionExecutorService:
                 execution_id=execution_id,
                 plan_id=plan_id,
                 user_id=user_id,
-                error=str(e)
+                error=str(e),
             )
 
     async def _send_execution_progress_webhook(
@@ -1078,11 +1120,13 @@ class ActionExecutorService:
         execution_id: str,
         plan_id: int,
         current_step: int,
-        total_steps: int
+        total_steps: int,
     ) -> None:
         """Send webhook notification for execution progress."""
         try:
-            progress_percentage = int((current_step / total_steps) * 100) if total_steps > 0 else 0
+            progress_percentage = (
+                int((current_step / total_steps) * 100) if total_steps > 0 else 0
+            )
 
             await webhook_service.send_execution_progress_webhook(
                 user_id=user_id,
@@ -1090,14 +1134,14 @@ class ActionExecutorService:
                 plan_id=plan_id,
                 current_step=current_step,
                 total_steps=total_steps,
-                progress_percentage=progress_percentage
+                progress_percentage=progress_percentage,
             )
 
         except Exception as e:
             logger.warning(
                 "Failed to send execution progress webhook",
                 execution_id=execution_id,
-                error=str(e)
+                error=str(e),
             )
 
 

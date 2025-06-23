@@ -7,7 +7,7 @@
     "api_base_url": "http://localhost:8000",
     "frontend_url": "http://localhost:3000"
   },
-  
+
   "test_execution": {
     "parallel_execution": true,
     "max_workers": 4,
@@ -18,7 +18,7 @@
     "generate_screenshots": true,
     "record_videos": true
   },
-  
+
   "test_data": {
     "cleanup_after_tests": true,
     "preserve_on_failure": true,
@@ -31,7 +31,7 @@
         "tenant": "e2e-enterprise"
       },
       "manager": {
-        "email": "manager@e2e.webagent.com", 
+        "email": "manager@e2e.webagent.com",
         "password": "E2EManager123!",
         "roles": ["tenant_admin"],
         "tenant": "e2e-enterprise"
@@ -50,7 +50,7 @@
       }
     }
   },
-  
+
   "performance_thresholds": {
     "api_response_time_ms": {
       "p50": 500,
@@ -78,7 +78,7 @@
       "timeout_errors": 0.01
     }
   },
-  
+
   "security_testing": {
     "enable_penetration_tests": true,
     "enable_vulnerability_scans": true,
@@ -115,7 +115,7 @@
       "test_privilege_escalation": true
     }
   },
-  
+
   "browser_testing": {
     "browsers": ["chromium", "firefox", "webkit"],
     "viewport_sizes": [
@@ -135,7 +135,7 @@
       "offline"
     ]
   },
-  
+
   "monitoring_integration": {
     "enable_metrics_collection": true,
     "datadog_api_key": "${DATADOG_API_KEY}",
@@ -146,7 +146,7 @@
       "${TEAMS_WEBHOOK_URL}"
     ]
   },
-  
+
   "reporting": {
     "generate_html_reports": true,
     "generate_json_reports": true,
@@ -163,7 +163,7 @@
       "send_on_failure_only": true
     }
   },
-  
+
   "chaos_engineering": {
     "enable_chaos_tests": false,
     "scenarios": [
@@ -200,7 +200,7 @@
       }
     ]
   },
-  
+
   "compliance_testing": {
     "enable_gdpr_tests": true,
     "enable_hipaa_tests": false,
@@ -210,7 +210,7 @@
     "encryption_tests": true,
     "audit_trail_tests": true
   },
-  
+
   "load_testing": {
     "ramp_up_duration_seconds": 300,
     "steady_state_duration_seconds": 600,
@@ -227,7 +227,7 @@
         ]
       },
       {
-        "name": "planner_workflow", 
+        "name": "planner_workflow",
         "weight": 30,
         "actions": [
           "login",
@@ -262,7 +262,7 @@
       }
     ]
   },
-  
+
   "test_websites": {
     "simple_form": {
       "url": "https://httpbin.org/forms/post",
@@ -300,7 +300,7 @@
       "timeout_seconds": 30
     }
   },
-  
+
   "notification_settings": {
     "slack": {
       "enabled": false,

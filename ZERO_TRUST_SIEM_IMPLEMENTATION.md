@@ -20,7 +20,7 @@ Successfully implemented comprehensive Zero Trust Security Framework and enhance
 ### **Trust Calculation Engine**
 ```python
 async def calculate_trust_score(
-    user_id: int, 
+    user_id: int,
     access_context: AccessContext,
     device_fingerprint: Optional[DeviceFingerprint] = None
 ) -> TrustAssessment:

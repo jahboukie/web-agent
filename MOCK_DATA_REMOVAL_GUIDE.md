@@ -40,7 +40,7 @@ CREATE_TEST_USERS=false
 #### ✅ **Safe - Test/Development Only**
 - `tests/` - All test files (19 files)
 - `demo_*.py` - Demo scripts
-- `test_*.py` - Test scripts  
+- `test_*.py` - Test scripts
 - `validate_*.py` - Validation scripts
 - `check_*.py` - Debug scripts
 - `scripts/test_*.py` - Test automation
@@ -60,7 +60,7 @@ Current implementation in `app/db/init_db.py` is already production-safe:
 async def init_db(db: AsyncSession) -> None:
     # Always create superuser
     await create_superuser(db)
-    
+
     # Only create test data in development
     if settings.ENVIRONMENT == "development":
         await create_test_data(db)
@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     SEED_DEMO_DATA: bool = False
     CREATE_TEST_USERS: bool = False
-    
+
     @property
     def should_seed_demo_data(self) -> bool:
         return self.ENVIRONMENT == "development" and self.SEED_DEMO_DATA
@@ -92,28 +92,28 @@ from app.core.config import settings
 def validate_production_config():
     """Validate production configuration has no mock data."""
     errors = []
-    
+
     # Check environment
     if settings.ENVIRONMENT not in ["staging", "production"]:
         errors.append(f"Invalid environment: {settings.ENVIRONMENT}")
-    
+
     # Check demo data flags
     if settings.SEED_DEMO_DATA:
         errors.append("SEED_DEMO_DATA must be false in production")
-    
+
     # Check for default passwords
     if "changeme" in settings.SECRET_KEY.lower():
         errors.append("Default SECRET_KEY detected")
-    
+
     if "changeme" in os.getenv("POSTGRES_PASSWORD", "").lower():
         errors.append("Default POSTGRES_PASSWORD detected")
-    
+
     # Check for demo email domains
     demo_domains = ["example.com", "test.com", "demo.com"]
     for domain in demo_domains:
         if domain in str(settings.CORS_ORIGINS):
             errors.append(f"Demo domain {domain} found in CORS_ORIGINS")
-    
+
     return errors
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 # WebAgent Coding Standards
 
-**Version:** 1.0  
-**Date:** June 19, 2025  
+**Version:** 1.0
+**Date:** June 19, 2025
 **Scope:** All Python code in the WebAgent project
 
 ---
@@ -74,7 +74,7 @@ def create_user(
 class UserService:
     db: AsyncSession
     cache_ttl: int = 3600
-    
+
     def __init__(self, db: AsyncSession):
         self.db = db
 ```
@@ -85,21 +85,21 @@ class UserService:
 ```python
 def parse_webpage(url: str, options: WebPageParseRequest) -> WebPageParseResponse:
     """Parse a webpage and extract semantic information.
-    
+
     Analyzes the webpage structure, extracts interactive elements,
     and performs semantic analysis for automation planning.
-    
+
     Args:
         url: The webpage URL to parse
         options: Parsing configuration and options
-        
+
     Returns:
         WebPageParseResponse containing parsed data and metadata
-        
+
     Raises:
         ValidationError: If URL is invalid or inaccessible
         BrowserError: If browser automation fails
-        
+
     Example:
         >>> options = WebPageParseRequest(url="https://example.com")
         >>> result = await parse_webpage("https://example.com", options)
@@ -162,22 +162,22 @@ from app.db.base import Base
 
 class User(Base):
     __tablename__ = "users"
-    
+
     # Primary key first
     id = Column(Integer, primary_key=True, index=True)
-    
+
     # Required fields
     email = Column(String(255), unique=True, index=True, nullable=False)
     username = Column(String(100), unique=True, index=True, nullable=False)
-    
+
     # Optional fields
     full_name = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    
+
     # Timestamps at the end
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    
+
     # Relationships at the end
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
 ```
@@ -193,7 +193,7 @@ class UserService:
         await db.commit()
         await db.refresh(db_user)
         return db_user
-    
+
     @staticmethod
     async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         """Get user by ID."""
@@ -303,10 +303,10 @@ async def create_task_with_plan(
         task = Task(**task_data.dict())
         db.add(task)
         await db.flush()  # Get task.id
-        
+
         plan = ExecutionPlan(task_id=task.id, **plan_data.dict())
         db.add(plan)
-        
+
         return task
 ```
 
@@ -321,26 +321,26 @@ from app.schemas.user import UserCreate
 
 class TestUserService:
     """Test suite for UserService."""
-    
+
     @pytest.mark.asyncio
     async def test_create_user_success(self, db_session, sample_user_data):
         """Test successful user creation."""
         # Arrange
         user_data = UserCreate(**sample_user_data)
-        
+
         # Act
         user = await UserService.create(db_session, user_data)
-        
+
         # Assert
         assert user.email == sample_user_data["email"]
         assert user.id is not None
-        
+
     @pytest.mark.asyncio
     async def test_create_user_duplicate_email(self, db_session, existing_user):
         """Test user creation with duplicate email."""
         # Arrange
         user_data = UserCreate(email=existing_user.email, username="different")
-        
+
         # Act & Assert
         with pytest.raises(IntegrityError):
             await UserService.create(db_session, user_data)
@@ -383,7 +383,7 @@ async def create_task(user_id: int, task_data: TaskCreate) -> Task:
         task_type=task_data.task_type,
         target_url=task_data.target_url
     )
-    
+
     try:
         task = await TaskService.create(db, user_id, task_data)
         logger.info(
@@ -420,7 +420,7 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     goal: str = Field(min_length=10, max_length=1000)
     target_url: Optional[HttpUrl] = None
-    
+
     @validator('goal')
     def validate_goal(cls, v):
         # Remove potentially dangerous content

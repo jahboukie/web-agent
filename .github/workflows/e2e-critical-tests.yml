@@ -37,7 +37,7 @@ jobs:
     name: Critical Path Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    
+
     services:
       postgres:
         image: postgres:15
@@ -51,7 +51,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-          
+
       redis:
         image: redis:7
         options: >-
@@ -85,7 +85,7 @@ jobs:
 
     - name: Load cached venv
       id: cached-poetry-dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
@@ -151,7 +151,7 @@ jobs:
         FRONTEND_URL: http://localhost:3000
 
     - name: Upload test artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: critical-path-test-artifacts
@@ -159,7 +159,7 @@ jobs:
         retention-days: 30
 
     - name: Upload test reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: critical-path-test-reports
@@ -223,7 +223,7 @@ jobs:
         poetry run safety check --json --output tests/artifacts/safety_report.json
 
     - name: Upload security artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-test-artifacts
@@ -264,7 +264,7 @@ jobs:
           --verbose
 
     - name: Upload performance artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-test-artifacts
@@ -315,7 +315,7 @@ jobs:
         STRIPE_TEST_KEY: ${{ secrets.STRIPE_TEST_KEY }}
 
     - name: Upload billing artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: billing-test-artifacts
@@ -330,14 +330,14 @@ jobs:
 
     steps:
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Generate Test Summary
       run: |
         echo "## WebAgent E2E Test Results" >> $GITHUB_STEP_SUMMARY
         echo "| Test Suite | Status | Duration | Success Rate |" >> $GITHUB_STEP_SUMMARY
         echo "|------------|--------|----------|--------------|" >> $GITHUB_STEP_SUMMARY
-        
+
         # Parse results from artifacts (would implement actual parsing)
         echo "| Critical Path | ✅ Passed | 25m | 100% |" >> $GITHUB_STEP_SUMMARY
         echo "| Security | ✅ Passed | 35m | 100% |" >> $GITHUB_STEP_SUMMARY
@@ -363,11 +363,11 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: `## 🧪 E2E Test Results
-            
+
             Critical Path Tests: ✅ Passed
-            Security Tests: ✅ Passed  
+            Security Tests: ✅ Passed
             Performance Tests: ⚠️ Partial
             Billing Tests: ✅ Passed
-            
+
             [View detailed results](${context.payload.repository.html_url}/actions/runs/${context.runId})`
           })

@@ -1,6 +1,6 @@
 /**
  * Pricing and Subscription Types
- * 
+ *
  * Revenue-optimized pricing model with strategic tiered offerings
  */
 
@@ -8,15 +8,15 @@ export interface PricingTier {
   id: string;
   name: string;
   price: number;
-  period: 'month' | 'year';
+  period: "month" | "year";
   description: string;
   features: string[];
   limits: {
-    parses: number | 'unlimited';
-    plans: number | 'unlimited';
-    executions: number | 'unlimited';
-    storage_gb: number | 'unlimited';
-    api_calls: number | 'unlimited';
+    parses: number | "unlimited";
+    plans: number | "unlimited";
+    executions: number | "unlimited";
+    storage_gb: number | "unlimited";
+    api_calls: number | "unlimited";
   };
   upgrade_cta?: string;
   popular?: boolean;
@@ -26,7 +26,7 @@ export interface PricingTier {
 
 export interface UserSubscription {
   tier: string;
-  status: 'active' | 'cancelled' | 'past_due' | 'trialing';
+  status: "active" | "cancelled" | "past_due" | "trialing";
   current_period_start: string;
   current_period_end: string;
   usage: {
@@ -37,11 +37,11 @@ export interface UserSubscription {
     api_calls_used: number;
   };
   limits: {
-    parses: number | 'unlimited';
-    plans: number | 'unlimited';
-    executions: number | 'unlimited';
-    storage_gb: number | 'unlimited';
-    api_calls: number | 'unlimited';
+    parses: number | "unlimited";
+    plans: number | "unlimited";
+    executions: number | "unlimited";
+    storage_gb: number | "unlimited";
+    api_calls: number | "unlimited";
   };
   next_billing_date?: string;
   amount_due?: number;
@@ -117,195 +117,201 @@ export interface PlatformAnalytics {
 
 export const PRICING_TIERS: PricingTier[] = [
   {
-    id: 'free',
-    name: 'Free Tier',
+    id: "free",
+    name: "Free Tier",
     price: 0,
-    period: 'month',
-    description: 'Perfect for exploring WebAgent\'s revolutionary AI capabilities',
+    period: "month",
+    description:
+      "Perfect for exploring WebAgent's revolutionary AI capabilities",
     features: [
-      '200 website parses/month',
-      '20 AI plans/month', 
-      '10 automations/month',
-      'Basic analytics dashboard',
-      'Community support',
-      'Full platform UI access'
+      "200 website parses/month",
+      "20 AI plans/month",
+      "10 automations/month",
+      "Basic analytics dashboard",
+      "Community support",
+      "Full platform UI access",
     ],
     limits: {
       parses: 200,
       plans: 20,
       executions: 10,
       storage_gb: 1,
-      api_calls: 1000
+      api_calls: 1000,
     },
-    upgrade_cta: 'See how Enterprise customers achieve 97% automation success'
+    upgrade_cta: "See how Enterprise customers achieve 97% automation success",
   },
   {
-    id: 'reader_pro',
-    name: 'Reader Pro',
+    id: "reader_pro",
+    name: "Reader Pro",
     price: 129,
-    period: 'month',
-    description: 'Unlimited intelligent website parsing with advanced analytics',
+    period: "month",
+    description:
+      "Unlimited intelligent website parsing with advanced analytics",
     features: [
-      'Unlimited website parsing',
-      'Advanced parsing analytics',
-      'Performance optimization insights',
-      'Element accuracy tracking',
-      'Domain intelligence reports',
-      'Priority support'
+      "Unlimited website parsing",
+      "Advanced parsing analytics",
+      "Performance optimization insights",
+      "Element accuracy tracking",
+      "Domain intelligence reports",
+      "Priority support",
     ],
     limits: {
-      parses: 'unlimited',
+      parses: "unlimited",
       plans: 20,
       executions: 10,
       storage_gb: 10,
-      api_calls: 10000
-    }
+      api_calls: 10000,
+    },
   },
   {
-    id: 'planner_pro',
-    name: 'Planner Pro', 
+    id: "planner_pro",
+    name: "Planner Pro",
     price: 179,
-    period: 'month',
-    description: 'Unlimited AI planning with confidence scoring and workflow analytics',
+    period: "month",
+    description:
+      "Unlimited AI planning with confidence scoring and workflow analytics",
     features: [
-      'Unlimited AI planning',
-      'Workflow analytics dashboard',
-      'Confidence scoring trends',
-      'Goal completion tracking',
-      'AI reasoning performance',
-      'Advanced plan optimization'
+      "Unlimited AI planning",
+      "Workflow analytics dashboard",
+      "Confidence scoring trends",
+      "Goal completion tracking",
+      "AI reasoning performance",
+      "Advanced plan optimization",
     ],
     limits: {
       parses: 200,
-      plans: 'unlimited',
+      plans: "unlimited",
       executions: 10,
       storage_gb: 10,
-      api_calls: 10000
-    }
+      api_calls: 10000,
+    },
   },
   {
-    id: 'actor_pro',
-    name: 'Actor Pro',
+    id: "actor_pro",
+    name: "Actor Pro",
     price: 229,
-    period: 'month', 
-    description: 'Unlimited automation execution with comprehensive monitoring',
+    period: "month",
+    description: "Unlimited automation execution with comprehensive monitoring",
     features: [
-      'Unlimited automation execution',
-      'Execution analytics dashboard',
-      'Error monitoring & alerts',
-      'ROI calculation tools',
-      'Performance optimization',
-      'Success rate tracking'
+      "Unlimited automation execution",
+      "Execution analytics dashboard",
+      "Error monitoring & alerts",
+      "ROI calculation tools",
+      "Performance optimization",
+      "Success rate tracking",
     ],
     limits: {
       parses: 200,
       plans: 20,
-      executions: 'unlimited',
+      executions: "unlimited",
       storage_gb: 25,
-      api_calls: 25000
-    }
+      api_calls: 25000,
+    },
   },
   {
-    id: 'complete',
-    name: 'Complete Platform',
+    id: "complete",
+    name: "Complete Platform",
     price: 399,
-    period: 'month',
-    description: 'Full WebAgent platform with unified analytics - 40% savings!',
+    period: "month",
+    description: "Full WebAgent platform with unified analytics - 40% savings!",
     features: [
-      'Unlimited everything',
-      'Unified cross-tool analytics',
-      'Workflow optimization insights',
-      'Advanced ROI calculations',
-      'Integration monitoring',
-      'Priority support & training'
+      "Unlimited everything",
+      "Unified cross-tool analytics",
+      "Workflow optimization insights",
+      "Advanced ROI calculations",
+      "Integration monitoring",
+      "Priority support & training",
     ],
     limits: {
-      parses: 'unlimited',
-      plans: 'unlimited', 
-      executions: 'unlimited',
+      parses: "unlimited",
+      plans: "unlimited",
+      executions: "unlimited",
       storage_gb: 100,
-      api_calls: 100000
+      api_calls: 100000,
     },
     popular: true,
-    savings: '40% vs individual tools',
-    badge: 'Best Value'
+    savings: "40% vs individual tools",
+    badge: "Best Value",
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise Platform',
+    id: "enterprise",
+    name: "Enterprise Platform",
     price: 1499,
-    period: 'month',
-    description: 'Enterprise-grade platform with dedicated support and compliance',
+    period: "month",
+    description:
+      "Enterprise-grade platform with dedicated support and compliance",
     features: [
-      'Everything in Complete Platform',
-      'Advanced compliance dashboards',
-      'Custom branding & white-label',
-      'Dedicated Customer Success Manager',
-      'SLA monitoring & guarantees',
-      'Early access to new features',
-      'Custom integrations',
-      'Advanced security controls'
+      "Everything in Complete Platform",
+      "Advanced compliance dashboards",
+      "Custom branding & white-label",
+      "Dedicated Customer Success Manager",
+      "SLA monitoring & guarantees",
+      "Early access to new features",
+      "Custom integrations",
+      "Advanced security controls",
     ],
     limits: {
-      parses: 'unlimited',
-      plans: 'unlimited',
-      executions: 'unlimited', 
-      storage_gb: 'unlimited',
-      api_calls: 'unlimited'
+      parses: "unlimited",
+      plans: "unlimited",
+      executions: "unlimited",
+      storage_gb: "unlimited",
+      api_calls: "unlimited",
     },
-    badge: 'Enterprise'
-  }
+    badge: "Enterprise",
+  },
 ];
 
 export const ADD_ON_PRICING = [
   {
-    id: 'advanced_analytics',
-    name: 'Advanced Analytics Dashboard',
+    id: "advanced_analytics",
+    name: "Advanced Analytics Dashboard",
     price: 99,
-    period: 'month',
-    description: 'Enhanced compliance reporting and custom insights',
-    compatible_tiers: ['reader_pro', 'planner_pro', 'actor_pro', 'complete']
-  }
+    period: "month",
+    description: "Enhanced compliance reporting and custom insights",
+    compatible_tiers: ["reader_pro", "planner_pro", "actor_pro", "complete"],
+  },
 ];
 
 export interface UpgradePrompt {
-  trigger: 'usage_threshold' | 'feature_gate' | 'billing_cycle';
+  trigger: "usage_threshold" | "feature_gate" | "billing_cycle";
   threshold_percentage: number;
   title: string;
   message: string;
   cta_text: string;
   cta_action: string;
-  urgency: 'low' | 'medium' | 'high';
+  urgency: "low" | "medium" | "high";
   value_props: string[];
 }
 
 export const UPGRADE_PROMPTS: UpgradePrompt[] = [
   {
-    trigger: 'usage_threshold',
+    trigger: "usage_threshold",
     threshold_percentage: 80,
-    title: 'Approaching Usage Limit',
-    message: 'You\'ve used 80% of your monthly allocation. Upgrade to avoid interruptions.',
-    cta_text: 'Upgrade Now',
-    cta_action: 'open_pricing',
-    urgency: 'medium',
+    title: "Approaching Usage Limit",
+    message:
+      "You've used 80% of your monthly allocation. Upgrade to avoid interruptions.",
+    cta_text: "Upgrade Now",
+    cta_action: "open_pricing",
+    urgency: "medium",
     value_props: [
-      'Never hit limits again',
-      'Advanced analytics included',
-      '40% savings with Complete Platform'
-    ]
+      "Never hit limits again",
+      "Advanced analytics included",
+      "40% savings with Complete Platform",
+    ],
   },
   {
-    trigger: 'feature_gate',
+    trigger: "feature_gate",
     threshold_percentage: 0,
-    title: 'Unlock Advanced Analytics',
-    message: 'Enterprise customers achieve 3x better automation ROI with advanced insights.',
-    cta_text: 'See Enterprise Features',
-    cta_action: 'view_enterprise',
-    urgency: 'low',
+    title: "Unlock Advanced Analytics",
+    message:
+      "Enterprise customers achieve 3x better automation ROI with advanced insights.",
+    cta_text: "See Enterprise Features",
+    cta_action: "view_enterprise",
+    urgency: "low",
     value_props: [
-      'Compliance dashboards',
-      'Custom success metrics',
-      'Dedicated support team'
-    ]
-  }
+      "Compliance dashboards",
+      "Custom success metrics",
+      "Dedicated support team",
+    ],
+  },
 ];

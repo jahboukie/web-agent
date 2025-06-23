@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 
-from app.schemas.user import User, UserUpdate, UserProfile, UserPreferences
+from app.schemas.user import User, UserPreferences, UserProfile, UserUpdate
 
 router = APIRouter()
 
@@ -10,7 +10,7 @@ async def get_user_profile():
     """Get current user's detailed profile with stats."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User profile not yet implemented"
+        detail="User profile not yet implemented",
     )
 
 
@@ -19,7 +19,7 @@ async def update_user_profile(user_update: UserUpdate):
     """Update user profile information."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User profile update not yet implemented"
+        detail="User profile update not yet implemented",
     )
 
 
@@ -28,7 +28,7 @@ async def get_user_preferences():
     """Get user's preferences and settings."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User preferences not yet implemented"
+        detail="User preferences not yet implemented",
     )
 
 
@@ -37,5 +37,5 @@ async def update_user_preferences(preferences: UserPreferences):
     """Update user's preferences and settings."""
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="User preferences update not yet implemented"
+        detail="User preferences update not yet implemented",
     )

@@ -1,14 +1,14 @@
 /**
  * Cryptographic Service for WebAgent Aura Frontend
- * 
+ *
  * Handles client-side zero-knowledge encryption, key management,
  * and cryptographic operations for secure data handling.
  */
 
 // Storage keys for encrypted data
-const PRIVATE_KEY_STORAGE = 'webagent_private_key';
-const SIGNING_KEY_STORAGE = 'webagent_signing_key';
-const SALT_STORAGE = 'webagent_salt';
+const PRIVATE_KEY_STORAGE = "webagent_private_key";
+const SIGNING_KEY_STORAGE = "webagent_signing_key";
+const SALT_STORAGE = "webagent_salt";
 
 // Types
 export interface KeyPair {
@@ -42,7 +42,7 @@ class CryptoService {
 
   private async initializeWebCrypto(): Promise<void> {
     if (!window.crypto || !window.crypto.subtle) {
-      throw new Error('Web Crypto API not supported in this browser');
+      throw new Error("Web Crypto API not supported in this browser");
     }
     this.isInitialized = true;
   }
@@ -57,28 +57,30 @@ class CryptoService {
       // Generate encryption key pair (RSA-OAEP for key exchange, AES-GCM for data)
       const encryptionKeyPair = await window.crypto.subtle.generateKey(
         {
-          name: 'RSA-OAEP',
+          name: "RSA-OAEP",
           modulusLength: 2048,
           publicExponent: new Uint8Array([1, 0, 1]),
-          hash: 'SHA-256',
+          hash: "SHA-256",
         },
         true, // extractable
-        ['encrypt', 'decrypt']
+        ["encrypt", "decrypt"],
       );
 
       // Generate signing key pair (ECDSA)
       const signingKeyPair = await window.crypto.subtle.generateKey(
         {
-          name: 'ECDSA',
-          namedCurve: 'P-256',
+          name: "ECDSA",
+          namedCurve: "P-256",
         },
         true, // extractable
-        ['sign', 'verify']
+        ["sign", "verify"],
       );
 
       // Export public keys
       const publicKey = await this.exportPublicKey(encryptionKeyPair.publicKey);
-      const signingPublicKey = await this.exportPublicKey(signingKeyPair.publicKey);
+      const signingPublicKey = await this.exportPublicKey(
+        signingKeyPair.publicKey,
+      );
 
       return {
         publicKey,
@@ -92,11 +94,20 @@ class CryptoService {
   }
 
   // Key Management
-  async storePrivateKeys(privateKey: CryptoKey, signingPrivateKey: CryptoKey): Promise<void> {
+  async storePrivateKeys(
+    privateKey: CryptoKey,
+    signingPrivateKey: CryptoKey,
+  ): Promise<void> {
     try {
       // Export keys for storage
-      const privateKeyData = await window.crypto.subtle.exportKey('pkcs8', privateKey);
-      const signingKeyData = await window.crypto.subtle.exportKey('pkcs8', signingPrivateKey);
+      const privateKeyData = await window.crypto.subtle.exportKey(
+        "pkcs8",
+        privateKey,
+      );
+      const signingKeyData = await window.crypto.subtle.exportKey(
+        "pkcs8",
+        signingPrivateKey,
+      );
 
       // Convert to base64 for storage
       const privateKeyB64 = this.arrayBufferToBase64(privateKeyData);
@@ -129,30 +140,30 @@ class CryptoService {
 
       // Import keys
       this.privateKey = await window.crypto.subtle.importKey(
-        'pkcs8',
+        "pkcs8",
         privateKeyData,
         {
-          name: 'RSA-OAEP',
-          hash: 'SHA-256',
+          name: "RSA-OAEP",
+          hash: "SHA-256",
         },
         false,
-        ['decrypt']
+        ["decrypt"],
       );
 
       this.signingPrivateKey = await window.crypto.subtle.importKey(
-        'pkcs8',
+        "pkcs8",
         signingKeyData,
         {
-          name: 'ECDSA',
-          namedCurve: 'P-256',
+          name: "ECDSA",
+          namedCurve: "P-256",
         },
         false,
-        ['sign']
+        ["sign"],
       );
 
       return true;
     } catch (error) {
-      console.error('Failed to load private keys:', error);
+      console.error("Failed to load private keys:", error);
       return false;
     }
   }
@@ -187,25 +198,28 @@ class CryptoService {
 
       const encryptedBuffer = await window.crypto.subtle.encrypt(
         {
-          name: 'AES-GCM',
+          name: "AES-GCM",
           iv: iv,
         },
         key,
-        dataBuffer
+        dataBuffer,
       );
 
       return {
         data: this.arrayBufferToBase64(encryptedBuffer),
         iv: this.arrayBufferToBase64(iv),
         salt: this.arrayBufferToBase64(salt),
-        algorithm: 'AES-GCM',
+        algorithm: "AES-GCM",
       };
     } catch (error) {
       throw new Error(`Encryption failed: ${error}`);
     }
   }
 
-  async decryptData(encryptedData: EncryptedData, password?: string): Promise<string> {
+  async decryptData(
+    encryptedData: EncryptedData,
+    password?: string,
+  ): Promise<string> {
     try {
       // Convert from base64
       const dataBuffer = this.base64ToArrayBuffer(encryptedData.data);
@@ -223,11 +237,11 @@ class CryptoService {
       // Decrypt data
       const decryptedBuffer = await window.crypto.subtle.decrypt(
         {
-          name: 'AES-GCM',
+          name: "AES-GCM",
           iv: iv,
         },
         key,
-        dataBuffer
+        dataBuffer,
       );
 
       const decoder = new TextDecoder();
@@ -242,7 +256,7 @@ class CryptoService {
     if (!this.signingPrivateKey) {
       await this.loadPrivateKeys();
       if (!this.signingPrivateKey) {
-        throw new Error('No signing key available');
+        throw new Error("No signing key available");
       }
     }
 
@@ -252,11 +266,11 @@ class CryptoService {
 
       const signature = await window.crypto.subtle.sign(
         {
-          name: 'ECDSA',
-          hash: 'SHA-256',
+          name: "ECDSA",
+          hash: "SHA-256",
         },
         this.signingPrivateKey,
-        dataBuffer
+        dataBuffer,
       );
 
       return this.arrayBufferToBase64(signature);
@@ -265,7 +279,11 @@ class CryptoService {
     }
   }
 
-  async verifySignature(data: string, signature: string, publicKey: string): Promise<boolean> {
+  async verifySignature(
+    data: string,
+    signature: string,
+    publicKey: string,
+  ): Promise<boolean> {
     try {
       const encoder = new TextEncoder();
       const dataBuffer = encoder.encode(data);
@@ -274,37 +292,40 @@ class CryptoService {
       // Import public key
       const publicKeyBuffer = this.base64ToArrayBuffer(publicKey);
       const cryptoPublicKey = await window.crypto.subtle.importKey(
-        'spki',
+        "spki",
         publicKeyBuffer,
         {
-          name: 'ECDSA',
-          namedCurve: 'P-256',
+          name: "ECDSA",
+          namedCurve: "P-256",
         },
         false,
-        ['verify']
+        ["verify"],
       );
 
       return await window.crypto.subtle.verify(
         {
-          name: 'ECDSA',
-          hash: 'SHA-256',
+          name: "ECDSA",
+          hash: "SHA-256",
         },
         cryptoPublicKey,
         signatureBuffer,
-        dataBuffer
+        dataBuffer,
       );
     } catch (error) {
-      console.error('Signature verification failed:', error);
+      console.error("Signature verification failed:", error);
       return false;
     }
   }
 
   // Hashing
-  async hash(data: string, algorithm: string = 'SHA-256'): Promise<string> {
+  async hash(data: string, algorithm: string = "SHA-256"): Promise<string> {
     try {
       const encoder = new TextEncoder();
       const dataBuffer = encoder.encode(data);
-      const hashBuffer = await window.crypto.subtle.digest(algorithm, dataBuffer);
+      const hashBuffer = await window.crypto.subtle.digest(
+        algorithm,
+        dataBuffer,
+      );
       return this.arrayBufferToBase64(hashBuffer);
     } catch (error) {
       throw new Error(`Hashing failed: ${error}`);
@@ -312,56 +333,59 @@ class CryptoService {
   }
 
   // Utility Methods
-  private async deriveKeyFromPassword(password: string, salt: Uint8Array): Promise<CryptoKey> {
+  private async deriveKeyFromPassword(
+    password: string,
+    salt: Uint8Array,
+  ): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
 
     // Import password as key material
     const keyMaterial = await window.crypto.subtle.importKey(
-      'raw',
+      "raw",
       passwordBuffer,
-      'PBKDF2',
+      "PBKDF2",
       false,
-      ['deriveKey']
+      ["deriveKey"],
     );
 
     // Derive AES key
     return await window.crypto.subtle.deriveKey(
       {
-        name: 'PBKDF2',
+        name: "PBKDF2",
         salt: salt,
         iterations: 100000,
-        hash: 'SHA-256',
+        hash: "SHA-256",
       },
       keyMaterial,
       {
-        name: 'AES-GCM',
+        name: "AES-GCM",
         length: 256,
       },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"],
     );
   }
 
   private async generateAESKey(): Promise<CryptoKey> {
     return await window.crypto.subtle.generateKey(
       {
-        name: 'AES-GCM',
+        name: "AES-GCM",
         length: 256,
       },
       false,
-      ['encrypt', 'decrypt']
+      ["encrypt", "decrypt"],
     );
   }
 
   private async exportPublicKey(publicKey: CryptoKey): Promise<string> {
-    const exported = await window.crypto.subtle.exportKey('spki', publicKey);
+    const exported = await window.crypto.subtle.exportKey("spki", publicKey);
     return this.arrayBufferToBase64(exported);
   }
 
   private arrayBufferToBase64(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
-    let binary = '';
+    let binary = "";
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }

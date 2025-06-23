@@ -1,7 +1,7 @@
 /**
  * Usage Counter Component
  * Based on WebAgent Analytics Dashboard Wireframes
- * 
+ *
  * Features:
  * - Visual progress bars with usage indicators
  * - Contextual upgrade CTAs
@@ -10,18 +10,18 @@
  * - Hover tooltips with details
  */
 
-import React from 'react';
-import { TrendingUp, AlertTriangle, CheckCircle, ArrowUp } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import React from "react";
+import { TrendingUp, AlertTriangle, CheckCircle, ArrowUp } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 export interface UsageCounterProps {
-  type: 'reader' | 'planner' | 'actor' | 'storage' | 'api_calls';
+  type: "reader" | "planner" | "actor" | "storage" | "api_calls";
   label: string;
   current: number;
   max: number;
   unit?: string;
   trend?: {
-    direction: 'up' | 'down' | 'stable';
+    direction: "up" | "down" | "stable";
     percentage: number;
     period: string;
   };
@@ -32,19 +32,19 @@ export interface UsageCounterProps {
 }
 
 const typeIcons = {
-  reader: '👁️',
-  planner: '🧠', 
-  actor: '🤖',
-  storage: '💾',
-  api_calls: '🔗',
+  reader: "👁️",
+  planner: "🧠",
+  actor: "🤖",
+  storage: "💾",
+  api_calls: "🔗",
 };
 
 const typeColors = {
-  reader: 'from-blue-500 to-blue-600',
-  planner: 'from-purple-500 to-purple-600',
-  actor: 'from-green-500 to-green-600',
-  storage: 'from-orange-500 to-orange-600',
-  api_calls: 'from-pink-500 to-pink-600',
+  reader: "from-blue-500 to-blue-600",
+  planner: "from-purple-500 to-purple-600",
+  actor: "from-green-500 to-green-600",
+  storage: "from-orange-500 to-orange-600",
+  api_calls: "from-pink-500 to-pink-600",
 };
 
 export function UsageCounter({
@@ -52,7 +52,7 @@ export function UsageCounter({
   label,
   current,
   max,
-  unit = '',
+  unit = "",
   trend,
   onUpgradeClick,
   className,
@@ -62,16 +62,16 @@ export function UsageCounter({
   const percentage = Math.min((current / max) * 100, 100);
   const isNearLimit = percentage >= 80;
   const isAtLimit = percentage >= 95;
-  
+
   const getStatusColor = () => {
-    if (isAtLimit) return 'text-red-600 bg-red-50 border-red-200';
-    if (isNearLimit) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-green-600 bg-green-50 border-green-200';
+    if (isAtLimit) return "text-red-600 bg-red-50 border-red-200";
+    if (isNearLimit) return "text-yellow-600 bg-yellow-50 border-yellow-200";
+    return "text-green-600 bg-green-50 border-green-200";
   };
 
   const getProgressColor = () => {
-    if (isAtLimit) return 'bg-red-500';
-    if (isNearLimit) return 'bg-yellow-500';
+    if (isAtLimit) return "bg-red-500";
+    if (isNearLimit) return "bg-yellow-500";
     return `bg-gradient-to-r ${typeColors[type]}`;
   };
 
@@ -87,18 +87,20 @@ export function UsageCounter({
     return num.toString();
   };
 
-  const defaultUpgradeMessage = isAtLimit 
+  const defaultUpgradeMessage = isAtLimit
     ? `Upgrade to unlock unlimited ${label.toLowerCase()}`
-    : isNearLimit 
-    ? `Running low on ${label.toLowerCase()}? Upgrade for more`
-    : `Upgrade for unlimited ${label.toLowerCase()}`;
+    : isNearLimit
+      ? `Running low on ${label.toLowerCase()}? Upgrade for more`
+      : `Upgrade for unlimited ${label.toLowerCase()}`;
 
   return (
-    <div className={cn(
-      'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4',
-      'hover:shadow-md transition-all duration-200',
-      className
-    )}>
+    <div
+      className={cn(
+        "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4",
+        "hover:shadow-md transition-all duration-200",
+        className,
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -109,31 +111,47 @@ export function UsageCounter({
             </h3>
             {trend && (
               <div className="flex items-center space-x-1 text-xs">
-                <TrendingUp className={cn(
-                  'h-3 w-3',
-                  trend.direction === 'up' ? 'text-green-500' : 
-                  trend.direction === 'down' ? 'text-red-500' : 'text-gray-500'
-                )} />
-                <span className={cn(
-                  trend.direction === 'up' ? 'text-green-600' : 
-                  trend.direction === 'down' ? 'text-red-600' : 'text-gray-600'
-                )}>
-                  {trend.direction === 'up' ? '+' : trend.direction === 'down' ? '-' : ''}
+                <TrendingUp
+                  className={cn(
+                    "h-3 w-3",
+                    trend.direction === "up"
+                      ? "text-green-500"
+                      : trend.direction === "down"
+                        ? "text-red-500"
+                        : "text-gray-500",
+                  )}
+                />
+                <span
+                  className={cn(
+                    trend.direction === "up"
+                      ? "text-green-600"
+                      : trend.direction === "down"
+                        ? "text-red-600"
+                        : "text-gray-600",
+                  )}
+                >
+                  {trend.direction === "up"
+                    ? "+"
+                    : trend.direction === "down"
+                      ? "-"
+                      : ""}
                   {trend.percentage}% {trend.period}
                 </span>
               </div>
             )}
           </div>
         </div>
-        
+
         {/* Status Badge */}
-        <div className={cn(
-          'flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border',
-          getStatusColor()
-        )}>
+        <div
+          className={cn(
+            "flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium border",
+            getStatusColor(),
+          )}
+        >
           {getStatusIcon()}
           <span>
-            {isAtLimit ? 'Limit Reached' : isNearLimit ? 'Near Limit' : 'Good'}
+            {isAtLimit ? "Limit Reached" : isNearLimit ? "Near Limit" : "Good"}
           </span>
         </div>
       </div>
@@ -158,8 +176,11 @@ export function UsageCounter({
       {/* Progress Bar */}
       <div className="mb-4">
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <div 
-            className={cn('h-2 rounded-full transition-all duration-500', getProgressColor())}
+          <div
+            className={cn(
+              "h-2 rounded-full transition-all duration-500",
+              getProgressColor(),
+            )}
             style={{ width: `${Math.min(percentage, 100)}%` }}
           />
         </div>
@@ -172,32 +193,44 @@ export function UsageCounter({
 
       {/* Upgrade CTA */}
       {(isNearLimit || isAtLimit) && showUpgradeButton && (
-        <div className={cn(
-          'p-3 rounded-lg border-l-4',
-          isAtLimit ? 'bg-red-50 border-red-400 dark:bg-red-900/20' : 'bg-yellow-50 border-yellow-400 dark:bg-yellow-900/20'
-        )}>
+        <div
+          className={cn(
+            "p-3 rounded-lg border-l-4",
+            isAtLimit
+              ? "bg-red-50 border-red-400 dark:bg-red-900/20"
+              : "bg-yellow-50 border-yellow-400 dark:bg-yellow-900/20",
+          )}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className={cn(
-                'text-sm font-medium',
-                isAtLimit ? 'text-red-800 dark:text-red-200' : 'text-yellow-800 dark:text-yellow-200'
-              )}>
-                {isAtLimit ? 'Usage Limit Reached' : 'Approaching Limit'}
+              <p
+                className={cn(
+                  "text-sm font-medium",
+                  isAtLimit
+                    ? "text-red-800 dark:text-red-200"
+                    : "text-yellow-800 dark:text-yellow-200",
+                )}
+              >
+                {isAtLimit ? "Usage Limit Reached" : "Approaching Limit"}
               </p>
-              <p className={cn(
-                'text-xs mt-1',
-                isAtLimit ? 'text-red-600 dark:text-red-300' : 'text-yellow-600 dark:text-yellow-300'
-              )}>
+              <p
+                className={cn(
+                  "text-xs mt-1",
+                  isAtLimit
+                    ? "text-red-600 dark:text-red-300"
+                    : "text-yellow-600 dark:text-yellow-300",
+                )}
+              >
                 {upgradeMessage || defaultUpgradeMessage}
               </p>
             </div>
             <button
               onClick={onUpgradeClick}
               className={cn(
-                'flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
-                isAtLimit 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                "flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                isAtLimit
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-yellow-600 hover:bg-yellow-700 text-white",
               )}
             >
               <ArrowUp className="h-3 w-3" />
@@ -223,32 +256,32 @@ export function UsageCounter({
 // Preset configurations for common usage types
 export const UsageCounterPresets = {
   reader: (current: number, max: number, onUpgradeClick?: () => void) => ({
-    type: 'reader' as const,
-    label: 'Website Parsing',
+    type: "reader" as const,
+    label: "Website Parsing",
     current,
     max,
-    unit: 'parses',
+    unit: "parses",
     onUpgradeClick,
-    upgradeMessage: 'Unlock unlimited website intelligence with Reader Pro',
+    upgradeMessage: "Unlock unlimited website intelligence with Reader Pro",
   }),
-  
+
   planner: (current: number, max: number, onUpgradeClick?: () => void) => ({
-    type: 'planner' as const,
-    label: 'AI Planning',
+    type: "planner" as const,
+    label: "AI Planning",
     current,
     max,
-    unit: 'plans',
+    unit: "plans",
     onUpgradeClick,
-    upgradeMessage: 'Get unlimited AI reasoning with Planner Pro',
+    upgradeMessage: "Get unlimited AI reasoning with Planner Pro",
   }),
-  
+
   actor: (current: number, max: number, onUpgradeClick?: () => void) => ({
-    type: 'actor' as const,
-    label: 'Automation Executions',
+    type: "actor" as const,
+    label: "Automation Executions",
     current,
     max,
-    unit: 'executions',
+    unit: "executions",
     onUpgradeClick,
-    upgradeMessage: 'Scale your automation with Actor Pro',
+    upgradeMessage: "Scale your automation with Actor Pro",
   }),
 };

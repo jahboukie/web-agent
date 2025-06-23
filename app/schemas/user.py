@@ -1,13 +1,14 @@
-from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
 from enum import Enum
+from typing import Any, Literal
+
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
 class UserBase(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=100)
-    full_name: Optional[str] = Field(None, max_length=255)
+    full_name: str | None = Field(None, max_length=255)
     is_active: bool = True
 
 
@@ -15,31 +16,31 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
     confirm_password: str = Field(min_length=8, max_length=128)
 
-    @validator('confirm_password')
+    @validator("confirm_password")
     def passwords_match(cls, v, values, **kwargs):
-        if 'password' in values and v != values['password']:
-            raise ValueError('Passwords do not match')
+        if "password" in values and v != values["password"]:
+            raise ValueError("Passwords do not match")
         return v
 
-    @validator('password')
+    @validator("password")
     def validate_password_strength(cls, v):
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            raise ValueError("Password must be at least 8 characters long")
         if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain at least one uppercase letter')
+            raise ValueError("Password must contain at least one uppercase letter")
         if not any(c.islower() for c in v):
-            raise ValueError('Password must contain at least one lowercase letter')
+            raise ValueError("Password must contain at least one lowercase letter")
         if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain at least one digit')
+            raise ValueError("Password must contain at least one digit")
         return v
 
 
 class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = Field(None, min_length=3, max_length=100)
-    full_name: Optional[str] = Field(None, max_length=255)
-    preferences: Optional[Dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    email: EmailStr | None = None
+    username: str | None = Field(None, min_length=3, max_length=100)
+    full_name: str | None = Field(None, max_length=255)
+    preferences: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 class UserPasswordUpdate(BaseModel):
@@ -47,10 +48,10 @@ class UserPasswordUpdate(BaseModel):
     new_password: str = Field(min_length=8, max_length=128)
     confirm_new_password: str = Field(min_length=8, max_length=128)
 
-    @validator('confirm_new_password')
+    @validator("confirm_new_password")
     def passwords_match(cls, v, values, **kwargs):
-        if 'new_password' in values and v != values['new_password']:
-            raise ValueError('New passwords do not match')
+        if "new_password" in values and v != values["new_password"]:
+            raise ValueError("New passwords do not match")
         return v
 
 
@@ -58,24 +59,24 @@ class User(UserBase):
     id: int
     is_superuser: bool = False
     created_at: datetime
-    updated_at: Optional[datetime] = None
-    last_login_at: Optional[datetime] = None
-    preferences: Dict[str, Any] = {}
+    updated_at: datetime | None = None
+    last_login_at: datetime | None = None
+    preferences: dict[str, Any] = {}
     api_rate_limit: int = 100
 
     # Enterprise features
-    employee_id: Optional[str] = None
-    department: Optional[str] = None
-    job_title: Optional[str] = None
-    manager_user_id: Optional[int] = None
-    sso_provider: Optional[str] = None
-    sso_user_id: Optional[str] = None
-    sso_attributes: Dict[str, Any] = {}
+    employee_id: str | None = None
+    department: str | None = None
+    job_title: str | None = None
+    manager_user_id: int | None = None
+    sso_provider: str | None = None
+    sso_user_id: str | None = None
+    sso_attributes: dict[str, Any] = {}
     mfa_enabled: bool = False
-    trust_score: Dict[str, Any] = {}
-    risk_profile: Dict[str, Any] = {}
+    trust_score: dict[str, Any] = {}
+    risk_profile: dict[str, Any] = {}
     data_classification: str = "internal"
-    consent_given_at: Optional[datetime] = None
+    consent_given_at: datetime | None = None
     gdpr_consent: bool = False
 
     class Config:
@@ -86,7 +87,7 @@ class UserPublic(BaseModel):
     id: int
     email: EmailStr
     username: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
     is_active: bool
     created_at: datetime
 
@@ -124,7 +125,7 @@ class UserProfile(User):
     successful_tasks: int = 0
     failed_tasks: int = 0
     total_execution_time_seconds: int = 0
-    last_task_at: Optional[datetime] = None
+    last_task_at: datetime | None = None
     account_creation_date: datetime
     subscription_tier: str = "free"
     api_calls_today: int = 0
@@ -138,7 +139,7 @@ class UserPreferences(BaseModel):
     require_confirmation_for_purchases: bool = True
     require_confirmation_for_account_changes: bool = True
     enable_notifications: bool = True
-    notification_email: Optional[EmailStr] = None
+    notification_email: EmailStr | None = None
     timezone: str = "UTC"
     language: str = "en"
     theme: str = "light"
@@ -152,59 +153,62 @@ class UserApiUsage(BaseModel):
     rate_limit_remaining: int
     next_reset_at: datetime
     subscription_tier: str
-    usage_history: List[Dict[str, Any]] = []
+    usage_history: list[dict[str, Any]] = []
 
 
 class UserRegistrationRequest(UserCreate):
     accept_terms: bool = True
     marketing_consent: bool = False
 
-    @validator('accept_terms')
+    @validator("accept_terms")
     def must_accept_terms(cls, v):
         if not v:
-            raise ValueError('You must accept the terms of service')
+            raise ValueError("You must accept the terms of service")
         return v
 
 
 class EnterpriseUserCreate(UserBase):
     """Enterprise user creation with SSO and organizational data."""
-    password: Optional[str] = Field(None, min_length=8, max_length=128)
-    employee_id: Optional[str] = Field(None, max_length=100)
-    department: Optional[str] = Field(None, max_length=255)
-    job_title: Optional[str] = Field(None, max_length=255)
-    manager_user_id: Optional[int] = None
-    sso_provider: Optional[str] = Field(None, max_length=100)
-    sso_user_id: Optional[str] = Field(None, max_length=255)
-    sso_attributes: Dict[str, Any] = Field(default_factory=dict)
+
+    password: str | None = Field(None, min_length=8, max_length=128)
+    employee_id: str | None = Field(None, max_length=100)
+    department: str | None = Field(None, max_length=255)
+    job_title: str | None = Field(None, max_length=255)
+    manager_user_id: int | None = None
+    sso_provider: str | None = Field(None, max_length=100)
+    sso_user_id: str | None = Field(None, max_length=255)
+    sso_attributes: dict[str, Any] = Field(default_factory=dict)
     data_classification: str = Field(default="internal", max_length=50)
     gdpr_consent: bool = False
-    tenant_id: Optional[int] = None
-    role_ids: List[int] = Field(default_factory=list)
+    tenant_id: int | None = None
+    role_ids: list[int] = Field(default_factory=list)
 
 
 class EnterpriseUserUpdate(BaseModel):
     """Enterprise user update with organizational and security fields."""
-    full_name: Optional[str] = Field(None, max_length=255)
-    is_active: Optional[bool] = None
-    employee_id: Optional[str] = Field(None, max_length=100)
-    department: Optional[str] = Field(None, max_length=255)
-    job_title: Optional[str] = Field(None, max_length=255)
-    manager_user_id: Optional[int] = None
-    preferences: Optional[Dict[str, Any]] = None
-    api_rate_limit: Optional[int] = Field(None, ge=1)
-    mfa_enabled: Optional[bool] = None
-    data_classification: Optional[str] = Field(None, max_length=50)
-    gdpr_consent: Optional[bool] = None
+
+    full_name: str | None = Field(None, max_length=255)
+    is_active: bool | None = None
+    employee_id: str | None = Field(None, max_length=100)
+    department: str | None = Field(None, max_length=255)
+    job_title: str | None = Field(None, max_length=255)
+    manager_user_id: int | None = None
+    preferences: dict[str, Any] | None = None
+    api_rate_limit: int | None = Field(None, ge=1)
+    mfa_enabled: bool | None = None
+    data_classification: str | None = Field(None, max_length=50)
+    gdpr_consent: bool | None = None
 
 
 class UserTenantRole(BaseModel):
     """User-tenant-role association."""
+
     user_id: int
     tenant_id: int
     role_id: int
     assigned_at: datetime
-    assigned_by: Optional[int] = None
-    expires_at: Optional[datetime] = None
+    assigned_by: int | None = None
+    expires_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -212,16 +216,19 @@ class UserTenantRole(BaseModel):
 
 class UserTenantRoleAssignment(BaseModel):
     """Request to assign roles to user in tenant."""
+
     user_id: int
     tenant_id: int
-    role_ids: List[int]
-    expires_at: Optional[datetime] = None
+    role_ids: list[int]
+    expires_at: datetime | None = None
 
 
 # Enterprise Security Enhancements
 
+
 class SecurityRole(str, Enum):
     """Enterprise security roles with hierarchical permissions."""
+
     SYSTEM_ADMIN = "SYSTEM_ADMIN"
     TENANT_ADMIN = "TENANT_ADMIN"
     AUTOMATION_MANAGER = "AUTOMATION_MANAGER"
@@ -232,6 +239,7 @@ class SecurityRole(str, Enum):
 
 class ComplianceLevel(str, Enum):
     """Data classification levels for compliance."""
+
     PUBLIC = "PUBLIC"
     INTERNAL = "INTERNAL"
     CONFIDENTIAL = "CONFIDENTIAL"
@@ -241,6 +249,7 @@ class ComplianceLevel(str, Enum):
 
 class ThreatLevel(str, Enum):
     """Risk assessment threat levels."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -249,166 +258,166 @@ class ThreatLevel(str, Enum):
 
 class EnterpriseUserCreate(UserCreate):
     """Enterprise user creation with security enhancements."""
-    
-    tenant_id: Optional[str] = None
+
+    tenant_id: str | None = None
     security_role: SecurityRole = SecurityRole.END_USER
-    department: Optional[str] = None
-    manager_email: Optional[EmailStr] = None
+    department: str | None = None
+    manager_email: EmailStr | None = None
     requires_2fa: bool = True
     compliance_level: ComplianceLevel = ComplianceLevel.INTERNAL
-    allowed_ip_ranges: List[str] = []
-    
+    allowed_ip_ranges: list[str] = []
+
     # Zero-knowledge encryption keys (generated client-side)
-    encryption_public_key: Optional[bytes] = None
-    signing_public_key: Optional[bytes] = None
-    key_derivation_salt: Optional[bytes] = None
-    
+    encryption_public_key: bytes | None = None
+    signing_public_key: bytes | None = None
+    key_derivation_salt: bytes | None = None
+
     # Enterprise onboarding
-    employment_start_date: Optional[datetime] = None
-    security_clearance_level: Optional[str] = None
+    employment_start_date: datetime | None = None
+    security_clearance_level: str | None = None
     background_check_completed: bool = False
 
 
 class DeviceInfo(BaseModel):
     """Device information for Zero Trust verification."""
-    
+
     device_id: str
     device_type: Literal["desktop", "mobile", "tablet", "server"]
     os_name: str
     os_version: str
-    browser_name: Optional[str] = None
-    browser_version: Optional[str] = None
+    browser_name: str | None = None
+    browser_version: str | None = None
     is_managed: bool = False
     is_encrypted: bool = False
-    last_security_scan: Optional[datetime] = None
+    last_security_scan: datetime | None = None
     trust_level: ThreatLevel = ThreatLevel.MEDIUM
     device_fingerprint: str
-    
+
 
 class AccessContext(BaseModel):
     """Zero Trust access context for continuous verification."""
-    
+
     ip_address: str
-    geolocation: Dict[str, Any]
+    geolocation: dict[str, Any]
     device_info: DeviceInfo
     network_type: Literal["corporate", "home", "public", "vpn"]
     time_of_access: datetime
     user_agent: str
     session_duration: int  # seconds
-    previous_login_location: Optional[Dict[str, Any]] = None
+    previous_login_location: dict[str, Any] | None = None
     risk_score: float = 0.0
-    threat_indicators: List[str] = []
-    
+    threat_indicators: list[str] = []
+
 
 class MFAMethod(BaseModel):
     """Multi-factor authentication method."""
-    
+
     method_type: Literal["totp", "sms", "email", "hardware_key", "biometric"]
     is_primary: bool
     is_backup: bool
     created_at: datetime
-    last_used_at: Optional[datetime] = None
+    last_used_at: datetime | None = None
     failure_count: int = 0
     is_compromised: bool = False
-    
+
 
 class SecurityEvent(BaseModel):
     """Security event for continuous monitoring."""
-    
+
     event_id: str
     event_type: str
     user_id: int
-    tenant_id: Optional[str] = None
+    tenant_id: str | None = None
     severity: ThreatLevel
     description: str
     source_ip: str
     user_agent: str
     access_context: AccessContext
-    automated_response: Optional[str] = None
+    automated_response: str | None = None
     requires_investigation: bool = False
     mitigated: bool = False
     created_at: datetime
-    
+
 
 class EnterpriseUserProfile(UserProfile):
     """Enhanced user profile with enterprise security features."""
-    
-    tenant_id: Optional[str] = None
+
+    tenant_id: str | None = None
     security_role: SecurityRole = SecurityRole.END_USER
-    department: Optional[str] = None
-    manager_id: Optional[int] = None
-    
+    department: str | None = None
+    manager_id: int | None = None
+
     # Zero Trust Security
     trust_score: float = 0.5  # 0.0 = no trust, 1.0 = full trust
-    last_risk_assessment: Optional[datetime] = None
+    last_risk_assessment: datetime | None = None
     current_threat_level: ThreatLevel = ThreatLevel.LOW
     failed_login_attempts: int = 0
-    account_locked_until: Optional[datetime] = None
-    
+    account_locked_until: datetime | None = None
+
     # MFA and Authentication
     mfa_enabled: bool = True
-    mfa_methods: List[MFAMethod] = []
+    mfa_methods: list[MFAMethod] = []
     requires_password_change: bool = False
-    password_last_changed: Optional[datetime] = None
-    
+    password_last_changed: datetime | None = None
+
     # Access Controls
-    allowed_ip_ranges: List[str] = []
+    allowed_ip_ranges: list[str] = []
     session_timeout_minutes: int = 30
     max_concurrent_sessions: int = 3
-    
+
     # Compliance and Audit
     compliance_level: ComplianceLevel = ComplianceLevel.INTERNAL
     data_retention_days: int = 2555  # 7 years default
-    consent_given_at: Optional[datetime] = None
+    consent_given_at: datetime | None = None
     gdpr_consent: bool = False
     hipaa_consent: bool = False
-    
+
     # Zero-Knowledge Encryption
-    encryption_key_id: Optional[str] = None
-    signing_key_id: Optional[str] = None
+    encryption_key_id: str | None = None
+    signing_key_id: str | None = None
     key_rotation_required: bool = False
-    last_key_rotation: Optional[datetime] = None
-    
+    last_key_rotation: datetime | None = None
+
     # Security Monitoring
-    recent_security_events: List[SecurityEvent] = []
+    recent_security_events: list[SecurityEvent] = []
     suspicious_activity_score: float = 0.0
-    last_security_scan: Optional[datetime] = None
-    
+    last_security_scan: datetime | None = None
+
     # Enterprise Features
-    provisioned_by: Optional[str] = None
-    deprovisioned_at: Optional[datetime] = None
+    provisioned_by: str | None = None
+    deprovisioned_at: datetime | None = None
     employment_status: Literal["active", "suspended", "terminated"] = "active"
-    security_clearance_level: Optional[str] = None
-    
+    security_clearance_level: str | None = None
+
 
 class ZeroTrustVerification(BaseModel):
     """Zero Trust continuous verification result."""
-    
+
     user_id: int
     verification_id: str
     access_granted: bool
     trust_score: float
-    risk_factors: List[str] = []
-    required_actions: List[str] = []  # e.g., ["require_mfa", "verify_device"]
-    session_restrictions: Dict[str, Any] = {}  # time limits, IP restrictions, etc.
+    risk_factors: list[str] = []
+    required_actions: list[str] = []  # e.g., ["require_mfa", "verify_device"]
+    session_restrictions: dict[str, Any] = {}  # time limits, IP restrictions, etc.
     next_verification_in: int = 3600  # seconds until next verification
     verified_at: datetime
-    
+
 
 class IncidentResponse(BaseModel):
     """Security incident response tracking."""
-    
+
     incident_id: str
     incident_type: str
     severity: ThreatLevel
-    affected_users: List[int] = []
-    affected_resources: List[str] = []
+    affected_users: list[int] = []
+    affected_resources: list[str] = []
     detected_at: datetime
-    response_initiated_at: Optional[datetime] = None
-    contained_at: Optional[datetime] = None
-    resolved_at: Optional[datetime] = None
-    root_cause: Optional[str] = None
-    lessons_learned: Optional[str] = None
+    response_initiated_at: datetime | None = None
+    contained_at: datetime | None = None
+    resolved_at: datetime | None = None
+    root_cause: str | None = None
+    lessons_learned: str | None = None
     notification_sent: bool = False
     customer_impact: bool = False
     regulatory_reporting_required: bool = False

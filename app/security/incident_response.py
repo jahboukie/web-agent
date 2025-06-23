@@ -5,23 +5,22 @@ Automated incident detection, response workflows, and customer notification
 protocols for rapid response to security breaches and vulnerabilities.
 """
 
-import asyncio
-import json
-from typing import Dict, Any, List, Optional, Callable
-from datetime import datetime, timedelta
-from enum import Enum
-from dataclasses import dataclass, field
 import uuid
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from app.core.config import settings
 from app.core.logging import get_logger
-from app.schemas.user import ThreatLevel, IncidentResponse, SecurityEvent
+from app.schemas.user import IncidentResponse, SecurityEvent, ThreatLevel
 
 logger = get_logger(__name__)
 
 
 class IncidentType(str, Enum):
     """Types of security incidents."""
+
     DATA_BREACH = "data_breach"
     ACCOUNT_COMPROMISE = "account_compromise"
     MALWARE_DETECTION = "malware_detection"
@@ -36,6 +35,7 @@ class IncidentType(str, Enum):
 
 class ResponseAction(str, Enum):
     """Incident response actions."""
+
     ISOLATE_SYSTEM = "isolate_system"
     DISABLE_ACCOUNT = "disable_account"
     RESET_PASSWORD = "reset_password"
@@ -52,6 +52,7 @@ class ResponseAction(str, Enum):
 
 class NotificationChannel(str, Enum):
     """Notification channels for incident response."""
+
     EMAIL = "email"
     SMS = "sms"
     SLACK = "slack"
@@ -63,15 +64,15 @@ class NotificationChannel(str, Enum):
 @dataclass
 class PlaybookStep:
     """Individual step in incident response playbook."""
-    
+
     step_id: str
     name: str
     description: str
     action: ResponseAction
     automated: bool
     timeout_minutes: int
-    prerequisites: List[str] = field(default_factory=list)
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    prerequisites: list[str] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
     notification_required: bool = False
     approval_required: bool = False
     rollback_possible: bool = False
@@ -80,43 +81,723 @@ class PlaybookStep:
 @dataclass
 class IncidentPlaybook:
     """Complete incident response playbook."""
-    
+
     playbook_id: str
     name: str
     description: str
-    incident_types: List[IncidentType]
-    severity_levels: List[ThreatLevel]
-    steps: List[PlaybookStep]
+    incident_types: list[IncidentType]
+    severity_levels: list[ThreatLevel]
+    steps: list[PlaybookStep]
     max_execution_time_minutes: int
     auto_execute: bool
     requires_approval: bool
-    notification_channels: List[NotificationChannel]
-    compliance_requirements: List[str] = field(default_factory=list)
+    notification_channels: list[NotificationChannel]
+    compliance_requirements: list[str] = field(default_factory=list)
 
 
 @dataclass
 class PlaybookExecution:
     """Tracking of playbook execution."""
-    
+
     execution_id: str
     incident_id: str
     playbook_id: str
     started_at: datetime
     status: str = "running"  # running, completed, failed, cancelled
     current_step: int = 0
-    completed_steps: List[str] = field(default_factory=list)
-    failed_steps: List[str] = field(default_factory=list)
-    execution_log: List[Dict[str, Any]] = field(default_factory=list)
-    completed_at: Optional[datetime] = None
+    completed_steps: list[str] = field(default_factory=list)
+    failed_steps: list[str] = field(default_factory=list)
+    execution_log: list[dict[str, Any]] = field(default_factory=list)
+    completed_at: datetime | None = None
     success: bool = False
 
 
 class IncidentResponseOrchestrator:
     """
     Security Incident Response Orchestrator
-    
+
     Manages automated incident detection, response workflows,
     and notifications according to predefined playbooks.
     """
-    
-    def __init__(self):\n        self.playbooks = self._load_playbooks()\n        self.active_incidents = {}\n        self.execution_history = []\n        self.notification_handlers = self._initialize_notification_handlers()\n        \n    def _load_playbooks(self) -> Dict[str, IncidentPlaybook]:\n        \"\"\"Load predefined incident response playbooks.\"\"\"\n        \n        playbooks = {}\n        \n        # Data Breach Response Playbook\n        data_breach_playbook = IncidentPlaybook(\n            playbook_id=\"pb_data_breach_001\",\n            name=\"Data Breach Response\",\n            description=\"Comprehensive response to data breach incidents\",\n            incident_types=[IncidentType.DATA_BREACH],\n            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],\n            steps=[\n                PlaybookStep(\n                    step_id=\"db_001\",\n                    name=\"Immediate Containment\",\n                    description=\"Isolate affected systems to prevent further data exposure\",\n                    action=ResponseAction.ISOLATE_SYSTEM,\n                    automated=True,\n                    timeout_minutes=5,\n                    notification_required=True\n                ),\n                PlaybookStep(\n                    step_id=\"db_002\",\n                    name=\"Evidence Preservation\",\n                    description=\"Create forensic backups of affected systems\",\n                    action=ResponseAction.BACKUP_EVIDENCE,\n                    automated=True,\n                    timeout_minutes=30,\n                    prerequisites=[\"db_001\"]\n                ),\n                PlaybookStep(\n                    step_id=\"db_003\",\n                    name=\"Impact Assessment\",\n                    description=\"Assess scope and impact of data breach\",\n                    action=ResponseAction.ESCALATE_TO_SOC,\n                    automated=False,\n                    timeout_minutes=60,\n                    prerequisites=[\"db_001\", \"db_002\"],\n                    approval_required=True\n                ),\n                PlaybookStep(\n                    step_id=\"db_004\",\n                    name=\"Customer Notification\",\n                    description=\"Notify affected customers within regulatory timeframes\",\n                    action=ResponseAction.NOTIFY_USERS,\n                    automated=False,\n                    timeout_minutes=120,\n                    prerequisites=[\"db_003\"],\n                    approval_required=True,\n                    parameters={\n                        \"notification_template\": \"data_breach_notification\",\n                        \"regulatory_deadline_hours\": 72\n                    }\n                ),\n                PlaybookStep(\n                    step_id=\"db_005\",\n                    name=\"Regulatory Notification\",\n                    description=\"Notify relevant regulatory authorities\",\n                    action=ResponseAction.CONTACT_AUTHORITIES,\n                    automated=False,\n                    timeout_minutes=240,\n                    prerequisites=[\"db_003\"],\n                    approval_required=True\n                )\n            ],\n            max_execution_time_minutes=480,\n            auto_execute=True,\n            requires_approval=True,\n            notification_channels=[NotificationChannel.EMAIL, NotificationChannel.SLACK],\n            compliance_requirements=[\"GDPR Article 33\", \"CCPA Section 1798.82\"]\n        )\n        playbooks[data_breach_playbook.playbook_id] = data_breach_playbook\n        \n        # Account Compromise Response Playbook\n        account_compromise_playbook = IncidentPlaybook(\n            playbook_id=\"pb_account_compromise_001\",\n            name=\"Account Compromise Response\",\n            description=\"Response to compromised user accounts\",\n            incident_types=[IncidentType.ACCOUNT_COMPROMISE],\n            severity_levels=[ThreatLevel.MEDIUM, ThreatLevel.HIGH, ThreatLevel.CRITICAL],\n            steps=[\n                PlaybookStep(\n                    step_id=\"ac_001\",\n                    name=\"Disable Compromised Account\",\n                    description=\"Immediately disable the compromised account\",\n                    action=ResponseAction.DISABLE_ACCOUNT,\n                    automated=True,\n                    timeout_minutes=1\n                ),\n                PlaybookStep(\n                    step_id=\"ac_002\",\n                    name=\"Revoke Active Sessions\",\n                    description=\"Revoke all active tokens and sessions\",\n                    action=ResponseAction.REVOKE_TOKENS,\n                    automated=True,\n                    timeout_minutes=2,\n                    prerequisites=[\"ac_001\"]\n                ),\n                PlaybookStep(\n                    step_id=\"ac_003\",\n                    name=\"Force Password Reset\",\n                    description=\"Force password reset for the account\",\n                    action=ResponseAction.RESET_PASSWORD,\n                    automated=True,\n                    timeout_minutes=5,\n                    prerequisites=[\"ac_001\", \"ac_002\"]\n                ),\n                PlaybookStep(\n                    step_id=\"ac_004\",\n                    name=\"Notify Account Owner\",\n                    description=\"Notify the account owner of the compromise\",\n                    action=ResponseAction.NOTIFY_USERS,\n                    automated=True,\n                    timeout_minutes=10,\n                    prerequisites=[\"ac_003\"],\n                    parameters={\n                        \"notification_template\": \"account_compromise_notification\"\n                    }\n                )\n            ],\n            max_execution_time_minutes=60,\n            auto_execute=True,\n            requires_approval=False,\n            notification_channels=[NotificationChannel.EMAIL]\n        )\n        playbooks[account_compromise_playbook.playbook_id] = account_compromise_playbook\n        \n        # Malware Detection Response Playbook\n        malware_playbook = IncidentPlaybook(\n            playbook_id=\"pb_malware_001\",\n            name=\"Malware Detection Response\",\n            description=\"Response to malware detection incidents\",\n            incident_types=[IncidentType.MALWARE_DETECTION],\n            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],\n            steps=[\n                PlaybookStep(\n                    step_id=\"mw_001\",\n                    name=\"Quarantine Malware\",\n                    description=\"Quarantine detected malware files\",\n                    action=ResponseAction.QUARANTINE_FILE,\n                    automated=True,\n                    timeout_minutes=2\n                ),\n                PlaybookStep(\n                    step_id=\"mw_002\",\n                    name=\"Isolate Affected System\",\n                    description=\"Isolate the affected system from network\",\n                    action=ResponseAction.ISOLATE_SYSTEM,\n                    automated=True,\n                    timeout_minutes=5,\n                    prerequisites=[\"mw_001\"]\n                ),\n                PlaybookStep(\n                    step_id=\"mw_003\",\n                    name=\"Scan Related Systems\",\n                    description=\"Scan systems that may be affected\",\n                    action=ResponseAction.ESCALATE_TO_SOC,\n                    automated=False,\n                    timeout_minutes=30,\n                    prerequisites=[\"mw_002\"]\n                )\n            ],\n            max_execution_time_minutes=120,\n            auto_execute=True,\n            requires_approval=False,\n            notification_channels=[NotificationChannel.SLACK, NotificationChannel.PAGERDUTY]\n        )\n        playbooks[malware_playbook.playbook_id] = malware_playbook\n        \n        # DDoS Attack Response Playbook\n        ddos_playbook = IncidentPlaybook(\n            playbook_id=\"pb_ddos_001\",\n            name=\"DDoS Attack Response\",\n            description=\"Response to distributed denial of service attacks\",\n            incident_types=[IncidentType.DDOS_ATTACK],\n            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],\n            steps=[\n                PlaybookStep(\n                    step_id=\"ddos_001\",\n                    name=\"Activate DDoS Protection\",\n                    description=\"Activate cloud-based DDoS protection\",\n                    action=ResponseAction.ACTIVATE_DR,\n                    automated=True,\n                    timeout_minutes=5\n                ),\n                PlaybookStep(\n                    step_id=\"ddos_002\",\n                    name=\"Block Malicious IPs\",\n                    description=\"Block identified malicious IP addresses\",\n                    action=ResponseAction.BLOCK_IP,\n                    automated=True,\n                    timeout_minutes=10,\n                    prerequisites=[\"ddos_001\"]\n                ),\n                PlaybookStep(\n                    step_id=\"ddos_003\",\n                    name=\"Scale Infrastructure\",\n                    description=\"Scale infrastructure to handle increased load\",\n                    action=ResponseAction.ACTIVATE_DR,\n                    automated=True,\n                    timeout_minutes=15,\n                    prerequisites=[\"ddos_001\"]\n                )\n            ],\n            max_execution_time_minutes=60,\n            auto_execute=True,\n            requires_approval=False,\n            notification_channels=[NotificationChannel.PAGERDUTY, NotificationChannel.SLACK]\n        )\n        playbooks[ddos_playbook.playbook_id] = ddos_playbook\n        \n        return playbooks\n    \n    def _initialize_notification_handlers(self) -> Dict[NotificationChannel, Callable]:\n        \"\"\"Initialize notification handlers for different channels.\"\"\"\n        \n        return {\n            NotificationChannel.EMAIL: self._send_email_notification,\n            NotificationChannel.SMS: self._send_sms_notification,\n            NotificationChannel.SLACK: self._send_slack_notification,\n            NotificationChannel.PAGERDUTY: self._send_pagerduty_notification,\n            NotificationChannel.WEBHOOK: self._send_webhook_notification,\n            NotificationChannel.DASHBOARD: self._send_dashboard_notification\n        }\n    \n    async def detect_and_respond(self, security_event: SecurityEvent) -> Optional[PlaybookExecution]:\n        \"\"\"Detect incident and trigger appropriate response playbook.\"\"\"\n        \n        try:\n            # Analyze security event to determine incident type\n            incident_type = await self._classify_incident(security_event)\n            if not incident_type:\n                logger.debug(\"Security event does not require incident response\", event_id=security_event.event_id)\n                return None\n            \n            # Create incident record\n            incident = await self._create_incident(security_event, incident_type)\n            \n            # Select appropriate playbook\n            playbook = await self._select_playbook(incident_type, security_event.severity)\n            if not playbook:\n                logger.warning(\"No playbook found for incident\", incident_type=incident_type.value)\n                return None\n            \n            # Execute playbook\n            execution = await self._execute_playbook(incident, playbook)\n            \n            return execution\n            \n        except Exception as e:\n            logger.error(\"Incident detection and response failed\", error=str(e))\n            return None\n    \n    async def _classify_incident(self, security_event: SecurityEvent) -> Optional[IncidentType]:\n        \"\"\"Classify security event to determine incident type.\"\"\"\n        \n        # Classification logic based on event type and context\n        event_type = security_event.event_type.lower()\n        \n        if \"data_breach\" in event_type or \"data_exposure\" in event_type:\n            return IncidentType.DATA_BREACH\n        elif \"account_compromise\" in event_type or \"credential_theft\" in event_type:\n            return IncidentType.ACCOUNT_COMPROMISE\n        elif \"malware\" in event_type or \"virus\" in event_type:\n            return IncidentType.MALWARE_DETECTION\n        elif \"unauthorized_access\" in event_type:\n            return IncidentType.UNAUTHORIZED_ACCESS\n        elif \"ddos\" in event_type or \"dos_attack\" in event_type:\n            return IncidentType.DDOS_ATTACK\n        elif \"insider_threat\" in event_type:\n            return IncidentType.INSIDER_THREAT\n        elif \"vulnerability_exploit\" in event_type:\n            return IncidentType.VULNERABILITY_EXPLOITATION\n        elif \"compliance_violation\" in event_type:\n            return IncidentType.COMPLIANCE_VIOLATION\n        elif \"system_compromise\" in event_type:\n            return IncidentType.SYSTEM_COMPROMISE\n        elif \"cloud_misconfiguration\" in event_type:\n            return IncidentType.CLOUD_MISCONFIGURATION\n        \n        # Check severity for automatic escalation\n        if security_event.severity in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:\n            return IncidentType.SYSTEM_COMPROMISE\n        \n        return None\n    \n    async def _create_incident(self, security_event: SecurityEvent, incident_type: IncidentType) -> IncidentResponse:\n        \"\"\"Create incident record for tracking.\"\"\"\n        \n        incident = IncidentResponse(\n            incident_id=f\"inc_{datetime.utcnow().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}\",\n            incident_type=incident_type.value,\n            severity=security_event.severity,\n            affected_users=[security_event.user_id],\n            affected_resources=[],\n            detected_at=datetime.utcnow(),\n            customer_impact=security_event.severity in [ThreatLevel.HIGH, ThreatLevel.CRITICAL],\n            regulatory_reporting_required=incident_type in [\n                IncidentType.DATA_BREACH,\n                IncidentType.COMPLIANCE_VIOLATION\n            ]\n        )\n        \n        self.active_incidents[incident.incident_id] = incident\n        \n        logger.info(\n            \"Security incident created\",\n            incident_id=incident.incident_id,\n            incident_type=incident_type.value,\n            severity=security_event.severity.value\n        )\n        \n        return incident\n    \n    async def _select_playbook(self, incident_type: IncidentType, severity: ThreatLevel) -> Optional[IncidentPlaybook]:\n        \"\"\"Select appropriate playbook for incident.\"\"\"\n        \n        for playbook in self.playbooks.values():\n            if (incident_type in playbook.incident_types and \n                severity in playbook.severity_levels):\n                return playbook\n        \n        return None\n    \n    async def _execute_playbook(self, incident: IncidentResponse, playbook: IncidentPlaybook) -> PlaybookExecution:\n        \"\"\"Execute incident response playbook.\"\"\"\n        \n        execution = PlaybookExecution(\n            execution_id=f\"exec_{uuid.uuid4().hex[:12]}\",\n            incident_id=incident.incident_id,\n            playbook_id=playbook.playbook_id,\n            started_at=datetime.utcnow()\n        )\n        \n        try:\n            logger.info(\n                \"Starting playbook execution\",\n                incident_id=incident.incident_id,\n                playbook_id=playbook.playbook_id,\n                execution_id=execution.execution_id\n            )\n            \n            # Send initial notification\n            await self._send_notifications(\n                playbook.notification_channels,\n                f\"Incident Response Started\",\n                f\"Incident {incident.incident_id} detected. Executing playbook {playbook.name}.\",\n                incident\n            )\n            \n            # Execute each step\n            for i, step in enumerate(playbook.steps):\n                execution.current_step = i\n                \n                # Check prerequisites\n                if not await self._check_prerequisites(step, execution):\n                    logger.warning(\n                        \"Step prerequisites not met\",\n                        step_id=step.step_id,\n                        execution_id=execution.execution_id\n                    )\n                    continue\n                \n                # Check if approval required\n                if step.approval_required and not playbook.auto_execute:\n                    logger.info(\n                        \"Step requires manual approval\",\n                        step_id=step.step_id,\n                        execution_id=execution.execution_id\n                    )\n                    # In a real implementation, this would wait for approval\n                    continue\n                \n                # Execute step\n                success = await self._execute_step(step, incident, execution)\n                \n                if success:\n                    execution.completed_steps.append(step.step_id)\n                    execution.execution_log.append({\n                        \"timestamp\": datetime.utcnow().isoformat(),\n                        \"step_id\": step.step_id,\n                        \"status\": \"completed\",\n                        \"message\": f\"Successfully executed {step.name}\"\n                    })\n                else:\n                    execution.failed_steps.append(step.step_id)\n                    execution.execution_log.append({\n                        \"timestamp\": datetime.utcnow().isoformat(),\n                        \"step_id\": step.step_id,\n                        \"status\": \"failed\",\n                        \"message\": f\"Failed to execute {step.name}\"\n                    })\n                    \n                    # Stop execution if critical step fails\n                    if not step.rollback_possible:\n                        break\n            \n            # Complete execution\n            execution.completed_at = datetime.utcnow()\n            execution.success = len(execution.failed_steps) == 0\n            execution.status = \"completed\" if execution.success else \"failed\"\n            \n            # Send completion notification\n            status_msg = \"completed successfully\" if execution.success else \"completed with failures\"\n            await self._send_notifications(\n                playbook.notification_channels,\n                f\"Incident Response {status_msg.title()}\",\n                f\"Incident {incident.incident_id} response {status_msg}.\",\n                incident\n            )\n            \n            self.execution_history.append(execution)\n            \n            logger.info(\n                \"Playbook execution completed\",\n                execution_id=execution.execution_id,\n                success=execution.success,\n                completed_steps=len(execution.completed_steps),\n                failed_steps=len(execution.failed_steps)\n            )\n            \n        except Exception as e:\n            execution.status = \"failed\"\n            execution.completed_at = datetime.utcnow()\n            execution.execution_log.append({\n                \"timestamp\": datetime.utcnow().isoformat(),\n                \"step_id\": \"execution\",\n                \"status\": \"error\",\n                \"message\": f\"Playbook execution failed: {str(e)}\"\n            })\n            \n            logger.error(\n                \"Playbook execution failed\",\n                execution_id=execution.execution_id,\n                error=str(e)\n            )\n        \n        return execution\n    \n    async def _check_prerequisites(self, step: PlaybookStep, execution: PlaybookExecution) -> bool:\n        \"\"\"Check if step prerequisites are met.\"\"\"\n        \n        for prereq in step.prerequisites:\n            if prereq not in execution.completed_steps:\n                return False\n        \n        return True\n    \n    async def _execute_step(self, step: PlaybookStep, incident: IncidentResponse, execution: PlaybookExecution) -> bool:\n        \"\"\"Execute individual playbook step.\"\"\"\n        \n        try:\n            logger.info(\n                \"Executing playbook step\",\n                step_id=step.step_id,\n                action=step.action.value,\n                execution_id=execution.execution_id\n            )\n            \n            if not step.automated:\n                # Manual step - log for human intervention\n                logger.info(\n                    \"Manual step requires human intervention\",\n                    step_id=step.step_id,\n                    description=step.description\n                )\n                return True\n            \n            # Execute automated actions\n            if step.action == ResponseAction.ISOLATE_SYSTEM:\n                return await self._isolate_system(step, incident)\n            elif step.action == ResponseAction.DISABLE_ACCOUNT:\n                return await self._disable_account(step, incident)\n            elif step.action == ResponseAction.RESET_PASSWORD:\n                return await self._reset_password(step, incident)\n            elif step.action == ResponseAction.REVOKE_TOKENS:\n                return await self._revoke_tokens(step, incident)\n            elif step.action == ResponseAction.BLOCK_IP:\n                return await self._block_ip(step, incident)\n            elif step.action == ResponseAction.QUARANTINE_FILE:\n                return await self._quarantine_file(step, incident)\n            elif step.action == ResponseAction.NOTIFY_USERS:\n                return await self._notify_users(step, incident)\n            elif step.action == ResponseAction.BACKUP_EVIDENCE:\n                return await self._backup_evidence(step, incident)\n            else:\n                logger.warning(\"Unknown action type\", action=step.action.value)\n                return False\n            \n        except Exception as e:\n            logger.error(\n                \"Step execution failed\",\n                step_id=step.step_id,\n                action=step.action.value,\n                error=str(e)\n            )\n            return False\n    \n    async def _send_notifications(self, channels: List[NotificationChannel], title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send notifications through specified channels.\"\"\"\n        \n        for channel in channels:\n            try:\n                handler = self.notification_handlers.get(channel)\n                if handler:\n                    await handler(title, message, incident)\n                else:\n                    logger.warning(\"No handler for notification channel\", channel=channel.value)\n            except Exception as e:\n                logger.error(\n                    \"Notification failed\",\n                    channel=channel.value,\n                    error=str(e)\n                )\n    \n    # Action implementations\n    async def _isolate_system(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Isolate affected system from network.\"\"\"\n        logger.info(\"System isolation executed\", incident_id=incident.incident_id)\n        return True\n    \n    async def _disable_account(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Disable compromised user account.\"\"\"\n        logger.info(\"Account disabled\", incident_id=incident.incident_id)\n        return True\n    \n    async def _reset_password(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Force password reset for affected account.\"\"\"\n        logger.info(\"Password reset forced\", incident_id=incident.incident_id)\n        return True\n    \n    async def _revoke_tokens(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Revoke all active tokens and sessions.\"\"\"\n        logger.info(\"Tokens revoked\", incident_id=incident.incident_id)\n        return True\n    \n    async def _block_ip(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Block malicious IP addresses.\"\"\"\n        logger.info(\"IP addresses blocked\", incident_id=incident.incident_id)\n        return True\n    \n    async def _quarantine_file(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Quarantine malicious files.\"\"\"\n        logger.info(\"Files quarantined\", incident_id=incident.incident_id)\n        return True\n    \n    async def _notify_users(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Notify affected users.\"\"\"\n        logger.info(\"Users notified\", incident_id=incident.incident_id)\n        return True\n    \n    async def _backup_evidence(self, step: PlaybookStep, incident: IncidentResponse) -> bool:\n        \"\"\"Create forensic backups for evidence.\"\"\"\n        logger.info(\"Evidence backed up\", incident_id=incident.incident_id)\n        return True\n    \n    # Notification handlers\n    async def _send_email_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send email notification.\"\"\"\n        logger.info(\"Email notification sent\", title=title, incident_id=incident.incident_id)\n    \n    async def _send_sms_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send SMS notification.\"\"\"\n        logger.info(\"SMS notification sent\", title=title, incident_id=incident.incident_id)\n    \n    async def _send_slack_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send Slack notification.\"\"\"\n        logger.info(\"Slack notification sent\", title=title, incident_id=incident.incident_id)\n    \n    async def _send_pagerduty_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send PagerDuty notification.\"\"\"\n        logger.info(\"PagerDuty notification sent\", title=title, incident_id=incident.incident_id)\n    \n    async def _send_webhook_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send webhook notification.\"\"\"\n        logger.info(\"Webhook notification sent\", title=title, incident_id=incident.incident_id)\n    \n    async def _send_dashboard_notification(self, title: str, message: str, incident: IncidentResponse) -> None:\n        \"\"\"Send dashboard notification.\"\"\"\n        logger.info(\"Dashboard notification sent\", title=title, incident_id=incident.incident_id)\n\n\n# Global incident response orchestrator\nincident_response_orchestrator = IncidentResponseOrchestrator()"
+
+    def __init__(self):
+        self.playbooks = self._load_playbooks()
+        self.active_incidents = {}
+        self.execution_history = []
+        self.notification_handlers = self._initialize_notification_handlers()
+
+    def _load_playbooks(self) -> dict[str, IncidentPlaybook]:
+        """Load predefined incident response playbooks."""
+
+        playbooks = {}
+
+        # Data Breach Response Playbook
+        data_breach_playbook = IncidentPlaybook(
+            playbook_id="pb_data_breach_001",
+            name="Data Breach Response",
+            description="Comprehensive response to data breach incidents",
+            incident_types=[IncidentType.DATA_BREACH],
+            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],
+            steps=[
+                PlaybookStep(
+                    step_id="db_001",
+                    name="Immediate Containment",
+                    description="Isolate affected systems to prevent further data exposure",
+                    action=ResponseAction.ISOLATE_SYSTEM,
+                    automated=True,
+                    timeout_minutes=5,
+                    notification_required=True,
+                ),
+                PlaybookStep(
+                    step_id="db_002",
+                    name="Evidence Preservation",
+                    description="Create forensic backups of affected systems",
+                    action=ResponseAction.BACKUP_EVIDENCE,
+                    automated=True,
+                    timeout_minutes=30,
+                    prerequisites=["db_001"],
+                ),
+                PlaybookStep(
+                    step_id="db_003",
+                    name="Impact Assessment",
+                    description="Assess scope and impact of data breach",
+                    action=ResponseAction.ESCALATE_TO_SOC,
+                    automated=False,
+                    timeout_minutes=60,
+                    prerequisites=["db_001", "db_002"],
+                    approval_required=True,
+                ),
+                PlaybookStep(
+                    step_id="db_004",
+                    name="Customer Notification",
+                    description="Notify affected customers within regulatory timeframes",
+                    action=ResponseAction.NOTIFY_USERS,
+                    automated=False,
+                    timeout_minutes=120,
+                    prerequisites=["db_003"],
+                    approval_required=True,
+                    parameters={
+                        "notification_template": "data_breach_notification",
+                        "regulatory_deadline_hours": 72,
+                    },
+                ),
+                PlaybookStep(
+                    step_id="db_005",
+                    name="Regulatory Notification",
+                    description="Notify relevant regulatory authorities",
+                    action=ResponseAction.CONTACT_AUTHORITIES,
+                    automated=False,
+                    timeout_minutes=240,
+                    prerequisites=["db_003"],
+                    approval_required=True,
+                ),
+            ],
+            max_execution_time_minutes=480,
+            auto_execute=True,
+            requires_approval=True,
+            notification_channels=[
+                NotificationChannel.EMAIL,
+                NotificationChannel.SLACK,
+            ],
+            compliance_requirements=["GDPR Article 33", "CCPA Section 1798.82"],
+        )
+        playbooks[data_breach_playbook.playbook_id] = data_breach_playbook
+
+        # Account Compromise Response Playbook
+        account_compromise_playbook = IncidentPlaybook(
+            playbook_id="pb_account_compromise_001",
+            name="Account Compromise Response",
+            description="Response to compromised user accounts",
+            incident_types=[IncidentType.ACCOUNT_COMPROMISE],
+            severity_levels=[
+                ThreatLevel.MEDIUM,
+                ThreatLevel.HIGH,
+                ThreatLevel.CRITICAL,
+            ],
+            steps=[
+                PlaybookStep(
+                    step_id="ac_001",
+                    name="Disable Compromised Account",
+                    description="Immediately disable the compromised account",
+                    action=ResponseAction.DISABLE_ACCOUNT,
+                    automated=True,
+                    timeout_minutes=1,
+                ),
+                PlaybookStep(
+                    step_id="ac_002",
+                    name="Revoke Active Sessions",
+                    description="Revoke all active tokens and sessions",
+                    action=ResponseAction.REVOKE_TOKENS,
+                    automated=True,
+                    timeout_minutes=2,
+                    prerequisites=["ac_001"],
+                ),
+                PlaybookStep(
+                    step_id="ac_003",
+                    name="Force Password Reset",
+                    description="Force password reset for the account",
+                    action=ResponseAction.RESET_PASSWORD,
+                    automated=True,
+                    timeout_minutes=5,
+                    prerequisites=["ac_001", "ac_002"],
+                ),
+                PlaybookStep(
+                    step_id="ac_004",
+                    name="Notify Account Owner",
+                    description="Notify the account owner of the compromise",
+                    action=ResponseAction.NOTIFY_USERS,
+                    automated=True,
+                    timeout_minutes=10,
+                    prerequisites=["ac_003"],
+                    parameters={
+                        "notification_template": "account_compromise_notification"
+                    },
+                ),
+            ],
+            max_execution_time_minutes=60,
+            auto_execute=True,
+            requires_approval=False,
+            notification_channels=[NotificationChannel.EMAIL],
+        )
+        playbooks[account_compromise_playbook.playbook_id] = account_compromise_playbook
+
+        # Malware Detection Response Playbook
+        malware_playbook = IncidentPlaybook(
+            playbook_id="pb_malware_001",
+            name="Malware Detection Response",
+            description="Response to malware detection incidents",
+            incident_types=[IncidentType.MALWARE_DETECTION],
+            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],
+            steps=[
+                PlaybookStep(
+                    step_id="mw_001",
+                    name="Quarantine Malware",
+                    description="Quarantine detected malware files",
+                    action=ResponseAction.QUARANTINE_FILE,
+                    automated=True,
+                    timeout_minutes=2,
+                ),
+                PlaybookStep(
+                    step_id="mw_002",
+                    name="Isolate Affected System",
+                    description="Isolate the affected system from network",
+                    action=ResponseAction.ISOLATE_SYSTEM,
+                    automated=True,
+                    timeout_minutes=5,
+                    prerequisites=["mw_001"],
+                ),
+                PlaybookStep(
+                    step_id="mw_003",
+                    name="Scan Related Systems",
+                    description="Scan systems that may be affected",
+                    action=ResponseAction.ESCALATE_TO_SOC,
+                    automated=False,
+                    timeout_minutes=30,
+                    prerequisites=["mw_002"],
+                ),
+            ],
+            max_execution_time_minutes=120,
+            auto_execute=True,
+            requires_approval=False,
+            notification_channels=[
+                NotificationChannel.SLACK,
+                NotificationChannel.PAGERDUTY,
+            ],
+        )
+        playbooks[malware_playbook.playbook_id] = malware_playbook
+
+        # DDoS Attack Response Playbook
+        ddos_playbook = IncidentPlaybook(
+            playbook_id="pb_ddos_001",
+            name="DDoS Attack Response",
+            description="Response to distributed denial of service attacks",
+            incident_types=[IncidentType.DDOS_ATTACK],
+            severity_levels=[ThreatLevel.HIGH, ThreatLevel.CRITICAL],
+            steps=[
+                PlaybookStep(
+                    step_id="ddos_001",
+                    name="Activate DDoS Protection",
+                    description="Activate cloud-based DDoS protection",
+                    action=ResponseAction.ACTIVATE_DR,
+                    automated=True,
+                    timeout_minutes=5,
+                ),
+                PlaybookStep(
+                    step_id="ddos_002",
+                    name="Block Malicious IPs",
+                    description="Block identified malicious IP addresses",
+                    action=ResponseAction.BLOCK_IP,
+                    automated=True,
+                    timeout_minutes=10,
+                    prerequisites=["ddos_001"],
+                ),
+                PlaybookStep(
+                    step_id="ddos_003",
+                    name="Scale Infrastructure",
+                    description="Scale infrastructure to handle increased load",
+                    action=ResponseAction.ACTIVATE_DR,
+                    automated=True,
+                    timeout_minutes=15,
+                    prerequisites=["ddos_001"],
+                ),
+            ],
+            max_execution_time_minutes=60,
+            auto_execute=True,
+            requires_approval=False,
+            notification_channels=[
+                NotificationChannel.PAGERDUTY,
+                NotificationChannel.SLACK,
+            ],
+        )
+        playbooks[ddos_playbook.playbook_id] = ddos_playbook
+
+        return playbooks
+
+    def _initialize_notification_handlers(self) -> dict[NotificationChannel, Callable]:
+        """Initialize notification handlers for different channels."""
+
+        return {
+            NotificationChannel.EMAIL: self._send_email_notification,
+            NotificationChannel.SMS: self._send_sms_notification,
+            NotificationChannel.SLACK: self._send_slack_notification,
+            NotificationChannel.PAGERDUTY: self._send_pagerduty_notification,
+            NotificationChannel.WEBHOOK: self._send_webhook_notification,
+            NotificationChannel.DASHBOARD: self._send_dashboard_notification,
+        }
+
+    async def detect_and_respond(
+        self, security_event: SecurityEvent
+    ) -> PlaybookExecution | None:
+        """Detect incident and trigger appropriate response playbook."""
+
+        try:
+            # Analyze security event to determine incident type
+            incident_type = await self._classify_incident(security_event)
+            if not incident_type:
+                logger.debug(
+                    "Security event does not require incident response",
+                    event_id=security_event.event_id,
+                )
+                return None
+
+            # Create incident record
+            incident = await self._create_incident(security_event, incident_type)
+
+            # Select appropriate playbook
+            playbook = await self._select_playbook(
+                incident_type, security_event.severity
+            )
+            if not playbook:
+                logger.warning(
+                    "No playbook found for incident", incident_type=incident_type.value
+                )
+                return None
+
+            # Execute playbook
+            execution = await self._execute_playbook(incident, playbook)
+
+            return execution
+
+        except Exception as e:
+            logger.error("Incident detection and response failed", error=str(e))
+            return None
+
+    async def _classify_incident(
+        self, security_event: SecurityEvent
+    ) -> IncidentType | None:
+        """Classify security event to determine incident type."""
+
+        # Classification logic based on event type and context
+        event_type = security_event.event_type.lower()
+
+        if "data_breach" in event_type or "data_exposure" in event_type:
+            return IncidentType.DATA_BREACH
+        elif "account_compromise" in event_type or "credential_theft" in event_type:
+            return IncidentType.ACCOUNT_COMPROMISE
+        elif "malware" in event_type or "virus" in event_type:
+            return IncidentType.MALWARE_DETECTION
+        elif "unauthorized_access" in event_type:
+            return IncidentType.UNAUTHORIZED_ACCESS
+        elif "ddos" in event_type or "dos_attack" in event_type:
+            return IncidentType.DDOS_ATTACK
+        elif "insider_threat" in event_type:
+            return IncidentType.INSIDER_THREAT
+        elif "vulnerability_exploit" in event_type:
+            return IncidentType.VULNERABILITY_EXPLOITATION
+        elif "compliance_violation" in event_type:
+            return IncidentType.COMPLIANCE_VIOLATION
+        elif "system_compromise" in event_type:
+            return IncidentType.SYSTEM_COMPROMISE
+        elif "cloud_misconfiguration" in event_type:
+            return IncidentType.CLOUD_MISCONFIGURATION
+
+        # Check severity for automatic escalation
+        if security_event.severity in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:
+            return IncidentType.SYSTEM_COMPROMISE
+
+        return None
+
+    async def _create_incident(
+        self, security_event: SecurityEvent, incident_type: IncidentType
+    ) -> IncidentResponse:
+        """Create incident record for tracking."""
+
+        incident = IncidentResponse(
+            incident_id=f"inc_{datetime.utcnow().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}",
+            incident_type=incident_type.value,
+            severity=security_event.severity,
+            affected_users=[security_event.user_id],
+            affected_resources=[],
+            detected_at=datetime.utcnow(),
+            customer_impact=security_event.severity
+            in [ThreatLevel.HIGH, ThreatLevel.CRITICAL],
+            regulatory_reporting_required=incident_type
+            in [IncidentType.DATA_BREACH, IncidentType.COMPLIANCE_VIOLATION],
+        )
+
+        self.active_incidents[incident.incident_id] = incident
+
+        logger.info(
+            "Security incident created",
+            incident_id=incident.incident_id,
+            incident_type=incident_type.value,
+            severity=security_event.severity.value,
+        )
+
+        return incident
+
+    async def _select_playbook(
+        self, incident_type: IncidentType, severity: ThreatLevel
+    ) -> IncidentPlaybook | None:
+        """Select appropriate playbook for incident."""
+
+        for playbook in self.playbooks.values():
+            if (
+                incident_type in playbook.incident_types
+                and severity in playbook.severity_levels
+            ):
+                return playbook
+
+        return None
+
+    async def _execute_playbook(
+        self, incident: IncidentResponse, playbook: IncidentPlaybook
+    ) -> PlaybookExecution:
+        """Execute incident response playbook."""
+
+        execution = PlaybookExecution(
+            execution_id=f"exec_{uuid.uuid4().hex[:12]}",
+            incident_id=incident.incident_id,
+            playbook_id=playbook.playbook_id,
+            started_at=datetime.utcnow(),
+        )
+
+        try:
+            logger.info(
+                "Starting playbook execution",
+                incident_id=incident.incident_id,
+                playbook_id=playbook.playbook_id,
+                execution_id=execution.execution_id,
+            )
+
+            # Send initial notification
+            await self._send_notifications(
+                playbook.notification_channels,
+                "Incident Response Started",
+                f"Incident {incident.incident_id} detected. Executing playbook {playbook.name}.",
+                incident,
+            )
+
+            # Execute each step
+            for i, step in enumerate(playbook.steps):
+                execution.current_step = i
+
+                # Check prerequisites
+                if not await self._check_prerequisites(step, execution):
+                    logger.warning(
+                        "Step prerequisites not met",
+                        step_id=step.step_id,
+                        execution_id=execution.execution_id,
+                    )
+                    continue
+
+                # Check if approval required
+                if step.approval_required and not playbook.auto_execute:
+                    logger.info(
+                        "Step requires manual approval",
+                        step_id=step.step_id,
+                        execution_id=execution.execution_id,
+                    )
+                    # In a real implementation, this would wait for approval
+                    continue
+
+                # Execute step
+                success = await self._execute_step(step, incident, execution)
+
+                if success:
+                    execution.completed_steps.append(step.step_id)
+                    execution.execution_log.append(
+                        {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "step_id": step.step_id,
+                            "status": "completed",
+                            "message": f"Successfully executed {step.name}",
+                        }
+                    )
+                else:
+                    execution.failed_steps.append(step.step_id)
+                    execution.execution_log.append(
+                        {
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "step_id": step.step_id,
+                            "status": "failed",
+                            "message": f"Failed to execute {step.name}",
+                        }
+                    )
+
+                    # Stop execution if critical step fails
+                    if not step.rollback_possible:
+                        break
+
+            # Complete execution
+            execution.completed_at = datetime.utcnow()
+            execution.success = len(execution.failed_steps) == 0
+            execution.status = "completed" if execution.success else "failed"
+
+            # Send completion notification
+            status_msg = (
+                "completed successfully"
+                if execution.success
+                else "completed with failures"
+            )
+            await self._send_notifications(
+                playbook.notification_channels,
+                f"Incident Response {status_msg.title()}",
+                f"Incident {incident.incident_id} response {status_msg}.",
+                incident,
+            )
+
+            self.execution_history.append(execution)
+
+            logger.info(
+                "Playbook execution completed",
+                execution_id=execution.execution_id,
+                success=execution.success,
+                completed_steps=len(execution.completed_steps),
+                failed_steps=len(execution.failed_steps),
+            )
+
+        except Exception as e:
+            execution.status = "failed"
+            execution.completed_at = datetime.utcnow()
+            execution.execution_log.append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "step_id": "execution",
+                    "status": "error",
+                    "message": f"Playbook execution failed: {str(e)}",
+                }
+            )
+
+            logger.error(
+                "Playbook execution failed",
+                execution_id=execution.execution_id,
+                error=str(e),
+            )
+
+        return execution
+
+    async def _check_prerequisites(
+        self, step: PlaybookStep, execution: PlaybookExecution
+    ) -> bool:
+        """Check if step prerequisites are met."""
+
+        for prereq in step.prerequisites:
+            if prereq not in execution.completed_steps:
+                return False
+
+        return True
+
+    async def _execute_step(
+        self,
+        step: PlaybookStep,
+        incident: IncidentResponse,
+        execution: PlaybookExecution,
+    ) -> bool:
+        """Execute individual playbook step."""
+
+        try:
+            logger.info(
+                "Executing playbook step",
+                step_id=step.step_id,
+                action=step.action.value,
+                execution_id=execution.execution_id,
+            )
+
+            if not step.automated:
+                # Manual step - log for human intervention
+                logger.info(
+                    "Manual step requires human intervention",
+                    step_id=step.step_id,
+                    description=step.description,
+                )
+                return True
+
+            # Execute automated actions
+            if step.action == ResponseAction.ISOLATE_SYSTEM:
+                return await self._isolate_system(step, incident)
+            elif step.action == ResponseAction.DISABLE_ACCOUNT:
+                return await self._disable_account(step, incident)
+            elif step.action == ResponseAction.RESET_PASSWORD:
+                return await self._reset_password(step, incident)
+            elif step.action == ResponseAction.REVOKE_TOKENS:
+                return await self._revoke_tokens(step, incident)
+            elif step.action == ResponseAction.BLOCK_IP:
+                return await self._block_ip(step, incident)
+            elif step.action == ResponseAction.QUARANTINE_FILE:
+                return await self._quarantine_file(step, incident)
+            elif step.action == ResponseAction.NOTIFY_USERS:
+                return await self._notify_users(step, incident)
+            elif step.action == ResponseAction.BACKUP_EVIDENCE:
+                return await self._backup_evidence(step, incident)
+            else:
+                logger.warning("Unknown action type", action=step.action.value)
+                return False
+
+        except Exception as e:
+            logger.error(
+                "Step execution failed",
+                step_id=step.step_id,
+                action=step.action.value,
+                error=str(e),
+            )
+            return False
+
+    async def _send_notifications(
+        self,
+        channels: list[NotificationChannel],
+        title: str,
+        message: str,
+        incident: IncidentResponse,
+    ) -> None:
+        """Send notifications through specified channels."""
+
+        for channel in channels:
+            try:
+                handler = self.notification_handlers.get(channel)
+                if handler:
+                    await handler(title, message, incident)
+                else:
+                    logger.warning(
+                        "No handler for notification channel", channel=channel.value
+                    )
+            except Exception as e:
+                logger.error("Notification failed", channel=channel.value, error=str(e))
+
+    # Action implementations
+    async def _isolate_system(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Isolate affected system from network."""
+        logger.info("System isolation executed", incident_id=incident.incident_id)
+        return True
+
+    async def _disable_account(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Disable compromised user account."""
+        logger.info("Account disabled", incident_id=incident.incident_id)
+        return True
+
+    async def _reset_password(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Force password reset for affected account."""
+        logger.info("Password reset forced", incident_id=incident.incident_id)
+        return True
+
+    async def _revoke_tokens(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Revoke all active tokens and sessions."""
+        logger.info("Tokens revoked", incident_id=incident.incident_id)
+        return True
+
+    async def _block_ip(self, step: PlaybookStep, incident: IncidentResponse) -> bool:
+        """Block malicious IP addresses."""
+        logger.info("IP addresses blocked", incident_id=incident.incident_id)
+        return True
+
+    async def _quarantine_file(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Quarantine malicious files."""
+        logger.info("Files quarantined", incident_id=incident.incident_id)
+        return True
+
+    async def _notify_users(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Notify affected users."""
+        logger.info("Users notified", incident_id=incident.incident_id)
+        return True
+
+    async def _backup_evidence(
+        self, step: PlaybookStep, incident: IncidentResponse
+    ) -> bool:
+        """Create forensic backups for evidence."""
+        logger.info("Evidence backed up", incident_id=incident.incident_id)
+        return True
+
+    # Notification handlers
+    async def _send_email_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send email notification."""
+        logger.info(
+            "Email notification sent", title=title, incident_id=incident.incident_id
+        )
+
+    async def _send_sms_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send SMS notification."""
+        logger.info(
+            "SMS notification sent", title=title, incident_id=incident.incident_id
+        )
+
+    async def _send_slack_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send Slack notification."""
+        logger.info(
+            "Slack notification sent", title=title, incident_id=incident.incident_id
+        )
+
+    async def _send_pagerduty_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send PagerDuty notification."""
+        logger.info(
+            "PagerDuty notification sent", title=title, incident_id=incident.incident_id
+        )
+
+    async def _send_webhook_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send webhook notification."""
+        logger.info(
+            "Webhook notification sent", title=title, incident_id=incident.incident_id
+        )
+
+    async def _send_dashboard_notification(
+        self, title: str, message: str, incident: IncidentResponse
+    ) -> None:
+        """Send dashboard notification."""
+        logger.info(
+            "Dashboard notification sent", title=title, incident_id=incident.incident_id
+        )
+
+
+# Global incident response orchestrator
+incident_response_orchestrator = IncidentResponseOrchestrator()

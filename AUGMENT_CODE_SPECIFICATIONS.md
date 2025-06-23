@@ -299,9 +299,9 @@ Task service with CRUD operations and business logic.
 Implement:
 - create_task(db: AsyncSession, user_id: int, task_data: TaskCreate) -> Task
 - get_task(db: AsyncSession, task_id: int, user_id: int) -> Optional[Task]
-- get_user_tasks(db: AsyncSession, user_id: int, filters: TaskFilters, 
+- get_user_tasks(db: AsyncSession, user_id: int, filters: TaskFilters,
                  page: int, page_size: int) -> Tuple[List[Task], int]
-- update_task(db: AsyncSession, task_id: int, user_id: int, 
+- update_task(db: AsyncSession, task_id: int, user_id: int,
               task_data: TaskUpdate) -> Task
 - delete_task(db: AsyncSession, task_id: int, user_id: int) -> bool
 - get_task_stats(db: AsyncSession, user_id: int) -> TaskStats

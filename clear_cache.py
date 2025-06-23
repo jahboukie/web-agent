@@ -4,21 +4,20 @@ Clear Redis cache to fix schema mismatch issues.
 """
 
 import asyncio
+
 import redis.asyncio as redis
+
 
 async def clear_cache():
     """Clear all Redis cache data."""
     try:
         # Connect to Redis
         redis_client = redis.Redis(
-            host='localhost',
-            port=6379,
-            db=0,
-            decode_responses=True
+            host="localhost", port=6379, db=0, decode_responses=True
         )
 
         # Get all keys first to see what's cached
-        all_keys = await redis_client.keys('*')
+        all_keys = await redis_client.keys("*")
         print(f"📊 Found {len(all_keys)} keys in Redis cache")
 
         # Show some sample keys
@@ -34,7 +33,7 @@ async def clear_cache():
         print("✅ Redis cache cleared successfully!")
 
         # Verify it's empty
-        remaining_keys = await redis_client.keys('*')
+        remaining_keys = await redis_client.keys("*")
         print(f"🔍 Remaining keys after clear: {len(remaining_keys)}")
 
         # Close connection
@@ -42,6 +41,7 @@ async def clear_cache():
 
     except Exception as e:
         print(f"❌ Failed to clear cache: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(clear_cache())

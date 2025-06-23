@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.add_column('tasks', sa.Column('memory_usage_mb', sa.Integer(), nullable=True))
     op.add_column('tasks', sa.Column('browser_session_id', sa.String(255), nullable=True))
     op.add_column('tasks', sa.Column('last_error_at', sa.DateTime(timezone=True), nullable=True))
-    
+
     # Add indexes for performance
     op.create_index('idx_tasks_background_task_id', 'tasks', ['background_task_id'])
     op.create_index('idx_tasks_queue_name', 'tasks', ['queue_name'])
@@ -42,7 +42,7 @@ def downgrade() -> None:
     op.drop_index('idx_tasks_background_task_id', table_name='tasks')
     op.drop_index('idx_tasks_queue_name', table_name='tasks')
     op.drop_index('idx_tasks_processing_started_at', table_name='tasks')
-    
+
     # Remove columns
     op.drop_column('tasks', 'last_error_at')
     op.drop_column('tasks', 'browser_session_id')

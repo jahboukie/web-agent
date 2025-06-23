@@ -4,7 +4,13 @@
       "Bash(mkdir:*)",
       "Bash(touch:*)",
       "Bash(curl:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(pip install:*)",
+      "Bash(pre-commit run:*)",
+      "Bash(python:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

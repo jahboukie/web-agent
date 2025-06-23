@@ -214,20 +214,20 @@ jobs:
 async def test_reader_parser_complex_spa(self, test_db, test_users_db):
     """
     ⚠️ CRITICAL: Test Reader component with complex SPA.
-    
+
     Validates parsing accuracy and performance for dynamic content.
     """
     # Arrange
     user = test_users_db["user"]
     url = "https://complex-spa-example.com"
-    
+
     # Act
     start_time = time.time()
     result = await web_parser_service.parse_webpage_async(
         test_db, None, url, {"dynamic_content": True}
     )
     duration = time.time() - start_time
-    
+
     # Assert
     assert result.success, "Parse should succeed"
     assert duration < 5.0, f"Parse took {duration:.2f}s, expected < 5s"

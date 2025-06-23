@@ -181,7 +181,7 @@ SENTRY_DSN="<SENTRY-DSN>"
 ## 🔍 Outstanding Items
 
 ### Minor Issues (Non-Blocking)
-1. **Modified Files**: 
+1. **Modified Files**:
    - `app/api/v1/endpoints/tasks.py` (+203 lines)
    - `pyproject.toml` (+22 lines)
 

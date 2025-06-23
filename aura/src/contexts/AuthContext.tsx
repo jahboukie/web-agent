@@ -1,12 +1,18 @@
 /**
  * Authentication Context
- * 
+ *
  * Provides authentication state management, user data, and security
  * context throughout the WebAgent Aura application.
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { apiService, cryptoService, type User } from '../services';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
+import { apiService, cryptoService, type User } from "../services";
 
 interface AuthContextType {
   user: User | null;
@@ -51,16 +57,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const userData = apiService.getUserData();
         if (userData) {
           setUser(userData);
-          
+
           // Load private keys if available
           await cryptoService.loadPrivateKeys();
-          
+
           // Get initial trust assessment
           await updateTrustScore();
         }
       }
     } catch (error) {
-      console.error('Failed to initialize auth:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Failed to initialize auth:", error);
+      }
       // Clear invalid auth state
       apiService.logout();
     } finally {
@@ -77,14 +85,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       setUser(response.user);
-      
+
       // Load private keys
       await cryptoService.loadPrivateKeys();
-      
+
       // Get trust assessment
       await updateTrustScore();
     } catch (error) {
-      console.error('Login failed:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Login failed:", error);
+      }
       throw error;
     }
   };
@@ -93,11 +103,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const response = await apiService.register(data);
       setUser(response.user);
-      
+
       // Keys are already stored during registration
       await updateTrustScore();
     } catch (error) {
-      console.error('Registration failed:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Registration failed:", error);
+      }
       throw error;
     }
   };
@@ -111,14 +123,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshUser = async () => {
     try {
       if (!isAuthenticated) return;
-      
+
       // Fetch updated user data
-      const userData = await apiService.get<User>('/users/me');
+      const userData = await apiService.get<User>("/users/me");
       setUser(userData);
     } catch (error) {
-      console.error('Failed to refresh user:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Failed to refresh user:", error);
+      }
       // If refresh fails due to auth, logout
-      if (error.code === 'UNAUTHORIZED') {
+      if (error.code === "UNAUTHORIZED") {
         logout();
       }
     }
@@ -127,16 +141,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateTrustScore = async () => {
     try {
       if (!isAuthenticated) return;
-      
+
       const assessment = await apiService.getTrustAssessment();
       setTrustScore(assessment.trust_score);
-      
+
       // Update user's trust score if it's different
       if (user && user.trust_score !== assessment.trust_score) {
-        setUser(prev => prev ? { ...prev, trust_score: assessment.trust_score } : null);
+        setUser((prev) =>
+          prev ? { ...prev, trust_score: assessment.trust_score } : null,
+        );
       }
     } catch (error) {
-      console.warn('Failed to update trust score:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Failed to update trust score:", error);
+      }
     }
   };
 
@@ -144,9 +162,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const interval = setInterval(() => {
-      updateTrustScore();
-    }, 5 * 60 * 1000); // Update every 5 minutes
+    const interval = setInterval(
+      () => {
+        updateTrustScore();
+      },
+      5 * 60 * 1000,
+    ); // Update every 5 minutes
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
@@ -163,17 +184,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateTrustScore,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
@@ -196,7 +213,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
 
     if (!isAuthenticated) {
       // Redirect to login or show login form
-      window.location.href = '/login';
+      window.location.href = "/login";
       return null;
     }
 
@@ -213,23 +230,23 @@ export function usePermissions() {
   };
 
   const hasAnyRole = (roles: string[]): boolean => {
-    return roles.some(role => hasRole(role));
+    return roles.some((role) => hasRole(role));
   };
 
   const isAdmin = (): boolean => {
-    return hasAnyRole(['SYSTEM_ADMIN', 'TENANT_ADMIN']);
+    return hasAnyRole(["SYSTEM_ADMIN", "TENANT_ADMIN"]);
   };
 
   const canManageUsers = (): boolean => {
-    return hasAnyRole(['SYSTEM_ADMIN', 'TENANT_ADMIN']);
+    return hasAnyRole(["SYSTEM_ADMIN", "TENANT_ADMIN"]);
   };
 
   const canViewAuditLogs = (): boolean => {
-    return hasAnyRole(['SYSTEM_ADMIN', 'TENANT_ADMIN', 'AUDITOR']);
+    return hasAnyRole(["SYSTEM_ADMIN", "TENANT_ADMIN", "AUDITOR"]);
   };
 
   const canManageAutomation = (): boolean => {
-    return hasAnyRole(['SYSTEM_ADMIN', 'TENANT_ADMIN', 'AUTOMATION_MANAGER']);
+    return hasAnyRole(["SYSTEM_ADMIN", "TENANT_ADMIN", "AUTOMATION_MANAGER"]);
   };
 
   return {

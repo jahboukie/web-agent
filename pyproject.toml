@@ -36,14 +36,14 @@ anthropic = "^0.7.7"
 langchain = "^0.1.0"
 langchain-anthropic = "^0.1.0"
 langchain-openai = "^0.1.0"
-langchain-community = "^0.0.20"
+langchain-community = "^0.2.0"
 langchain-experimental = "^0.0.50"
 langchain-core = "^0.1.23"
 
 # Vector databases and similarity search
 chromadb = "^0.4.22"
 faiss-cpu = "^1.7.4"
-tiktoken = "^0.5.2"
+tiktoken = "^0.7.0"
 
 # Additional AI/ML tools
 numpy = "^1.24.0"
@@ -111,8 +111,10 @@ pytest-redis = "^3.0.2"
 black = "^23.11.0"
 isort = "^5.12.0"
 flake8 = "^6.1.0"
+ruff = "^0.3.4"
 mypy = "^1.7.1"
 pre-commit = "^3.6.0"
+detect-secrets = "^1.4.0"
 
 # Development Tools
 ipython = "^8.17.2"
@@ -189,3 +191,70 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "migrations",
+    "alembic",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "N",  # pep8-naming
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+    "B904",  # Within an `except` clause, raise exceptions with `raise ... from err`
+    "F841",  # Local variable assigned but never used
+    "E402",  # Module level import not at top of file
+    "N805",  # First argument of a method should be named `self`
+    "E712",  # Avoid equality comparisons to `True`/`False`
+    "B007",  # Loop control variable not used within loop body
+    "E722",  # Do not use bare `except`
+    "B017",  # `pytest.raises(Exception)` should be considered evil
+    "B011",  # Do not `assert False`
+    "F821",  # Undefined name
+    "F811",  # Redefinition of unused variable
+    "C416",  # Unnecessary comprehension
+    "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+    "N817",  # CamelCase imported as acronym
+    "N812",  # Lowercase imported as non-lowercase
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["S101"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations", "alembic"]
+skips = ["B101", "B601"]

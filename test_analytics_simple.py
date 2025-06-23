@@ -6,19 +6,20 @@ Quick test of the analytics endpoints to validate functionality.
 """
 
 import asyncio
+
 import aiohttp
-import json
 
 BASE_URL = "http://127.0.0.1:8000"
 API_BASE = f"{BASE_URL}/api/v1"
 
+
 async def test_analytics():
     """Test analytics endpoints."""
-    
+
     async with aiohttp.ClientSession() as session:
         print("🚀 Testing WebAgent Analytics System")
         print("=" * 50)
-        
+
         # Test health endpoint first
         print("🔍 Testing server health...")
         try:
@@ -29,7 +30,7 @@ async def test_analytics():
                     print(f"   ⚠️ Server health check: {resp.status}")
         except Exception as e:
             print(f"   ❌ Health check failed: {str(e)}")
-        
+
         # Test docs endpoint
         print("📚 Testing API documentation...")
         try:
@@ -40,7 +41,7 @@ async def test_analytics():
                     print(f"   ⚠️ API docs: {resp.status}")
         except Exception as e:
             print(f"   ❌ API docs failed: {str(e)}")
-        
+
         # Test registration with simpler data
         print("🔐 Testing user registration...")
         register_data = {
@@ -48,11 +49,13 @@ async def test_analytics():
             "username": "simple_test",
             "password": "TestPass123!",
             "confirm_password": "TestPass123!",
-            "full_name": "Simple Test User"
+            "full_name": "Simple Test User",
         }
-        
+
         try:
-            async with session.post(f"{API_BASE}/auth/register", json=register_data) as resp:
+            async with session.post(
+                f"{API_BASE}/auth/register", json=register_data
+            ) as resp:
                 print(f"   Registration response: {resp.status}")
                 if resp.status in [200, 201]:
                     print("   ✅ Registration successful")
@@ -63,14 +66,11 @@ async def test_analytics():
                     print(f"   ❌ Registration failed: {response_text}")
         except Exception as e:
             print(f"   ❌ Registration error: {str(e)}")
-        
+
         # Test login
         print("🔑 Testing user login...")
-        login_data = {
-            "username": "simple_test@webagent.ai",
-            "password": "TestPass123!"
-        }
-        
+        login_data = {"username": "simple_test@webagent.ai", "password": "TestPass123!"}
+
         auth_token = None
         try:
             async with session.post(f"{API_BASE}/auth/login", data=login_data) as resp:
@@ -80,7 +80,9 @@ async def test_analytics():
                     auth_token = data.get("access_token")
                     if auth_token:
                         print("   ✅ Login successful")
-                        session.headers.update({"Authorization": f"Bearer {auth_token}"})
+                        session.headers.update(
+                            {"Authorization": f"Bearer {auth_token}"}
+                        )
                     else:
                         print("   ❌ No access token received")
                 else:
@@ -88,21 +90,21 @@ async def test_analytics():
                     print(f"   ❌ Login failed: {response_text}")
         except Exception as e:
             print(f"   ❌ Login error: {str(e)}")
-        
+
         if not auth_token:
             print("❌ Cannot proceed without authentication")
             return
-        
+
         # Test analytics endpoints
         print("\n📊 Testing Analytics Endpoints...")
-        
+
         endpoints = [
             "/analytics/subscription",
-            "/analytics/usage", 
+            "/analytics/usage",
             "/analytics/success-metrics",
-            "/analytics/roi-calculation"
+            "/analytics/roi-calculation",
         ]
-        
+
         for endpoint in endpoints:
             try:
                 async with session.get(f"{API_BASE}{endpoint}") as resp:
@@ -113,9 +115,10 @@ async def test_analytics():
                         print(f"   ❌ {endpoint}: {resp.status}")
             except Exception as e:
                 print(f"   ❌ {endpoint}: Error - {str(e)}")
-        
+
         print("\n🎯 Analytics System Test Complete!")
         print("✅ WebAgent Analytics Dashboard is operational!")
+
 
 if __name__ == "__main__":
     asyncio.run(test_analytics())

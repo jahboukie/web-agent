@@ -1,16 +1,17 @@
-from fastapi import FastAPI, Request, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException
-import structlog
 import time
 import uuid
 
-from app.core.config import settings
-from app.core.logging import configure_logging, RequestContextMiddleware
+import structlog
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
+
 from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.logging import RequestContextMiddleware, configure_logging
 
 # Configure logging before creating the app
 configure_logging()
@@ -19,7 +20,7 @@ logger = structlog.get_logger(__name__)
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
-    
+
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
@@ -28,13 +29,17 @@ def create_application() -> FastAPI:
         docs_url="/docs" if settings.DEBUG else None,
         redoc_url="/redoc" if settings.DEBUG else None,
     )
-    
-    # Add security middleware (disabled for development)
-    # app.add_middleware(
-    #     TrustedHostMiddleware,
-    #     allowed_hosts=["*"] if settings.DEBUG else ["yourdomain.com"]
-    # )
-    
+
+    # Add security middleware
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=(
+            ["*"]
+            if settings.DEBUG
+            else ["www.webagentapp.com", "webagentapp.com", "api.webagentapp.com"]
+        ),
+    )
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -43,13 +48,13 @@ def create_application() -> FastAPI:
         allow_methods=settings.CORS_ALLOW_METHODS,
         allow_headers=settings.CORS_ALLOW_HEADERS,
     )
-    
+
     # Add request context middleware
     app.add_middleware(RequestContextMiddleware)
-    
+
     # Include API routes
     app.include_router(api_router, prefix="/api/v1")
-    
+
     return app
 
 
@@ -61,14 +66,14 @@ async def add_request_id_middleware(request: Request, call_next):
     """Add unique request ID to each request."""
     request_id = str(uuid.uuid4())
     request.scope["request_id"] = request_id
-    
+
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
-    
+
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Process-Time"] = str(process_time)
-    
+
     logger.info(
         "Request completed",
         method=request.method,
@@ -77,7 +82,7 @@ async def add_request_id_middleware(request: Request, call_next):
         process_time=process_time,
         request_id=request_id,
     )
-    
+
     return response
 
 
@@ -92,7 +97,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         url=str(request.url),
         request_id=request.scope.get("request_id"),
     )
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -116,7 +121,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         url=str(request.url),
         request_id=request.scope.get("request_id"),
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
@@ -141,12 +146,12 @@ async def general_exception_handler(request: Request, exc: Exception):
         url=str(request.url),
         request_id=request.scope.get("request_id"),
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": {
-                "type": "InternalServerError", 
+                "type": "InternalServerError",
                 "message": "An unexpected error occurred",
                 "request_id": request.scope.get("request_id"),
             }
@@ -165,16 +170,17 @@ async def startup_event():
     )
 
     # Fix Windows event loop policy for Playwright
-    import sys
     import asyncio
+    import sys
+
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
         logger.info("Set Windows ProactorEventLoopPolicy for Playwright compatibility")
 
     # Initialize database
     try:
-        from app.db.session import get_async_session, check_database_connection
         from app.db.init_db import init_db
+        from app.db.session import check_database_connection, get_async_session
 
         # Check database connection
         if await check_database_connection():
@@ -193,6 +199,7 @@ async def startup_event():
     # Initialize HTTP client manager
     try:
         from app.core.http_client import http_client_manager
+
         await http_client_manager.initialize()
         logger.info("HTTP client manager initialized")
     except Exception as e:
@@ -201,6 +208,7 @@ async def startup_event():
     # Initialize webhook service (depends on HTTP client)
     try:
         from app.services.webhook_service import webhook_service
+
         await webhook_service.initialize()
         logger.info("Webhook service initialized")
     except Exception as e:
@@ -215,6 +223,7 @@ async def shutdown_event():
     # Close database connections
     try:
         from app.db.session import close_async_engine
+
         await close_async_engine()
         logger.info("Database connections closed")
     except Exception as e:
@@ -223,6 +232,7 @@ async def shutdown_event():
     # Shutdown webhook service
     try:
         from app.services.webhook_service import webhook_service
+
         await webhook_service.shutdown()
         logger.info("Webhook service shutdown complete")
     except Exception as e:
@@ -231,6 +241,7 @@ async def shutdown_event():
     # Shutdown HTTP client manager (after all services that use it)
     try:
         from app.core.http_client import http_client_manager
+
         await http_client_manager.shutdown()
         logger.info("HTTP client manager shutdown complete")
     except Exception as e:
@@ -256,13 +267,13 @@ async def health_check():
         "timestamp": time.time(),
         "version": settings.APP_VERSION,
         "environment": settings.ENVIRONMENT,
-        "database": {"status": "unknown"}
+        "database": {"status": "unknown"},
     }
 
     # Check database health
     try:
-        from app.db.session import get_async_session
         from app.db.init_db import check_database_health
+        from app.db.session import get_async_session
 
         async for db in get_async_session():
             db_health = await check_database_health(db)

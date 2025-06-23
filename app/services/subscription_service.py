@@ -5,15 +5,18 @@ Manages WebAgent's 2025 revenue-optimized pricing model with strategic tier mana
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-import structlog
 
-from app.schemas.analytics import (
-    UserSubscription, SubscriptionTier, SubscriptionStatus, UsageMetrics
-)
+import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.user import User
+from app.schemas.analytics import (
+    SubscriptionStatus,
+    SubscriptionTier,
+    UsageMetrics,
+    UserSubscription,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -22,7 +25,7 @@ class SubscriptionService:
     """
     Subscription management service for revenue-optimized pricing tiers.
     """
-    
+
     # 2025 Optimized Pricing Structure
     PRICING_TIERS = {
         SubscriptionTier.FREE: {
@@ -33,20 +36,20 @@ class SubscriptionService:
                 "plans": 20,
                 "executions": 10,
                 "storage_gb": 1,
-                "api_calls": 1000
+                "api_calls": 1000,
             },
             "features": [
                 "Basic website parsing",
                 "Limited AI planning",
                 "Basic automation",
-                "Community support"
+                "Community support",
             ],
             "restrictions": [
                 "Limited usage quotas",
                 "Basic analytics only",
                 "No priority support",
-                "No advanced features"
-            ]
+                "No advanced features",
+            ],
         },
         SubscriptionTier.READER_PRO: {
             "name": "Reader Pro",
@@ -56,7 +59,7 @@ class SubscriptionService:
                 "plans": 20,
                 "executions": 10,
                 "storage_gb": 10,
-                "api_calls": "unlimited"
+                "api_calls": "unlimited",
             },
             "features": [
                 "Unlimited website parsing",
@@ -64,23 +67,23 @@ class SubscriptionService:
                 "Performance optimization",
                 "Priority support",
                 "Trend analysis",
-                "Element accuracy insights"
+                "Element accuracy insights",
             ],
             "restrictions": [
                 "Limited AI planning",
                 "Limited automation",
-                "No workflow analytics"
-            ]
+                "No workflow analytics",
+            ],
         },
         SubscriptionTier.PLANNER_PRO: {
-            "name": "Planner Pro", 
+            "name": "Planner Pro",
             "monthly_cost": 179.0,
             "limits": {
                 "parses": 200,
                 "plans": "unlimited",
                 "executions": 10,
                 "storage_gb": 15,
-                "api_calls": "unlimited"
+                "api_calls": "unlimited",
             },
             "features": [
                 "Unlimited AI planning",
@@ -88,13 +91,13 @@ class SubscriptionService:
                 "Confidence scoring",
                 "Goal completion tracking",
                 "AI reasoning performance",
-                "Priority support"
+                "Priority support",
             ],
             "restrictions": [
                 "Limited website parsing",
                 "Limited automation",
-                "No execution analytics"
-            ]
+                "No execution analytics",
+            ],
         },
         SubscriptionTier.ACTOR_PRO: {
             "name": "Actor Pro",
@@ -104,7 +107,7 @@ class SubscriptionService:
                 "plans": 20,
                 "executions": "unlimited",
                 "storage_gb": 25,
-                "api_calls": "unlimited"
+                "api_calls": "unlimited",
             },
             "features": [
                 "Unlimited automation",
@@ -112,13 +115,13 @@ class SubscriptionService:
                 "Error monitoring",
                 "ROI calculations",
                 "Success metrics",
-                "Priority support"
+                "Priority support",
             ],
             "restrictions": [
                 "Limited parsing",
                 "Limited planning",
-                "No unified analytics"
-            ]
+                "No unified analytics",
+            ],
         },
         SubscriptionTier.COMPLETE_PLATFORM: {
             "name": "Complete Platform",
@@ -126,26 +129,26 @@ class SubscriptionService:
             "annual_discount": 0.15,  # 15% discount for annual
             "limits": {
                 "parses": "unlimited",
-                "plans": "unlimited", 
+                "plans": "unlimited",
                 "executions": "unlimited",
                 "storage_gb": 100,
-                "api_calls": "unlimited"
+                "api_calls": "unlimited",
             },
             "features": [
                 "All Reader Pro features",
-                "All Planner Pro features", 
+                "All Planner Pro features",
                 "All Actor Pro features",
                 "Unified cross-tool analytics",
                 "Integration monitoring",
                 "Advanced success metrics",
                 "Priority support",
-                "40% savings vs individual tools"
+                "40% savings vs individual tools",
             ],
             "restrictions": [
                 "No enterprise features",
                 "No white-label options",
-                "No dedicated CSM"
-            ]
+                "No dedicated CSM",
+            ],
         },
         SubscriptionTier.ENTERPRISE_PLATFORM: {
             "name": "Enterprise Platform",
@@ -153,9 +156,9 @@ class SubscriptionService:
             "limits": {
                 "parses": "unlimited",
                 "plans": "unlimited",
-                "executions": "unlimited", 
+                "executions": "unlimited",
                 "storage_gb": "unlimited",
-                "api_calls": "unlimited"
+                "api_calls": "unlimited",
             },
             "features": [
                 "All Complete Platform features",
@@ -166,40 +169,46 @@ class SubscriptionService:
                 "Early access to features",
                 "Custom integrations",
                 "Advanced security features",
-                "Audit trails & reporting"
+                "Audit trails & reporting",
             ],
-            "restrictions": []
-        }
+            "restrictions": [],
+        },
     }
-    
-    async def get_user_subscription(self, db: AsyncSession, user_id: int) -> UserSubscription:
+
+    async def get_user_subscription(
+        self, db: AsyncSession, user_id: int
+    ) -> UserSubscription:
         """
         Get user's current subscription details with usage tracking.
         """
-        
+
         # Get user from database
         user_query = select(User).where(User.id == user_id)
         result = await db.execute(user_query)
         user = result.scalar_one_or_none()
-        
+
         if not user:
             raise ValueError(f"User {user_id} not found")
-        
+
         # Determine subscription tier (default to free for now)
         tier = SubscriptionTier.FREE
-        if hasattr(user, 'subscription_tier') and user.subscription_tier:
+        if hasattr(user, "subscription_tier") and user.subscription_tier:
             tier = SubscriptionTier(user.subscription_tier)
-        
+
         # Get tier configuration
         tier_config = self.PRICING_TIERS[tier]
-        
+
         # Calculate billing dates
-        current_period_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        current_period_end = (current_period_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
+        current_period_start = datetime.utcnow().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        current_period_end = (current_period_start + timedelta(days=32)).replace(
+            day=1
+        ) - timedelta(days=1)
+
         # Get current usage (would be calculated from actual usage)
         usage_metrics = await self._calculate_current_usage(db, user_id)
-        
+
         return UserSubscription(
             tier=tier,
             status=SubscriptionStatus.ACTIVE,
@@ -211,17 +220,21 @@ class SubscriptionService:
             annual_discount=tier_config.get("annual_discount", 0.0),
             next_billing_date=current_period_end + timedelta(days=1),
             features=tier_config["features"],
-            restrictions=tier_config["restrictions"]
+            restrictions=tier_config["restrictions"],
         )
-    
-    async def _calculate_current_usage(self, db: AsyncSession, user_id: int) -> UsageMetrics:
+
+    async def _calculate_current_usage(
+        self, db: AsyncSession, user_id: int
+    ) -> UsageMetrics:
         """
         Calculate current usage metrics for the user.
         """
-        
+
         # Get current month's usage
-        current_month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
+        current_month_start = datetime.utcnow().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+
         # This would query actual usage from tasks, plans, executions
         # For now, return sample data
         return UsageMetrics(
@@ -235,103 +248,111 @@ class SubscriptionService:
             execution_success_rate=91.2,
             time_saved_hours=12.5,
             cost_saved_usd=625.0,
-            automation_value=750.0
+            automation_value=750.0,
         )
-    
-    def get_tier_limits(self, tier: SubscriptionTier) -> Dict[str, Union[int, str]]:
+
+    def get_tier_limits(self, tier: SubscriptionTier) -> dict[str, int | str]:
         """
         Get usage limits for a specific subscription tier.
         """
         return self.PRICING_TIERS[tier]["limits"]
-    
-    def get_tier_features(self, tier: SubscriptionTier) -> List[str]:
+
+    def get_tier_features(self, tier: SubscriptionTier) -> list[str]:
         """
         Get features available for a specific subscription tier.
         """
         return self.PRICING_TIERS[tier]["features"]
-    
+
     def get_tier_cost(self, tier: SubscriptionTier) -> float:
         """
         Get monthly cost for a specific subscription tier.
         """
         return self.PRICING_TIERS[tier]["monthly_cost"]
-    
-    def calculate_upgrade_savings(self, current_tier: SubscriptionTier, target_tier: SubscriptionTier) -> Dict[str, float]:
+
+    def calculate_upgrade_savings(
+        self, current_tier: SubscriptionTier, target_tier: SubscriptionTier
+    ) -> dict[str, float]:
         """
         Calculate savings when upgrading to a bundle tier.
         """
-        
+
         current_cost = self.get_tier_cost(current_tier)
         target_cost = self.get_tier_cost(target_tier)
-        
+
         # Calculate individual tool costs if upgrading to Complete Platform
         if target_tier == SubscriptionTier.COMPLETE_PLATFORM:
             individual_cost = (
-                self.get_tier_cost(SubscriptionTier.READER_PRO) +
-                self.get_tier_cost(SubscriptionTier.PLANNER_PRO) +
-                self.get_tier_cost(SubscriptionTier.ACTOR_PRO)
+                self.get_tier_cost(SubscriptionTier.READER_PRO)
+                + self.get_tier_cost(SubscriptionTier.PLANNER_PRO)
+                + self.get_tier_cost(SubscriptionTier.ACTOR_PRO)
             )  # $129 + $179 + $229 = $537
-            
+
             savings_amount = individual_cost - target_cost  # $537 - $399 = $138
             savings_percentage = (savings_amount / individual_cost) * 100  # ~25.7%
-            
+
             return {
                 "savings_amount": savings_amount,
                 "savings_percentage": savings_percentage,
                 "individual_cost": individual_cost,
-                "bundle_cost": target_cost
+                "bundle_cost": target_cost,
             }
-        
+
         return {
             "savings_amount": 0.0,
             "savings_percentage": 0.0,
             "individual_cost": current_cost,
-            "bundle_cost": target_cost
+            "bundle_cost": target_cost,
         }
-    
-    def is_usage_approaching_limit(self, subscription: UserSubscription, threshold: float = 0.8) -> Dict[str, bool]:
+
+    def is_usage_approaching_limit(
+        self, subscription: UserSubscription, threshold: float = 0.8
+    ) -> dict[str, bool]:
         """
         Check if user is approaching usage limits for upgrade prompts.
         """
-        
+
         approaching_limits = {}
-        
+
         for limit_type, limit_value in subscription.limits.items():
             if limit_value == "unlimited":
                 approaching_limits[limit_type] = False
                 continue
-            
+
             usage_attr = f"{limit_type}_used"
             if hasattr(subscription.usage, usage_attr):
                 current_usage = getattr(subscription.usage, usage_attr)
                 usage_percentage = current_usage / limit_value
                 approaching_limits[limit_type] = usage_percentage >= threshold
-        
+
         return approaching_limits
-    
-    async def upgrade_subscription(self, db: AsyncSession, user_id: int, new_tier: SubscriptionTier) -> UserSubscription:
+
+    async def upgrade_subscription(
+        self, db: AsyncSession, user_id: int, new_tier: SubscriptionTier
+    ) -> UserSubscription:
         """
         Upgrade user's subscription to a new tier.
         """
-        
-        logger.info("Upgrading user subscription", 
-                   user_id=user_id, 
-                   new_tier=new_tier.value)
-        
+
+        logger.info(
+            "Upgrading user subscription", user_id=user_id, new_tier=new_tier.value
+        )
+
         # Get user
         user_query = select(User).where(User.id == user_id)
         result = await db.execute(user_query)
         user = result.scalar_one_or_none()
-        
+
         if not user:
             raise ValueError(f"User {user_id} not found")
-        
+
         # Update subscription tier (this would integrate with billing system)
         # For now, just log the upgrade
-        logger.info("Subscription upgrade completed", 
-                   user_id=user_id, 
-                   new_tier=new_tier.value,
-                   monthly_cost=self.get_tier_cost(new_tier))
-        
+        logger.info(
+            "Subscription upgrade completed",
+            user_id=user_id,
+            new_tier=new_tier.value,
+            monthly_cost=self.get_tier_cost(new_tier),
+        )
+
         # Return updated subscription
         return await self.get_user_subscription(db, user_id)

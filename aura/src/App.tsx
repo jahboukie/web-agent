@@ -6,13 +6,18 @@
  * security monitoring.
  */
 
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LoginForm } from './components/auth/LoginForm';
-import { RegisterForm } from './components/auth/RegisterForm';
-import { UnifiedDashboard } from './components/UnifiedDashboard';
-import { Shield } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { LoginForm } from "./components/auth/LoginForm";
+import { RegisterForm } from "./components/auth/RegisterForm";
+import { UnifiedDashboard } from "./components/UnifiedDashboard";
+import { Shield } from "lucide-react";
 
 // Main App Layout Component
 function AppLayout() {
@@ -26,7 +31,9 @@ function AppLayout() {
             <Shield className="h-12 w-12 text-primary-600 animate-pulse" />
           </div>
           <div className="loading-spinner mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading WebAgent...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading WebAgent...
+          </p>
         </div>
       </div>
     );
@@ -54,11 +61,11 @@ function AppLayout() {
 
 // Login Page Component
 function LoginPage() {
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   const handleSuccess = () => {
     // Navigation will be handled by the auth context
-    window.location.href = '/dashboard';
+    window.location.href = "/dashboard";
   };
 
   const handleError = (error: string) => {
@@ -74,11 +81,11 @@ function LoginPage() {
 
 // Register Page Component
 function RegisterPage() {
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
 
   const handleSuccess = () => {
     // Navigation will be handled by the auth context
-    window.location.href = '/dashboard';
+    window.location.href = "/dashboard";
   };
 
   const handleError = (error: string) => {

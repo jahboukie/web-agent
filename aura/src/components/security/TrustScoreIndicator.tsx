@@ -1,15 +1,26 @@
 /**
  * Trust Score Indicator Component
- * 
+ *
  * Displays Zero Trust security score with visual indicators,
  * risk factors, and security recommendations.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Shield, AlertTriangle, CheckCircle, Info, RefreshCw } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { apiService } from '../../services';
-import { cn, getTrustScoreColor, getTrustScoreLabel, formatRelativeTime } from '../../lib/utils';
+import React, { useState, useEffect } from "react";
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  RefreshCw,
+} from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { apiService } from "../../services";
+import {
+  cn,
+  getTrustScoreColor,
+  getTrustScoreLabel,
+  formatRelativeTime,
+} from "../../lib/utils";
 
 interface TrustAssessment {
   assessment_id: string;
@@ -35,13 +46,13 @@ interface TrustAssessment {
 interface TrustScoreIndicatorProps {
   className?: string;
   showDetails?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
-export function TrustScoreIndicator({ 
-  className, 
-  showDetails = false, 
-  size = 'md' 
+export function TrustScoreIndicator({
+  className,
+  showDetails = false,
+  size = "md",
 }: TrustScoreIndicatorProps) {
   const { user, trustScore, updateTrustScore } = useAuth();
   const [assessment, setAssessment] = useState<TrustAssessment | null>(null);
@@ -64,7 +75,7 @@ export function TrustScoreIndicator({
       setAssessment(data);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to fetch trust assessment:', error);
+      console.error("Failed to fetch trust assessment:", error);
     } finally {
       setIsLoading(false);
     }
@@ -84,30 +95,35 @@ export function TrustScoreIndicator({
   const scoreColor = getTrustScoreColor(score);
 
   const sizeClasses = {
-    sm: 'h-6 w-6',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    sm: "h-6 w-6",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   const textSizeClasses = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
   };
 
   return (
-    <div className={cn('flex items-center space-x-2', className)}>
+    <div className={cn("flex items-center space-x-2", className)}>
       {/* Trust Score Badge */}
       <div className="flex items-center space-x-2">
         <div className="relative">
-          <Shield className={cn(sizeClasses[size], 'text-gray-400')} />
-          <div 
+          <Shield className={cn(sizeClasses[size], "text-gray-400")} />
+          <div
             className={cn(
-              'absolute inset-0 rounded-full',
-              scoreColor.includes('very-high') ? 'bg-green-500' :
-              scoreColor.includes('high') ? 'bg-lime-500' :
-              scoreColor.includes('medium') ? 'bg-yellow-500' :
-              scoreColor.includes('low') ? 'bg-orange-500' : 'bg-red-500'
+              "absolute inset-0 rounded-full",
+              scoreColor.includes("very-high")
+                ? "bg-green-500"
+                : scoreColor.includes("high")
+                  ? "bg-lime-500"
+                  : scoreColor.includes("medium")
+                    ? "bg-yellow-500"
+                    : scoreColor.includes("low")
+                      ? "bg-orange-500"
+                      : "bg-red-500",
             )}
             style={{
               clipPath: `polygon(0 0, ${score * 100}% 0, ${score * 100}% 100%, 0 100%)`,
@@ -115,21 +131,23 @@ export function TrustScoreIndicator({
             }}
           />
         </div>
-        
+
         <div className="flex flex-col">
           <div className="flex items-center space-x-1">
-            <span className={cn('font-medium', textSizeClasses[size])}>
+            <span className={cn("font-medium", textSizeClasses[size])}>
               {Math.round(score * 100)}%
             </span>
-            <span className={cn(
-              'security-indicator',
-              scoreColor,
-              textSizeClasses[size]
-            )}>
+            <span
+              className={cn(
+                "security-indicator",
+                scoreColor,
+                textSizeClasses[size],
+              )}
+            >
               {scoreLabel}
             </span>
           </div>
-          
+
           {lastUpdated && (
             <span className="text-xs text-gray-500">
               Updated {formatRelativeTime(lastUpdated)}
@@ -144,7 +162,7 @@ export function TrustScoreIndicator({
           className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           title="Refresh trust score"
         >
-          <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
         </button>
       </div>
 
@@ -154,7 +172,7 @@ export function TrustScoreIndicator({
           onClick={() => setShowFullDetails(!showFullDetails)}
           className="text-xs text-primary-600 hover:text-primary-500 dark:text-primary-400"
         >
-          {showFullDetails ? 'Hide' : 'Show'} Details
+          {showFullDetails ? "Hide" : "Show"} Details
         </button>
       )}
 
@@ -178,30 +196,40 @@ export function TrustScoreIndicator({
                 Trust Factors
               </h4>
               <div className="space-y-2">
-                {Object.entries(assessment.trust_factors).map(([factor, value]) => (
-                  <div key={factor} className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-                      {factor.replace(/_/g, ' ')}
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className={cn(
-                            'h-2 rounded-full',
-                            value >= 0.8 ? 'bg-green-500' :
-                            value >= 0.6 ? 'bg-lime-500' :
-                            value >= 0.4 ? 'bg-yellow-500' :
-                            value >= 0.2 ? 'bg-orange-500' : 'bg-red-500'
-                          )}
-                          style={{ width: `${value * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-gray-600 dark:text-gray-400 w-8">
-                        {Math.round(value * 100)}%
+                {Object.entries(assessment.trust_factors).map(
+                  ([factor, value]) => (
+                    <div
+                      key={factor}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+                        {factor.replace(/_/g, " ")}
                       </span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className={cn(
+                              "h-2 rounded-full",
+                              value >= 0.8
+                                ? "bg-green-500"
+                                : value >= 0.6
+                                  ? "bg-lime-500"
+                                  : value >= 0.4
+                                    ? "bg-yellow-500"
+                                    : value >= 0.2
+                                      ? "bg-orange-500"
+                                      : "bg-red-500",
+                            )}
+                            style={{ width: `${value * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400 w-8">
+                          {Math.round(value * 100)}%
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </div>
 
@@ -216,7 +244,7 @@ export function TrustScoreIndicator({
                     <div key={index} className="flex items-center space-x-2">
                       <AlertTriangle className="h-4 w-4 text-orange-500" />
                       <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-                        {factor.replace(/_/g, ' ')}
+                        {factor.replace(/_/g, " ")}
                       </span>
                     </div>
                   ))}
@@ -235,7 +263,7 @@ export function TrustScoreIndicator({
                     <div key={index} className="flex items-center space-x-2">
                       <Info className="h-4 w-4 text-blue-500" />
                       <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-                        {action.replace(/_/g, ' ')}
+                        {action.replace(/_/g, " ")}
                       </span>
                     </div>
                   ))}
@@ -250,16 +278,25 @@ export function TrustScoreIndicator({
                   Session Restrictions
                 </h4>
                 <div className="space-y-1">
-                  {Object.entries(assessment.session_restrictions).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-                        {key.replace(/_/g, ' ')}
-                      </span>
-                      <span className="text-xs text-gray-900 dark:text-white">
-                        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
-                      </span>
-                    </div>
-                  ))}
+                  {Object.entries(assessment.session_restrictions).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between"
+                      >
+                        <span className="text-xs text-gray-600 dark:text-gray-400 capitalize">
+                          {key.replace(/_/g, " ")}
+                        </span>
+                        <span className="text-xs text-gray-900 dark:text-white">
+                          {typeof value === "boolean"
+                            ? value
+                              ? "Yes"
+                              : "No"
+                            : String(value)}
+                        </span>
+                      </div>
+                    ),
+                  )}
                 </div>
               </div>
             )}

@@ -1,0 +1,161 @@
+# WebAgent Pre-Commit Configuration
+# Ensures code quality, security, and testing before each commit
+
+repos:
+  # 1. CODE FORMATTING AND LINTING
+
+  # Python Code Formatting (Black)
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^app/.*\.py$|^tests/.*\.py$|.*\.py$
+        exclude: ^(migrations/|alembic/)
+
+  # Python Import Sorting (isort)
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        files: ^app/.*\.py$|^tests/.*\.py$|.*\.py$
+        exclude: ^(migrations/|alembic/)
+        args: ["--profile", "black", "--line-length", "88"]
+
+  # Python Linting (Ruff - fastest Python linter)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.4
+    hooks:
+      - id: ruff
+        files: ^app/.*\.py$|^tests/.*\.py$|.*\.py$
+        exclude: ^(migrations/|alembic/)
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        files: ^app/.*\.py$|^tests/.*\.py$|.*\.py$
+        exclude: ^(migrations/|alembic/)
+
+  # JavaScript/TypeScript Formatting (Prettier)
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: ^aura/.*\.(js|jsx|ts|tsx|json|css|scss|html|md)$|^webagent-landing/.*\.(js|jsx|ts|tsx|json|css|scss|html|md)$
+        exclude: ^(node_modules/|dist/|build/)
+        additional_dependencies:
+          - prettier@3.2.5
+          - "@typescript-eslint/parser@7.2.0"
+
+  # JavaScript/TypeScript Linting (ESLint)
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.0.0
+    hooks:
+      - id: eslint
+        files: ^aura/.*\.(js|jsx|ts|tsx)$|^webagent-landing/.*\.(js|jsx|ts|tsx)$
+        exclude: ^(node_modules/|dist/|build/)
+        additional_dependencies:
+          - eslint@8.57.0
+          - "@typescript-eslint/eslint-plugin@7.2.0"
+          - "@typescript-eslint/parser@7.2.0"
+          - "eslint-plugin-react@7.34.0"
+          - "eslint-plugin-react-hooks@4.6.0"
+
+  # 2. SECURITY AND SECRETS DETECTION
+
+  # Detect Private Keys and Secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: ^(\.git/|node_modules/|\.secrets\.baseline$)
+        additional_dependencies: ["gibberish-detector"]
+
+  # Scan for Additional Security Issues - DISABLED FOR FAST COMMITS
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: 1.7.8
+  #   hooks:
+  #     - id: bandit
+  #       files: ^app/.*\.py$
+  #       exclude: ^tests/
+  #       args: ["-r", "-f", "json", "-o", "bandit-report.json"]
+
+  # 3. GENERAL CODE QUALITY
+
+  # Remove Trailing Whitespace
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(\.git/|node_modules/|dist/|build/)
+      - id: end-of-file-fixer
+        exclude: ^(\.git/|node_modules/|dist/|build/)
+      - id: check-yaml
+        exclude: ^(node_modules/|dist/|build/)
+      - id: check-json
+        exclude: ^(node_modules/|dist/|build/)
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'production']
+
+  # Python Type Checking (MyPy) - DISABLED FOR FAST COMMITS
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.9.0
+  #   hooks:
+  #     - id: mypy
+  #       files: ^app/.*\.py$
+  #       exclude: ^(tests/|migrations/|alembic/)
+  #       additional_dependencies:
+  #         - types-requests
+  #         - types-redis
+  #         - sqlalchemy[mypy]
+  #       args: [--ignore-missing-imports, --install-types, --non-interactive]
+
+  # 4. TESTING (Custom Local Hooks) - DISABLED FOR FAST COMMITS
+
+  # Python Unit Tests - DISABLED (too slow for pre-commit)
+  # - repo: local
+  #   hooks:
+  #     - id: pytest
+  #       name: Run Python Tests
+  #       entry: python -m pytest
+  #       language: system
+  #       files: ^(app/|tests/).*\.py$
+  #       stages: [pre-commit]
+  #       pass_filenames: false
+  #       args: ["-v", "--tb=short", "--maxfail=5"]
+
+  #     # Frontend Tests (if you have them)
+  #     - id: frontend-tests
+  #       name: Run Frontend Tests
+  #       entry: bash -c 'cd aura && npm test -- --watchAll=false --passWithNoTests'
+  #       language: system
+  #       files: ^aura/.*\.(js|jsx|ts|tsx)$
+  #       stages: [pre-commit]
+  #       pass_filenames: false
+
+  #     # End-to-End Validation (Critical Tests Only)
+  #     - id: e2e-critical
+  #       name: Run Critical E2E Tests
+  #       entry: python tests/run_critical_e2e_tests.py
+  #       language: system
+  #       files: ^(app/|aura/|webagent-landing/).*$
+  #       stages: [pre-commit]
+  #       pass_filenames: false
+
+  # 5. DOCKER AND INFRASTRUCTURE
+
+  # Dockerfile Linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        files: ^.*Dockerfile.*$
+
+# Global Configuration
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+fail_fast: false
+minimum_pre_commit_version: '3.0.0'

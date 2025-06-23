@@ -1,17 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from typing import List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.web_page import (
-    WebPage, WebPageCreate, WebPageUpdate, WebPageParseRequest, WebPageParseResponse
-)
-from app.schemas.user import User
-from app.models.task import Task, TaskStatus, TaskPriority
-from app.db.session import get_async_session
 from app.api.dependencies import get_current_user
-from app.services.web_parser import web_parser_service
+from app.db.session import get_async_session
+from app.models.task import Task, TaskPriority, TaskStatus
+from app.schemas.user import User
+from app.schemas.web_page import WebPageParseRequest
 from app.services.task_status_service import TaskStatusService
+from app.services.web_parser import web_parser_service
 from app.services.webpage_cache_service import webpage_cache_service
 
 logger = structlog.get_logger(__name__)
@@ -19,9 +16,7 @@ router = APIRouter()
 
 
 async def _process_webpage_parsing_async(
-    task_id: int,
-    url: str,
-    options: WebPageParseRequest
+    task_id: int, url: str, options: WebPageParseRequest
 ):
     """Async background task function for webpage parsing."""
 
@@ -37,10 +32,17 @@ async def _process_webpage_parsing_async(
                 db, task_id, url, options
             )
 
-            logger.info("✅ Background webpage parsing completed", task_id=task_id, url=url)
+            logger.info(
+                "✅ Background webpage parsing completed", task_id=task_id, url=url
+            )
 
         except Exception as e:
-            logger.error("❌ Background webpage parsing failed", task_id=task_id, url=url, error=str(e))
+            logger.error(
+                "❌ Background webpage parsing failed",
+                task_id=task_id,
+                url=url,
+                error=str(e),
+            )
 
             # Update task status to failed
             await TaskStatusService.fail_task(db, task_id, e)
@@ -49,11 +51,7 @@ async def _process_webpage_parsing_async(
         break
 
 
-def _process_webpage_parsing(
-    task_id: int,
-    url: str,
-    options: WebPageParseRequest
-):
+def _process_webpage_parsing(task_id: int, url: str, options: WebPageParseRequest):
     """Sync wrapper for background task function (required by FastAPI BackgroundTasks)."""
 
     logger.info("🎯 SYNC WRAPPER CALLED", task_id=task_id, url=url)
@@ -75,7 +73,9 @@ def _process_webpage_parsing(
         logger.info("🎉 BACKGROUND TASK COMPLETED", task_id=task_id, url=url)
 
     except Exception as e:
-        logger.error("💥 BACKGROUND TASK FAILED", task_id=task_id, url=url, error=str(e))
+        logger.error(
+            "💥 BACKGROUND TASK FAILED", task_id=task_id, url=url, error=str(e)
+        )
 
 
 @router.post("/parse")
@@ -83,7 +83,7 @@ async def parse_webpage(
     parse_request: WebPageParseRequest,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Parse a webpage and extract semantic information (Background Processing).
@@ -104,14 +104,14 @@ async def parse_webpage(
             user_id=current_user.id,
             title=f"Parse webpage: {parse_request.url}",
             description=f"Semantic analysis and element extraction for {parse_request.url}",
-            goal=f"Extract interactive elements and analyze webpage structure",
+            goal="Extract interactive elements and analyze webpage structure",
             target_url=str(parse_request.url),
             priority=TaskPriority.MEDIUM,
             status=TaskStatus.PENDING,
             max_retries=3,
             timeout_seconds=300,  # 5 minutes
             require_confirmation=False,
-            allow_sensitive_actions=False
+            allow_sensitive_actions=False,
         )
 
         db.add(task)
@@ -123,14 +123,14 @@ async def parse_webpage(
             _process_webpage_parsing,
             task_id=task.id,
             url=str(parse_request.url),
-            options=parse_request
+            options=parse_request,
         )
 
         logger.info(
             "Webpage parsing queued",
             task_id=task.id,
             url=parse_request.url,
-            user_id=current_user.id
+            user_id=current_user.id,
         )
 
         # Return immediately with task information
@@ -140,14 +140,16 @@ async def parse_webpage(
             "message": "Webpage parsing started",
             "estimated_duration_seconds": 30,
             "check_status_url": f"/api/v1/parse/{task.id}",
-            "url": str(parse_request.url)
+            "url": str(parse_request.url),
         }
 
     except Exception as e:
-        logger.error("Failed to queue webpage parsing", error=str(e), url=parse_request.url)
+        logger.error(
+            "Failed to queue webpage parsing", error=str(e), url=parse_request.url
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start webpage parsing: {str(e)}"
+            detail=f"Failed to start webpage parsing: {str(e)}",
         )
 
 
@@ -155,7 +157,7 @@ async def parse_webpage(
 async def get_parsing_status(
     task_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get the status of a webpage parsing task.
@@ -170,27 +172,33 @@ async def get_parsing_status(
 
     try:
         # Get task status
-        task_status = await TaskStatusService.get_task_status(db, task_id, current_user.id)
+        task_status = await TaskStatusService.get_task_status(
+            db, task_id, current_user.id
+        )
 
         if not task_status:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found or access denied"
+                detail="Task not found or access denied",
             )
 
         # Add additional context based on status
         response = task_status.copy()
 
-        if task_status['status'] == 'completed':
-            response['message'] = "Webpage parsing completed successfully"
-            response['download_results_url'] = f"/api/v1/parse/{task_id}/results"
-        elif task_status['status'] == 'failed':
-            response['message'] = f"Webpage parsing failed: {task_status.get('error_message', 'Unknown error')}"
-            response['retry_url'] = f"/api/v1/parse/{task_id}/retry"
-        elif task_status['status'] == 'in_progress':
-            response['message'] = f"Processing: {task_status.get('current_step', 'Working...')}"
+        if task_status["status"] == "completed":
+            response["message"] = "Webpage parsing completed successfully"
+            response["download_results_url"] = f"/api/v1/parse/{task_id}/results"
+        elif task_status["status"] == "failed":
+            response["message"] = (
+                f"Webpage parsing failed: {task_status.get('error_message', 'Unknown error')}"
+            )
+            response["retry_url"] = f"/api/v1/parse/{task_id}/retry"
+        elif task_status["status"] == "in_progress":
+            response["message"] = (
+                f"Processing: {task_status.get('current_step', 'Working...')}"
+            )
         else:
-            response['message'] = "Task is queued for processing"
+            response["message"] = "Task is queued for processing"
 
         return response
 
@@ -200,7 +208,7 @@ async def get_parsing_status(
         logger.error("Failed to get parsing status", task_id=task_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve task status"
+            detail="Failed to retrieve task status",
         )
 
 
@@ -208,7 +216,7 @@ async def get_parsing_status(
 async def get_parsing_results(
     task_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get the results of a completed webpage parsing task.
@@ -223,26 +231,28 @@ async def get_parsing_results(
 
     try:
         # Get task status to verify completion
-        task_status = await TaskStatusService.get_task_status(db, task_id, current_user.id)
+        task_status = await TaskStatusService.get_task_status(
+            db, task_id, current_user.id
+        )
 
         if not task_status:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found or access denied"
+                detail="Task not found or access denied",
             )
 
-        if task_status['status'] != 'completed':
+        if task_status["status"] != "completed":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Task is not completed. Current status: {task_status['status']}"
+                detail=f"Task is not completed. Current status: {task_status['status']}",
             )
 
         # Return the result data
-        result_data = task_status.get('result_data')
+        result_data = task_status.get("result_data")
         if not result_data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No results found for this task"
+                detail="No results found for this task",
             )
 
         return result_data
@@ -253,7 +263,7 @@ async def get_parsing_results(
         logger.error("Failed to get parsing results", task_id=task_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve parsing results"
+            detail="Failed to retrieve parsing results",
         )
 
 
@@ -262,7 +272,7 @@ async def retry_parsing_task(
     task_id: int,
     background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Retry a failed webpage parsing task.
@@ -272,37 +282,40 @@ async def retry_parsing_task(
 
     try:
         # Get task status
-        task_status = await TaskStatusService.get_task_status(db, task_id, current_user.id)
+        task_status = await TaskStatusService.get_task_status(
+            db, task_id, current_user.id
+        )
 
         if not task_status:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found or access denied"
+                detail="Task not found or access denied",
             )
 
-        if task_status['status'] not in ['failed', 'cancelled']:
+        if task_status["status"] not in ["failed", "cancelled"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Task cannot be retried. Current status: {task_status['status']}"
+                detail=f"Task cannot be retried. Current status: {task_status['status']}",
             )
 
         # Get the original task to extract URL and options
         from sqlalchemy import select
+
         result = await db.execute(select(Task).where(Task.id == task_id))
         task = result.scalar_one_or_none()
 
         if not task:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
             )
 
         # Reset task status
         await TaskStatusService.update_task_progress(
-            db, task_id,
+            db,
+            task_id,
             status=TaskStatus.PENDING,
             progress_percentage=0,
-            current_step="queued_for_retry"
+            current_step="queued_for_retry",
         )
 
         # Create parse request from task data
@@ -310,7 +323,7 @@ async def retry_parsing_task(
             url=task.target_url,
             include_screenshot=True,
             wait_for_load=2,
-            wait_for_network_idle=True
+            wait_for_network_idle=True,
         )
 
         # Queue background processing
@@ -318,16 +331,18 @@ async def retry_parsing_task(
             _process_webpage_parsing,
             task_id=task.id,
             url=task.target_url,
-            options=parse_request
+            options=parse_request,
         )
 
-        logger.info("Webpage parsing retry queued", task_id=task_id, url=task.target_url)
+        logger.info(
+            "Webpage parsing retry queued", task_id=task_id, url=task.target_url
+        )
 
         return {
             "task_id": task_id,
             "status": "queued",
             "message": "Task queued for retry",
-            "check_status_url": f"/api/v1/parse/{task_id}"
+            "check_status_url": f"/api/v1/parse/{task_id}",
         }
 
     except HTTPException:
@@ -336,14 +351,14 @@ async def retry_parsing_task(
         logger.error("Failed to retry parsing task", task_id=task_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retry parsing task"
+            detail="Failed to retry parsing task",
         )
 
 
 @router.get("/active")
 async def get_active_parsing_tasks(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get all active (in-progress) parsing tasks for the current user.
@@ -357,14 +372,14 @@ async def get_active_parsing_tasks(
         return {
             "active_tasks": active_tasks,
             "count": len(active_tasks),
-            "message": f"Found {len(active_tasks)} active parsing tasks"
+            "message": f"Found {len(active_tasks)} active parsing tasks",
         }
 
     except Exception as e:
         logger.error("Failed to get active parsing tasks", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve active tasks"
+            detail="Failed to retrieve active tasks",
         )
 
 
@@ -372,7 +387,7 @@ async def get_active_parsing_tasks(
 async def get_parsing_metrics(
     hours: int = 24,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     Get parsing task metrics for the specified time period.
@@ -389,14 +404,12 @@ async def get_parsing_metrics(
         logger.error("Failed to get parsing metrics", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve parsing metrics"
+            detail="Failed to retrieve parsing metrics",
         )
 
 
 @router.get("/cache/stats")
-async def get_cache_stats(
-    current_user: User = Depends(get_current_user)
-):
+async def get_cache_stats(current_user: User = Depends(get_current_user)):
     """
     Get webpage parsing cache statistics.
 
@@ -412,22 +425,19 @@ async def get_cache_stats(
 
         return {
             "cache_stats": stats,
-            "message": "Cache statistics retrieved successfully"
+            "message": "Cache statistics retrieved successfully",
         }
 
     except Exception as e:
         logger.error("Failed to get cache stats", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve cache statistics"
+            detail="Failed to retrieve cache statistics",
         )
 
 
 @router.delete("/cache/{url:path}")
-async def invalidate_cache(
-    url: str,
-    current_user: User = Depends(get_current_user)
-):
+async def invalidate_cache(url: str, current_user: User = Depends(get_current_user)):
     """
     Invalidate cached results for a specific URL.
 
@@ -445,18 +455,18 @@ async def invalidate_cache(
             return {
                 "message": f"Cache invalidated for {url}",
                 "url": url,
-                "success": True
+                "success": True,
             }
         else:
             return {
                 "message": f"No cache found for {url}",
                 "url": url,
-                "success": False
+                "success": False,
             }
 
     except Exception as e:
         logger.error("Failed to invalidate cache", url=url, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to invalidate cache"
+            detail="Failed to invalidate cache",
         )

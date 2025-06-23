@@ -43,15 +43,15 @@ $attempt = 0
 do {
     $attempt++
     Start-Sleep -Seconds 2
-    
+
     try {
         $statusResponse = Invoke-RestMethod -Uri "http://localhost:8000/api/v1/web-pages/$taskId" -Method GET -Headers @{"Authorization"="Bearer $token"}
         $status = $statusResponse.status
         $progress = $statusResponse.progress_percentage
         $step = $statusResponse.current_step
-        
+
         Write-Host "   Attempt $attempt : $status | $progress% | $step" -ForegroundColor Cyan
-        
+
         if ($status -eq "COMPLETED") {
             Write-Host "Task completed successfully!" -ForegroundColor Green
             break
@@ -63,7 +63,7 @@ do {
     } catch {
         Write-Host "   Error checking status: $($_.Exception.Message)" -ForegroundColor Red
     }
-    
+
 } while ($attempt -lt $maxAttempts)
 
 if ($attempt -ge $maxAttempts) {
@@ -74,10 +74,10 @@ if ($attempt -ge $maxAttempts) {
 # Step 4: Get results if completed
 if ($status -eq "COMPLETED") {
     Write-Host "4. Retrieving semantic analysis results..." -ForegroundColor Yellow
-    
+
     try {
         $resultsResponse = Invoke-RestMethod -Uri "http://localhost:8000/api/v1/web-pages/$taskId" -Method GET -Headers @{"Authorization"="Bearer $token"}
-        
+
         Write-Host "Results retrieved successfully!" -ForegroundColor Green
         Write-Host "SEMANTIC ANALYSIS SUMMARY:" -ForegroundColor Magenta
         Write-Host "   URL: $($resultsResponse.url)" -ForegroundColor White
@@ -86,7 +86,7 @@ if ($status -eq "COMPLETED") {
         Write-Host "   Interactive Elements: $($resultsResponse.interactive_elements.Count)" -ForegroundColor White
         Write-Host "   Content Blocks: $($resultsResponse.content_blocks.Count)" -ForegroundColor White
         Write-Host "   Parsing Duration: $($resultsResponse.parsing_duration_ms)ms" -ForegroundColor White
-        
+
     } catch {
         Write-Host "Failed to retrieve results: $($_.Exception.Message)" -ForegroundColor Red
     }

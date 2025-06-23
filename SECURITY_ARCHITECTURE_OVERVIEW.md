@@ -1,9 +1,9 @@
 # WebAgent Enterprise Security Architecture
 ## Technical Due Diligence Documentation for Acquisition Evaluation
 
-**Version:** 1.0  
-**Date:** June 20, 2025  
-**Classification:** Confidential - Acquisition Due Diligence  
+**Version:** 1.0
+**Date:** June 20, 2025
+**Classification:** Confidential - Acquisition Due Diligence
 **Prepared for:** Strategic Acquirers & Technical Due Diligence Teams
 
 ---
@@ -267,7 +267,7 @@ ENABLE_ZERO_KNOWLEDGE: bool = True
 ZK_KEY_DERIVATION_ITERATIONS: int = 100000
 ZK_ENCRYPTION_ALGORITHM: str = "ChaCha20Poly1305"
 
-# Zero Trust Configuration  
+# Zero Trust Configuration
 ENABLE_ZERO_TRUST: bool = True
 CONTINUOUS_VERIFICATION_INTERVAL: int = 1800
 DEVICE_TRUST_REQUIRED: bool = True
@@ -302,7 +302,7 @@ class EnterpriseUserProfile(UserProfile):
     """
     Enhanced user security profile:
     - Trust score calculation (0-100%)
-    - Risk factor identification  
+    - Risk factor identification
     - Behavioral pattern analysis
     - Compliance level classification
     - Zero-knowledge key management
@@ -468,6 +468,6 @@ WebAgent's enterprise security architecture represents a **paradigm shift** in A
 
 ---
 
-**Document Classification:** Confidential - Acquisition Due Diligence  
-**Next Review:** Quarterly technical architecture update  
+**Document Classification:** Confidential - Acquisition Due Diligence
+**Next Review:** Quarterly technical architecture update
 **Contact:** Technical Due Diligence Team

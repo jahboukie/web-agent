@@ -1,33 +1,33 @@
 /**
  * Metrics Visualization Component
- * 
+ *
  * Comprehensive charts and metrics displays for Reader, Planner, and Actor
  * components with enterprise analytics and performance dashboards.
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Eye, 
-  Brain, 
-  Zap, 
-  Clock, 
+import React, { useState, useEffect } from "react";
+import {
+  BarChart3,
+  TrendingUp,
+  Eye,
+  Brain,
+  Zap,
+  Clock,
   Target,
   Activity,
   AlertCircle,
   CheckCircle,
   ArrowUp,
-  ArrowDown
-} from 'lucide-react';
-import { analyticsService } from '../../services';
-import { cn } from '../../lib/utils';
+  ArrowDown,
+} from "lucide-react";
+import { analyticsService } from "../../services";
+import { cn } from "../../lib/utils";
 
 interface MetricData {
   label: string;
   value: number;
   change: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   color: string;
 }
 
@@ -51,53 +51,52 @@ interface MetricCardProps {
   title: string;
   value: string;
   change: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   icon: React.ReactNode;
   color: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ 
-  title, 
-  value, 
-  change, 
-  trend, 
-  icon, 
-  color 
+const MetricCard: React.FC<MetricCardProps> = ({
+  title,
+  value,
+  change,
+  trend,
+  icon,
+  color,
 }) => {
   const getTrendIcon = () => {
-    if (trend === 'up') return <ArrowUp className="h-4 w-4 text-green-500" />;
-    if (trend === 'down') return <ArrowDown className="h-4 w-4 text-red-500" />;
+    if (trend === "up") return <ArrowUp className="h-4 w-4 text-green-500" />;
+    if (trend === "down") return <ArrowDown className="h-4 w-4 text-red-500" />;
     return <div className="h-4 w-4" />;
   };
 
   const getTrendColor = () => {
-    if (trend === 'up') return 'text-green-600 dark:text-green-400';
-    if (trend === 'down') return 'text-red-600 dark:text-red-400';
-    return 'text-gray-600 dark:text-gray-400';
+    if (trend === "up") return "text-green-600 dark:text-green-400";
+    if (trend === "down") return "text-red-600 dark:text-red-400";
+    return "text-gray-600 dark:text-gray-400";
   };
 
   return (
     <div className="card">
       <div className="card-body">
         <div className="flex items-center justify-between mb-4">
-          <div className={cn('p-3 rounded-lg', `bg-${color}-500`)}>
+          <div className={cn("p-3 rounded-lg", `bg-${color}-500`)}>
             <div className="text-white">{icon}</div>
           </div>
           <div className="flex items-center space-x-1">
             {getTrendIcon()}
-            <span className={cn('text-sm font-medium', getTrendColor())}>
-              {change > 0 ? '+' : ''}{change.toFixed(1)}%
+            <span className={cn("text-sm font-medium", getTrendColor())}>
+              {change > 0 ? "+" : ""}
+              {change.toFixed(1)}%
             </span>
           </div>
         </div>
-        
+
         <div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
             {value}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {title}
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{title}</p>
         </div>
       </div>
     </div>
@@ -110,7 +109,11 @@ interface SimpleChartProps {
   height?: number;
 }
 
-const SimpleChart: React.FC<SimpleChartProps> = ({ data, color, height = 100 }) => {
+const SimpleChart: React.FC<SimpleChartProps> = ({
+  data,
+  color,
+  height = 100,
+}) => {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-24 text-gray-400">
@@ -119,8 +122,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({ data, color, height = 100 }) 
     );
   }
 
-  const maxValue = Math.max(...data.map(d => d.value));
-  const minValue = Math.min(...data.map(d => d.value));
+  const maxValue = Math.max(...data.map((d) => d.value));
+  const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue || 1;
 
   return (
@@ -129,7 +132,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({ data, color, height = 100 }) 
         {data.map((point, index) => {
           const x = (index / (data.length - 1)) * 100;
           const y = ((maxValue - point.value) / range) * 80 + 10;
-          
+
           return (
             <g key={index}>
               {index > 0 && (
@@ -163,14 +166,17 @@ interface ComponentDashboardProps {
   color: string;
 }
 
-const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, color }) => {
+const ComponentDashboard: React.FC<ComponentDashboardProps> = ({
+  component,
+  color,
+}) => {
   const getComponentIcon = () => {
     switch (component.component) {
-      case 'reader':
+      case "reader":
         return <Eye className="h-6 w-6" />;
-      case 'planner':
+      case "planner":
         return <Brain className="h-6 w-6" />;
-      case 'actor':
+      case "actor":
         return <Zap className="h-6 w-6" />;
       default:
         return <Activity className="h-6 w-6" />;
@@ -178,8 +184,10 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
   };
 
   const getStatusIcon = () => {
-    if (component.success_rate >= 95) return <CheckCircle className="h-5 w-5 text-green-500" />;
-    if (component.success_rate >= 85) return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+    if (component.success_rate >= 95)
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    if (component.success_rate >= 85)
+      return <AlertCircle className="h-5 w-5 text-yellow-500" />;
     return <AlertCircle className="h-5 w-5 text-red-500" />;
   };
 
@@ -187,7 +195,7 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
     <div className="card">
       <div className="card-header">
         <div className="flex items-center space-x-3">
-          <div className={cn('p-2 rounded-lg', `bg-${color}-500`)}>
+          <div className={cn("p-2 rounded-lg", `bg-${color}-500`)}>
             <div className="text-white">{getComponentIcon()}</div>
           </div>
           <div>
@@ -203,7 +211,7 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
           </div>
         </div>
       </div>
-      
+
       <div className="card-body">
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -211,25 +219,33 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {component.total_requests.toLocaleString()}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Requests</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Total Requests
+            </p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {component.successful_requests.toLocaleString()}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Successful</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Successful
+            </p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {component.avg_response_time_ms.toFixed(0)}ms
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Avg Response</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Avg Response
+            </p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {component.success_rate.toFixed(1)}%
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Success Rate</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Success Rate
+            </p>
           </div>
         </div>
 
@@ -238,9 +254,15 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
             Performance Trend (Last 7 Days)
           </h4>
-          <SimpleChart 
-            data={component.performance_trend} 
-            color={color === 'blue' ? '59, 130, 246' : color === 'purple' ? '147, 51, 234' : '34, 197, 94'} 
+          <SimpleChart
+            data={component.performance_trend}
+            color={
+              color === "blue"
+                ? "59, 130, 246"
+                : color === "purple"
+                  ? "147, 51, 234"
+                  : "34, 197, 94"
+            }
           />
         </div>
 
@@ -249,9 +271,15 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
           <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
             Usage Trend (Last 7 Days)
           </h4>
-          <SimpleChart 
-            data={component.usage_trend} 
-            color={color === 'blue' ? '59, 130, 246' : color === 'purple' ? '147, 51, 234' : '34, 197, 94'} 
+          <SimpleChart
+            data={component.usage_trend}
+            color={
+              color === "blue"
+                ? "59, 130, 246"
+                : color === "purple"
+                  ? "147, 51, 234"
+                  : "34, 197, 94"
+            }
           />
         </div>
       </div>
@@ -260,9 +288,15 @@ const ComponentDashboard: React.FC<ComponentDashboardProps> = ({ component, colo
 };
 
 export const MetricsVisualization: React.FC = () => {
-  const [readerMetrics, setReaderMetrics] = useState<ComponentMetrics | null>(null);
-  const [plannerMetrics, setPlannerMetrics] = useState<ComponentMetrics | null>(null);
-  const [actorMetrics, setActorMetrics] = useState<ComponentMetrics | null>(null);
+  const [readerMetrics, setReaderMetrics] = useState<ComponentMetrics | null>(
+    null,
+  );
+  const [plannerMetrics, setPlannerMetrics] = useState<ComponentMetrics | null>(
+    null,
+  );
+  const [actorMetrics, setActorMetrics] = useState<ComponentMetrics | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -273,11 +307,11 @@ export const MetricsVisualization: React.FC = () => {
   const loadMetrics = async () => {
     try {
       setLoading(true);
-      
+
       const [reader, planner, actor] = await Promise.all([
-        analyticsService.getComponentMetrics('reader'),
-        analyticsService.getComponentMetrics('planner'),
-        analyticsService.getComponentMetrics('actor')
+        analyticsService.getComponentMetrics("reader"),
+        analyticsService.getComponentMetrics("planner"),
+        analyticsService.getComponentMetrics("actor"),
       ]);
 
       setReaderMetrics(reader);
@@ -285,8 +319,8 @@ export const MetricsVisualization: React.FC = () => {
       setActorMetrics(actor);
       setError(null);
     } catch (err) {
-      console.error('Failed to load metrics:', err);
-      setError('Failed to load metrics data');
+      console.error("Failed to load metrics:", err);
+      setError("Failed to load metrics data");
     } finally {
       setLoading(false);
     }
@@ -299,7 +333,10 @@ export const MetricsVisualization: React.FC = () => {
           <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div
+                key={i}
+                className="h-96 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              ></div>
             ))}
           </div>
         </div>
@@ -312,10 +349,7 @@ export const MetricsVisualization: React.FC = () => {
       <div className="text-center py-8">
         <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
         <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-        <button 
-          onClick={loadMetrics}
-          className="btn btn-primary"
-        >
+        <button onClick={loadMetrics} className="btn btn-primary">
           Retry
         </button>
       </div>
@@ -334,7 +368,7 @@ export const MetricsVisualization: React.FC = () => {
             Comprehensive metrics across all AI components
           </p>
         </div>
-        <button 
+        <button
           onClick={loadMetrics}
           className="btn btn-secondary flex items-center space-x-2"
         >
@@ -348,11 +382,11 @@ export const MetricsVisualization: React.FC = () => {
         {readerMetrics && (
           <ComponentDashboard component={readerMetrics} color="blue" />
         )}
-        
+
         {plannerMetrics && (
           <ComponentDashboard component={plannerMetrics} color="purple" />
         )}
-        
+
         {actorMetrics && (
           <ComponentDashboard component={actorMetrics} color="green" />
         )}

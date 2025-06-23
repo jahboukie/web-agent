@@ -1,66 +1,66 @@
 {
   "total_tests": 10,
-  "passed": 6,
-  "failed": 3,
+  "passed": 7,
+  "failed": 2,
   "skipped": 1,
-  "success_rate": 60.0,
-  "duration": 23.414378,
+  "success_rate": 70.0,
+  "duration": 2.189943,
   "results": [
     {
       "test_name": "Backend Health Check",
       "status": "PASS",
       "details": "Backend operational, version: 0.1.0",
-      "duration": 0.007444143295288086,
+      "duration": 0.022092580795288086,
       "error": "",
-      "timestamp": "2025-06-20T17:10:18.885409"
+      "timestamp": "2025-06-23T09:20:11.117250"
     },
     {
       "test_name": "API Endpoint: API Documentation",
       "status": "PASS",
       "details": "Endpoint accessible (HTTP 200)",
-      "duration": 0.0040302276611328125,
+      "duration": 0.0019991397857666016,
       "error": "",
-      "timestamp": "2025-06-20T17:10:18.889439"
-    },
-    {
-      "test_name": "API Endpoint: Auth Registration Endpoint",
-      "status": "FAIL",
-      "details": "Endpoint not accessible",
-      "duration": 0.004393577575683594,
-      "error": "HTTP 405",
-      "timestamp": "2025-06-20T17:10:18.893833"
+      "timestamp": "2025-06-23T09:20:11.120333"
     },
     {
       "test_name": "API Endpoint: Analytics Dashboard Endpoint",
       "status": "PASS",
       "details": "Endpoint accessible (HTTP 401)",
-      "duration": 0.00499725341796875,
+      "duration": 0.004080533981323242,
       "error": "",
-      "timestamp": "2025-06-20T17:10:18.898830"
+      "timestamp": "2025-06-23T09:20:11.124414"
     },
     {
       "test_name": "API Endpoint: Tasks Endpoint",
       "status": "PASS",
       "details": "Endpoint accessible (HTTP 401)",
-      "duration": 0.004740476608276367,
+      "duration": 0.005429267883300781,
       "error": "",
-      "timestamp": "2025-06-20T17:10:18.903570"
+      "timestamp": "2025-06-23T09:20:11.129843"
     },
     {
-      "test_name": "API Endpoint: Web Pages Endpoint",
-      "status": "FAIL",
-      "details": "Endpoint not accessible",
-      "duration": 0.0043256282806396484,
-      "error": "HTTP 404",
-      "timestamp": "2025-06-20T17:10:18.907896"
+      "test_name": "API Endpoint: Web Pages Active Endpoint",
+      "status": "PASS",
+      "details": "Endpoint accessible (HTTP 401)",
+      "duration": 0.004729509353637695,
+      "error": "",
+      "timestamp": "2025-06-23T09:20:11.134573"
+    },
+    {
+      "test_name": "API Endpoint: Auth Registration Endpoint",
+      "status": "PASS",
+      "details": "Endpoint accessible (HTTP 422)",
+      "duration": 0.012632131576538086,
+      "error": "",
+      "timestamp": "2025-06-23T09:20:11.147205"
     },
     {
       "test_name": "User Registration",
-      "status": "PASS",
-      "details": "User registered successfully: test_1750453818@webagent.com",
-      "duration": 0.25678229331970215,
-      "error": "",
-      "timestamp": "2025-06-20T17:10:19.164679"
+      "status": "FAIL",
+      "details": "User registration failed",
+      "duration": 0.45473456382751465,
+      "error": "HTTP 500: {\"error\":{\"type\":\"HTTPException\",\"message\":\"Registration failed due to server error\",\"status_code\":500,\"request_id\":\"4dd0e8c8-a78b-49c5-8594-54dbbfb8aa7d\"}}",
+      "timestamp": "2025-06-23T09:20:11.601939"
     },
     {
       "test_name": "Analytics Dashboard API",
@@ -68,23 +68,23 @@
       "details": "No auth token available",
       "duration": 0,
       "error": "",
-      "timestamp": "2025-06-20T17:10:19.164679"
+      "timestamp": "2025-06-23T09:20:11.601939"
     },
     {
       "test_name": "Frontend Loading",
       "status": "PASS",
       "details": "Frontend loaded successfully: Vite + React + TS",
-      "duration": 0.44164347648620605,
+      "duration": 0.3465859889984131,
       "error": "",
-      "timestamp": "2025-06-20T17:10:19.606322"
+      "timestamp": "2025-06-23T09:20:11.949571"
     },
     {
       "test_name": "Dashboard Components",
       "status": "FAIL",
       "details": "Dashboard components test failed",
-      "duration": 20.76371932029724,
-      "error": "Message: \nStacktrace:\n\tGetHandleVerifier [0x0x7ff6a640cda5+78885]\n\tGetHandleVerifier [0x0x7ff6a640ce00+78976]\n\t(No symbol) [0x0x7ff6a61c9bca]\n\t(No symbol) [0x0x7ff6a6220766]\n\t(No symbol) [0x0x7ff6a6220a1c]\n\t(No symbol) [0x0x7ff6a6274467]\n\t(No symbol) [0x0x7ff6a6248bcf]\n\t(No symbol) [0x0x7ff6a627122f]\n\t(No symbol) [0x0x7ff6a6248963]\n\t(No symbol) [0x0x7ff6a62116b1]\n\t(No symbol) [0x0x7ff6a6212443]\n\tGetHandleVerifier [0x0x7ff6a66e4eed+3061101]\n\tGetHandleVerifier [0x0x7ff6a66df33d+3037629]\n\tGetHandleVerifier [0x0x7ff6a66fe592+3165202]\n\tGetHandleVerifier [0x0x7ff6a642730e+186766]\n\tGetHandleVerifier [0x0x7ff6a642eb3f+217535]\n\tGetHandleVerifier [0x0x7ff6a64159b4+114740]\n\tGetHandleVerifier [0x0x7ff6a6415b69+115177]\n\tGetHandleVerifier [0x0x7ff6a63fc368+10728]\n\tBaseThreadInitThunk [0x0x7ffc7189e8d7+23]\n\tRtlUserThreadStart [0x0x7ffc723bc34c+44]\n",
-      "timestamp": "2025-06-20T17:10:40.370041"
+      "duration": 0.14435791969299316,
+      "error": "Frontend has error on main page",
+      "timestamp": "2025-06-23T09:20:12.093929"
     }
   ]
 }

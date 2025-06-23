@@ -1,9 +1,9 @@
 # Background Task Processing Architecture
 
-**Document Version:** 1.0  
-**Date:** June 19, 2025  
-**Phase:** Phase 2B - Core Intelligence Implementation  
-**Author:** Claude Code  
+**Document Version:** 1.0
+**Date:** June 19, 2025
+**Phase:** Phase 2B - Core Intelligence Implementation
+**Author:** Claude Code
 
 ---
 
@@ -45,7 +45,7 @@ async def parse_webpage(
 ):
     # 1. Create task record immediately
     task = await create_parsing_task(db, current_user.id, request)
-    
+
     # 2. Queue background processing
     background_tasks.add_task(
         process_webpage_parsing,
@@ -53,7 +53,7 @@ async def parse_webpage(
         url=request.url,
         options=request
     )
-    
+
     # 3. Return immediately with task ID
     return TaskCreationResponse(
         task_id=task.id,
@@ -70,7 +70,7 @@ from app.core.task_queue import TaskQueue
 @app.post("/api/v1/web-pages/parse")
 async def parse_webpage(request: WebPageParseRequest, ...):
     task = await create_parsing_task(db, current_user.id, request)
-    
+
     # Queue task in Redis with priority and retry config
     await TaskQueue.enqueue(
         task_type="webpage_parsing",
@@ -80,7 +80,7 @@ async def parse_webpage(request: WebPageParseRequest, ...):
         max_retries=3,
         timeout=300
     )
-    
+
     return TaskCreationResponse(task_id=task.id, status="queued")
 ```
 
@@ -94,22 +94,22 @@ Add background processing fields to existing Task model:
 # Extension to existing app/models/task.py
 class Task(Base):
     # ... existing fields ...
-    
+
     # Background processing fields
     background_task_id = Column(String(255), nullable=True, index=True)
     queue_name = Column(String(100), default="default")
     worker_id = Column(String(255), nullable=True)
     processing_started_at = Column(DateTime(timezone=True), nullable=True)
     processing_completed_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Progress tracking
     progress_details = Column(JSON, default=dict)  # {"current_step": "extracting_elements", "progress": 45}
     estimated_completion_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     # Resource tracking
     memory_usage_mb = Column(Integer, nullable=True)
     browser_session_id = Column(String(255), nullable=True)
-    
+
     # Error handling
     retry_attempts = Column(Integer, default=0)
     last_error_at = Column(DateTime(timezone=True), nullable=True)
@@ -131,7 +131,7 @@ class TaskStatusService:
         estimated_completion: datetime = None
     ):
         """Update task progress with real-time status."""
-        
+
     @staticmethod
     async def mark_task_processing(
         db: AsyncSession,
@@ -140,7 +140,7 @@ class TaskStatusService:
         browser_session_id: str = None
     ):
         """Mark task as actively processing."""
-        
+
     @staticmethod
     async def complete_task(
         db: AsyncSession,
@@ -149,7 +149,7 @@ class TaskStatusService:
         performance_metrics: dict
     ):
         """Mark task as completed with results."""
-        
+
     @staticmethod
     async def fail_task(
         db: AsyncSession,
@@ -172,7 +172,7 @@ async def task_status_websocket(
 ):
     """Provide real-time task status updates via WebSocket."""
     await websocket.accept()
-    
+
     # Subscribe to Redis task status updates
     async for status_update in TaskStatusService.subscribe_to_updates(task_id):
         await websocket.send_json(status_update)
@@ -192,13 +192,13 @@ class BrowserPoolManager:
         self.active_contexts = {}
         self.available_contexts = asyncio.Queue(maxsize=self.pool_size)
         self.context_stats = {}
-    
+
     async def acquire_context(self, task_id: int) -> BrowserContext:
         """Acquire a browser context for task execution."""
-        
+
     async def release_context(self, task_id: int, context: BrowserContext):
         """Release browser context back to pool or cleanup."""
-        
+
     async def cleanup_context(self, context: BrowserContext):
         """Clean up browser context resources."""
 ```
@@ -209,7 +209,7 @@ class BrowserPoolManager:
 # app/models/browser_session.py enhancement
 class BrowserSession(Base):
     # ... existing fields ...
-    
+
     # Resource management
     context_id = Column(String(255), nullable=False, index=True)
     pool_assigned_at = Column(DateTime(timezone=True), nullable=True)
@@ -218,7 +218,7 @@ class BrowserSession(Base):
         "max_duration_seconds": 300,
         "max_pages": 10
     })
-    
+
     # Anti-detection configuration
     user_agent_rotation = Column(Boolean, default=True)
     viewport_randomization = Column(Boolean, default=True)
@@ -233,11 +233,11 @@ class BrowserCleanupService:
     @staticmethod
     async def monitor_resource_usage():
         """Monitor browser resource usage and cleanup if needed."""
-        
+
     @staticmethod
     async def force_cleanup_session(session_id: str):
         """Force cleanup of browser session due to resource limits."""
-        
+
     @staticmethod
     async def health_check_browsers():
         """Health check all browser contexts and restart if needed."""
@@ -253,7 +253,7 @@ class WebParserService:
     def __init__(self):
         self.browser_pool = BrowserPoolManager()
         self.cache_service = WebPageCacheService()
-        
+
     async def parse_webpage_async(
         self,
         task_id: int,
@@ -261,40 +261,40 @@ class WebParserService:
         options: WebPageParseRequest
     ) -> WebPageParseResponse:
         """Main async parsing method for background execution."""
-        
+
         # 1. Check cache first
         cached_result = await self.cache_service.get_cached_page(url, options)
         if cached_result and not options.force_refresh:
             return cached_result
-            
+
         # 2. Update task status
         await TaskStatusService.update_task_progress(
             task_id=task_id,
             status=TaskStatus.IN_PROGRESS,
             current_step="acquiring_browser"
         )
-        
+
         # 3. Acquire browser context
         context = await self.browser_pool.acquire_context(task_id)
-        
+
         try:
             # 4. Perform parsing
             result = await self._perform_parsing(context, url, options, task_id)
-            
+
             # 5. Cache results
             await self.cache_service.cache_page_result(url, result)
-            
+
             # 6. Update task completion
             await TaskStatusService.complete_task(task_id, result.dict())
-            
+
             return result
-            
+
         except Exception as e:
             await TaskStatusService.fail_task(task_id, e)
             raise
         finally:
             await self.browser_pool.release_context(task_id, context)
-    
+
     async def _perform_parsing(
         self,
         context: BrowserContext,
@@ -303,9 +303,9 @@ class WebParserService:
         task_id: int
     ) -> WebPageParseResponse:
         """Perform the actual webpage parsing with progress updates."""
-        
+
         page = await context.new_page()
-        
+
         try:
             # Step 1: Navigate to page
             await TaskStatusService.update_task_progress(
@@ -314,7 +314,7 @@ class WebParserService:
                 current_step="navigating_to_page"
             )
             await page.goto(url, wait_until="networkidle")
-            
+
             # Step 2: Extract DOM structure
             await TaskStatusService.update_task_progress(
                 task_id=task_id,
@@ -322,7 +322,7 @@ class WebParserService:
                 current_step="extracting_dom"
             )
             dom_data = await self._extract_dom_structure(page)
-            
+
             # Step 3: Identify interactive elements
             await TaskStatusService.update_task_progress(
                 task_id=task_id,
@@ -330,7 +330,7 @@ class WebParserService:
                 current_step="identifying_elements"
             )
             elements = await self._extract_interactive_elements(page)
-            
+
             # Step 4: Perform semantic analysis
             await TaskStatusService.update_task_progress(
                 task_id=task_id,
@@ -338,7 +338,7 @@ class WebParserService:
                 current_step="semantic_analysis"
             )
             semantic_data = await self._perform_semantic_analysis(page, elements)
-            
+
             # Step 5: Take screenshot
             await TaskStatusService.update_task_progress(
                 task_id=task_id,
@@ -346,14 +346,14 @@ class WebParserService:
                 current_step="capturing_screenshot"
             )
             screenshot_path = await self._capture_screenshot(page, task_id)
-            
+
             return WebPageParseResponse(
                 web_page=WebPage(...),
                 processing_time_ms=processing_time,
                 screenshots=[screenshot_path],
                 cache_hit=False
             )
-            
+
         finally:
             await page.close()
 ```
@@ -366,29 +366,29 @@ class WebPageCacheService:
     def __init__(self):
         self.redis_client = get_redis_client()
         self.cache_ttl = settings.WEBPAGE_CACHE_TTL  # 1 hour default
-    
+
     async def get_cached_page(
-        self, 
-        url: str, 
+        self,
+        url: str,
         options: WebPageParseRequest
     ) -> Optional[WebPageParseResponse]:
         """Get cached webpage data if available and valid."""
         cache_key = self._generate_cache_key(url, options)
         cached_data = await self.redis_client.get(cache_key)
-        
+
         if cached_data:
             # Check if cached data is still valid
             parsed_data = json.loads(cached_data)
             cached_at = datetime.fromisoformat(parsed_data['cached_at'])
-            
+
             if datetime.utcnow() - cached_at < timedelta(seconds=self.cache_ttl):
                 return WebPageParseResponse.parse_obj(parsed_data['result'])
-        
+
         return None
-    
+
     async def cache_page_result(
-        self, 
-        url: str, 
+        self,
+        url: str,
         result: WebPageParseResponse
     ):
         """Cache webpage parsing result."""
@@ -398,13 +398,13 @@ class WebPageCacheService:
             'cached_at': datetime.utcnow().isoformat(),
             'url': url
         }
-        
+
         await self.redis_client.setex(
             cache_key,
             self.cache_ttl,
             json.dumps(cache_data)
         )
-    
+
     def _generate_cache_key(self, url: str, options: WebPageParseRequest) -> str:
         """Generate unique cache key based on URL and parsing options."""
         option_hash = hashlib.md5(
@@ -427,7 +427,7 @@ class RetryConfig:
     max_delay_seconds: float = 60.0
     exponential_base: float = 2.0
     jitter: bool = True
-    
+
     # Error-specific retry rules
     retry_on_errors: List[Type[Exception]] = field(default_factory=lambda: [
         aiohttp.ClientTimeout,
@@ -435,7 +435,7 @@ class RetryConfig:
         ConnectionError,
         BrowserError
     ])
-    
+
     no_retry_errors: List[Type[Exception]] = field(default_factory=lambda: [
         ValidationError,
         PermissionError,
@@ -452,22 +452,22 @@ class RetryHandler:
         **kwargs
     ):
         """Execute function with configurable retry logic."""
-        
+
         for attempt in range(config.max_attempts):
             try:
                 return await func(*args, **kwargs)
             except Exception as e:
                 if not RetryHandler._should_retry(e, config, attempt):
                     raise
-                
+
                 delay = RetryHandler._calculate_delay(attempt, config)
                 await TaskStatusService.update_task_progress(
                     task_id=task_id,
                     current_step=f"retrying_after_error_attempt_{attempt + 1}"
                 )
-                
+
                 await asyncio.sleep(delay)
-        
+
         raise Exception(f"Task failed after {config.max_attempts} attempts")
 ```
 
@@ -483,7 +483,7 @@ class WebParsingErrorHandler:
         context: dict
     ) -> ErrorRecoveryAction:
         """Classify error and determine recovery action."""
-        
+
         if isinstance(error, playwright.async_api.TimeoutError):
             return ErrorRecoveryAction.RETRY_WITH_LONGER_TIMEOUT
         elif isinstance(error, BrowserCrashError):
@@ -494,7 +494,7 @@ class WebParsingErrorHandler:
             return ErrorRecoveryAction.CLEANUP_AND_RETRY
         else:
             return ErrorRecoveryAction.FAIL_PERMANENTLY
-    
+
     @staticmethod
     async def apply_recovery_action(
         action: ErrorRecoveryAction,
@@ -522,21 +522,21 @@ Database  Redis    Browser     Results   Error     User
 # app/services/task_orchestration_service.py
 class TaskOrchestrationService:
     """Orchestrates the flow between WebParser, TaskPlanner, and ActionExecutor."""
-    
+
     async def handle_webpage_parsed(self, task_id: int, parse_result: WebPageParseResponse):
         """Handle completion of webpage parsing and trigger next phase."""
-        
+
         # 1. Store parsed webpage data
         await WebPageService.store_parsed_page(parse_result)
-        
+
         # 2. Check if this should trigger task planning
         task = await TaskService.get_task_by_id(task_id)
         if task.status == TaskStatus.PENDING_PLANNING:
             await self.trigger_task_planning(task_id, parse_result.web_page.id)
-    
+
     async def trigger_task_planning(self, task_id: int, web_page_id: int):
         """Trigger task planning service for a parsed webpage."""
-        
+
         # Queue planning task
         await TaskQueue.enqueue(
             task_type="task_planning",
@@ -555,7 +555,7 @@ class TaskMetrics:
     @staticmethod
     async def record_task_started(task_id: int, task_type: str):
         """Record task start metrics."""
-        
+
     @staticmethod
     async def record_task_completed(
         task_id: int,
@@ -564,7 +564,7 @@ class TaskMetrics:
         success: bool
     ):
         """Record task completion metrics."""
-        
+
     @staticmethod
     async def record_browser_resource_usage(
         session_id: str,
@@ -581,7 +581,7 @@ class TaskMetrics:
 @app.get("/health/background-tasks")
 async def background_task_health():
     """Health check for background task processing system."""
-    
+
     health_status = {
         "queue_health": await TaskQueue.health_check(),
         "browser_pool_status": await BrowserPoolManager.get_pool_status(),
@@ -589,7 +589,7 @@ async def background_task_health():
         "failed_tasks_last_hour": await TaskStatusService.get_recent_failures(),
         "redis_connection": await redis_health_check()
     }
-    
+
     return health_status
 ```
 
@@ -658,7 +658,7 @@ CREATE INDEX idx_tasks_processing_started_at ON tasks(processing_started_at);
 ### 9.2 Performance Targets
 
 - **MVP:** 10 concurrent parsing tasks, 30-second average parse time
-- **Scale:** 100 concurrent parsing tasks, 15-second average parse time  
+- **Scale:** 100 concurrent parsing tasks, 15-second average parse time
 - **Enterprise:** 1000+ concurrent parsing tasks, sub-10-second parse time
 
 ---

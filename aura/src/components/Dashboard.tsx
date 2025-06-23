@@ -1,17 +1,17 @@
 /**
  * Revenue-Optimized Analytics Dashboard
- * 
+ *
  * Comprehensive dashboard showcasing WebAgent's revolutionary AI capabilities
  * while driving strategic revenue growth through intelligent upgrade prompts.
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  Activity, 
-  Users, 
-  AlertTriangle, 
-  CheckCircle, 
+import React, { useState, useEffect } from "react";
+import {
+  Shield,
+  Activity,
+  Users,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   TrendingUp,
   Server,
@@ -25,22 +25,28 @@ import {
   Sparkles,
   ArrowUpRight,
   Target,
-  Award
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { TrustScoreIndicator } from './security/TrustScoreIndicator';
-import { analyticsService } from '../services/analyticsService';
-import type { DashboardStats } from '../services/analyticsService';
-import { cn, formatNumber, formatRelativeTime } from '../lib/utils';
-import { PRICING_TIERS } from '../types/pricing';
-import type { Activity as ActivityType, UpgradeOpportunity, SuccessMetric } from '../services/analyticsService';
+  Award,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { TrustScoreIndicator } from "./security/TrustScoreIndicator";
+import { analyticsService } from "../services/analyticsService";
+import type { DashboardStats } from "../services/analyticsService";
+import { cn, formatNumber, formatRelativeTime } from "../lib/utils";
+import { PRICING_TIERS } from "../types/pricing";
+import type {
+  Activity as ActivityType,
+  UpgradeOpportunity,
+  SuccessMetric,
+} from "../services/analyticsService";
 
 export function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string>('');
-  const [selectedTimeframe, setSelectedTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
+  const [error, setError] = useState<string>("");
+  const [selectedTimeframe, setSelectedTimeframe] = useState<
+    "7d" | "30d" | "90d"
+  >("30d");
 
   useEffect(() => {
     fetchDashboardData();
@@ -54,7 +60,7 @@ export function Dashboard() {
       const dashboardStats = await analyticsService.getDashboardStats();
       setStats(dashboardStats);
     } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+      setError(err.message || "Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +73,10 @@ export function Dashboard() {
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+              <div
+                key={i}
+                className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"
+              ></div>
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -103,27 +112,29 @@ export function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {user?.full_name?.split(' ')[0]}
+            Welcome back, {user?.full_name?.split(" ")[0]}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {stats?.subscription.tier === 'free' 
-              ? 'Exploring WebAgent\'s revolutionary AI capabilities'
-              : `${PRICING_TIERS.find(t => t.id === stats?.subscription.tier)?.name} - Unleashing automation power`
-            }
+            {stats?.subscription.tier === "free"
+              ? "Exploring WebAgent's revolutionary AI capabilities"
+              : `${PRICING_TIERS.find((t) => t.id === stats?.subscription.tier)?.name} - Unleashing automation power`}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-4">
           {/* Subscription Badge */}
-          <div className={cn(
-            'px-3 py-1 rounded-full text-sm font-medium',
-            stats?.subscription.tier === 'free' 
-              ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
-              : stats?.subscription.tier === 'enterprise'
-              ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-              : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-          )}>
-            {PRICING_TIERS.find(t => t.id === stats?.subscription.tier)?.name || 'Free'}
+          <div
+            className={cn(
+              "px-3 py-1 rounded-full text-sm font-medium",
+              stats?.subscription.tier === "free"
+                ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                : stats?.subscription.tier === "enterprise"
+                  ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+            )}
+          >
+            {PRICING_TIERS.find((t) => t.id === stats?.subscription.tier)
+              ?.name || "Free"}
           </div>
           <TrustScoreIndicator showDetails size="lg" />
         </div>
@@ -143,15 +154,23 @@ export function Dashboard() {
               </p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {stats.upgrade_opportunities[0].value_props.map((prop, idx) => (
-                  <span key={idx} className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-md">
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+                  >
                     <CheckCircle className="h-3 w-3 mr-1" />
                     {prop}
                   </span>
                 ))}
               </div>
-              <button 
+              <button
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                onClick={() => console.log('Upgrade action:', stats.upgrade_opportunities[0].cta_action)}
+                onClick={() =>
+                  console.log(
+                    "Upgrade action:",
+                    stats.upgrade_opportunities[0].cta_action,
+                  )
+                }
               >
                 {stats.upgrade_opportunities[0].cta_text}
                 <ArrowUpRight className="h-4 w-4 ml-1 inline" />
@@ -188,7 +207,7 @@ export function Dashboard() {
           tier={stats?.subscription.tier}
           upgradeAction="upgrade_reader_pro"
         />
-        
+
         <UsageCard
           title="Planner (AI Reasoning)"
           icon={<Brain className="h-6 w-6" />}
@@ -198,7 +217,7 @@ export function Dashboard() {
           tier={stats?.subscription.tier}
           upgradeAction="upgrade_planner_pro"
         />
-        
+
         <UsageCard
           title="Actor (Automation)"
           icon={<Play className="h-6 w-6" />}
@@ -232,8 +251,10 @@ export function Dashboard() {
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No recent activities</p>
-                  <button className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
-                    onClick={() => console.log('Create first workflow')}>
+                  <button
+                    className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
+                    onClick={() => console.log("Create first workflow")}
+                  >
                     Create your first workflow
                   </button>
                 </div>
@@ -259,13 +280,21 @@ export function Dashboard() {
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-green-800 dark:text-green-200">
-                  {stats?.usage_metrics.unified.roi_metrics.time_saved_hours.toFixed(1)} hours
+                  {stats?.usage_metrics.unified.roi_metrics.time_saved_hours.toFixed(
+                    1,
+                  )}{" "}
+                  hours
                 </div>
                 <div className="text-sm text-green-600 dark:text-green-300">
-                  Worth ${Math.round((stats?.usage_metrics.unified.roi_metrics.time_saved_hours || 0) * 75)} in productivity
+                  Worth $
+                  {Math.round(
+                    (stats?.usage_metrics.unified.roi_metrics
+                      .time_saved_hours || 0) * 75,
+                  )}{" "}
+                  in productivity
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <DollarSign className="h-5 w-5 text-blue-600" />
@@ -274,17 +303,24 @@ export function Dashboard() {
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-blue-800 dark:text-blue-200">
-                  ${stats?.usage_metrics.unified.roi_metrics.cost_saved_usd.toLocaleString()}
+                  $
+                  {stats?.usage_metrics.unified.roi_metrics.cost_saved_usd.toLocaleString()}
                 </div>
                 <div className="text-sm text-blue-600 dark:text-blue-300">
-                  ROI: {Math.round((stats?.usage_metrics.unified.roi_metrics.cost_saved_usd || 0) / 100)}x
+                  ROI:{" "}
+                  {Math.round(
+                    (stats?.usage_metrics.unified.roi_metrics.cost_saved_usd ||
+                      0) / 100,
+                  )}
+                  x
                 </div>
               </div>
-              
-              {stats?.subscription.tier === 'free' && (
+
+              {stats?.subscription.tier === "free" && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
                   <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                    <strong>🚀 Imagine this with unlimited usage!</strong><br/>
+                    <strong>🚀 Imagine this with unlimited usage!</strong>
+                    <br />
                     Complete Platform users average 3x better results.
                   </div>
                 </div>
@@ -307,30 +343,38 @@ export function Dashboard() {
               title="Parse Website"
               description="Extract data intelligently"
               icon={<Eye className="h-6 w-6" />}
-              onClick={() => console.log('Navigate to Reader')}
+              onClick={() => console.log("Navigate to Reader")}
               disabled={false}
             />
             <QuickActionButton
               title="Create Plan"
               description="AI-powered automation planning"
               icon={<Brain className="h-6 w-6" />}
-              onClick={() => console.log('Navigate to Planner')}
+              onClick={() => console.log("Navigate to Planner")}
               disabled={false}
             />
             <QuickActionButton
               title="Execute Workflow"
               description="Run automation sequences"
               icon={<Play className="h-6 w-6" />}
-              onClick={() => console.log('Navigate to Actor')}
+              onClick={() => console.log("Navigate to Actor")}
               disabled={false}
             />
             <QuickActionButton
-              title={stats?.subscription.tier === 'free' ? 'Unlock Analytics' : 'Advanced Analytics'}
-              description={stats?.subscription.tier === 'free' ? 'Enterprise insights' : 'Deep performance data'}
+              title={
+                stats?.subscription.tier === "free"
+                  ? "Unlock Analytics"
+                  : "Advanced Analytics"
+              }
+              description={
+                stats?.subscription.tier === "free"
+                  ? "Enterprise insights"
+                  : "Deep performance data"
+              }
               icon={<BarChart3 className="h-6 w-6" />}
-              onClick={() => console.log('Navigate to Analytics')}
-              disabled={stats?.subscription.tier === 'free'}
-              premium={stats?.subscription.tier === 'free'}
+              onClick={() => console.log("Navigate to Analytics")}
+              disabled={stats?.subscription.tier === "free"}
+              premium={stats?.subscription.tier === "free"}
             />
           </div>
         </div>
@@ -344,16 +388,16 @@ interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'orange' | 'purple';
+  color: "blue" | "green" | "orange" | "purple";
   trend?: string;
 }
 
 function StatCard({ title, value, icon, color, trend }: StatCardProps) {
   const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-    purple: 'bg-purple-500',
+    blue: "bg-blue-500",
+    green: "bg-green-500",
+    orange: "bg-orange-500",
+    purple: "bg-purple-500",
   };
 
   return (
@@ -362,15 +406,19 @@ function StatCard({ title, value, icon, color, trend }: StatCardProps) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-600 dark:text-gray-400">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {value}
+            </p>
             {trend && (
               <div className="flex items-center mt-1">
                 <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600 dark:text-green-400">{trend}</span>
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  {trend}
+                </span>
               </div>
             )}
           </div>
-          <div className={cn('p-3 rounded-lg', colorClasses[color])}>
+          <div className={cn("p-3 rounded-lg", colorClasses[color])}>
             <div className="text-white">{icon}</div>
           </div>
         </div>
@@ -384,22 +432,30 @@ interface UsageCardProps {
   title: string;
   icon: React.ReactNode;
   usage: number;
-  limit: number | 'unlimited';
-  color: 'blue' | 'green' | 'orange' | 'purple';
+  limit: number | "unlimited";
+  color: "blue" | "green" | "orange" | "purple";
   tier?: string;
   upgradeAction?: string;
 }
 
-function UsageCard({ title, icon, usage, limit, color, tier, upgradeAction }: UsageCardProps) {
-  const isUnlimited = limit === 'unlimited';
+function UsageCard({
+  title,
+  icon,
+  usage,
+  limit,
+  color,
+  tier,
+  upgradeAction,
+}: UsageCardProps) {
+  const isUnlimited = limit === "unlimited";
   const percentage = isUnlimited ? 0 : (usage / (limit as number)) * 100;
   const isNearLimit = percentage > 80;
-  
+
   const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-    purple: 'bg-purple-500',
+    blue: "bg-blue-500",
+    green: "bg-green-500",
+    orange: "bg-orange-500",
+    purple: "bg-purple-500",
   };
 
   return (
@@ -407,43 +463,51 @@ function UsageCard({ title, icon, usage, limit, color, tier, upgradeAction }: Us
       <div className="card-body">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className={cn('p-2 rounded-lg', colorClasses[color])}>
+            <div className={cn("p-2 rounded-lg", colorClasses[color])}>
               <div className="text-white">{icon}</div>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">{title}</h4>
+              <h4 className="font-medium text-gray-900 dark:text-white">
+                {title}
+              </h4>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {isUnlimited ? 'Unlimited' : `${usage} / ${limit}`}
+                {isUnlimited ? "Unlimited" : `${usage} / ${limit}`}
               </p>
             </div>
           </div>
-          {tier === 'free' && isNearLimit && (
+          {tier === "free" && isNearLimit && (
             <Zap className="h-5 w-5 text-yellow-500" />
           )}
         </div>
-        
+
         {!isUnlimited && (
           <div className="mb-3">
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-600 dark:text-gray-400">Usage</span>
-              <span className={cn('font-medium',
-                isNearLimit ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-white'
-              )}>
+              <span
+                className={cn(
+                  "font-medium",
+                  isNearLimit
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-gray-900 dark:text-white",
+                )}
+              >
                 {percentage.toFixed(0)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
-                className={cn('h-2 rounded-full transition-all duration-300',
-                  isNearLimit ? 'bg-yellow-500' : colorClasses[color]
+              <div
+                className={cn(
+                  "h-2 rounded-full transition-all duration-300",
+                  isNearLimit ? "bg-yellow-500" : colorClasses[color],
                 )}
                 style={{ width: `${Math.min(percentage, 100)}%` }}
               />
             </div>
           </div>
         )}
-        
-        {tier === 'free' && isNearLimit && (
+
+        {tier === "free" && isNearLimit && (
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
             <div className="flex items-start space-x-2">
               <AlertTriangle className="h-4 w-4 text-yellow-600 flex-shrink-0 mt-0.5" />
@@ -454,9 +518,9 @@ function UsageCard({ title, icon, usage, limit, color, tier, upgradeAction }: Us
                 <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-2">
                   Upgrade to avoid interruptions
                 </p>
-                <button 
+                <button
                   className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
-                  onClick={() => console.log('Upgrade:', upgradeAction)}
+                  onClick={() => console.log("Upgrade:", upgradeAction)}
                 >
                   Upgrade Now
                 </button>
@@ -464,7 +528,7 @@ function UsageCard({ title, icon, usage, limit, color, tier, upgradeAction }: Us
             </div>
           </div>
         )}
-        
+
         {isUnlimited && (
           <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 text-center">
             <CheckCircle className="h-5 w-5 text-green-600 mx-auto mb-1" />
@@ -489,27 +553,39 @@ interface ActivityItemProps {
 function ActivityItem({ activity }: ActivityItemProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'parse': return <Eye className="h-4 w-4" />;
-      case 'plan': return <Brain className="h-4 w-4" />;
-      case 'execute': return <Play className="h-4 w-4" />;
-      case 'system': return <Server className="h-4 w-4" />;
-      default: return <Activity className="h-4 w-4" />;
+      case "parse":
+        return <Eye className="h-4 w-4" />;
+      case "plan":
+        return <Brain className="h-4 w-4" />;
+      case "execute":
+        return <Play className="h-4 w-4" />;
+      case "system":
+        return <Server className="h-4 w-4" />;
+      default:
+        return <Activity className="h-4 w-4" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
-      case 'warning': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
-      case 'error': return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
-      case 'info': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
-      default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30';
+      case "success":
+        return "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30";
+      case "warning":
+        return "text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30";
+      case "error":
+        return "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30";
+      case "info":
+        return "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30";
+      default:
+        return "text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30";
     }
   };
 
   return (
     <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-      <div className={cn('p-1.5 rounded-full', getStatusColor(activity.status))}>
+      <div
+        className={cn("p-1.5 rounded-full", getStatusColor(activity.status))}
+      >
         {getActivityIcon(activity.type)}
       </div>
       <div className="flex-1 min-w-0">
@@ -527,7 +603,10 @@ function ActivityItem({ activity }: ActivityItemProps) {
         {activity.metadata && (
           <div className="flex items-center space-x-2 mt-2">
             {Object.entries(activity.metadata).map(([key, value], idx) => (
-              <span key={idx} className="inline-flex items-center px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 rounded">
+              <span
+                key={idx}
+                className="inline-flex items-center px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 rounded"
+              >
                 {key}: {value}
               </span>
             ))}
@@ -542,24 +621,26 @@ function ActivityItem({ activity }: ActivityItemProps) {
 interface SecurityMetricProps {
   label: string;
   value: string;
-  status: 'success' | 'warning' | 'error';
+  status: "success" | "warning" | "error";
   icon: React.ReactNode;
 }
 
 function SecurityMetric({ label, value, status, icon }: SecurityMetricProps) {
   const statusColors = {
-    success: 'text-green-600 dark:text-green-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    error: 'text-red-600 dark:text-red-400',
+    success: "text-green-600 dark:text-green-400",
+    warning: "text-yellow-600 dark:text-yellow-400",
+    error: "text-red-600 dark:text-red-400",
   };
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-3">
         <div className={cn(statusColors[status])}>{icon}</div>
-        <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {label}
+        </span>
       </div>
-      <span className={cn('text-sm font-medium', statusColors[status])}>
+      <span className={cn("text-sm font-medium", statusColors[status])}>
         {value}
       </span>
     </div>
@@ -576,17 +657,24 @@ interface QuickActionButtonProps {
   premium?: boolean;
 }
 
-function QuickActionButton({ title, description, icon, onClick, disabled = false, premium = false }: QuickActionButtonProps) {
+function QuickActionButton({
+  title,
+  description,
+  icon,
+  onClick,
+  disabled = false,
+  premium = false,
+}: QuickActionButtonProps) {
   return (
     <button
       type="button"
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
       className={cn(
-        'p-4 text-left border rounded-lg transition-all duration-200 relative',
-        disabled 
-          ? 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-700'
+        "p-4 text-left border rounded-lg transition-all duration-200 relative",
+        disabled
+          ? "border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed"
+          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-700",
       )}
     >
       {premium && (
@@ -595,28 +683,38 @@ function QuickActionButton({ title, description, icon, onClick, disabled = false
         </div>
       )}
       <div className="flex items-center space-x-3">
-        <div className={cn(
-          'transition-colors',
-          disabled ? 'text-gray-400 dark:text-gray-600' : 'text-primary-600 dark:text-primary-500'
-        )}>
+        <div
+          className={cn(
+            "transition-colors",
+            disabled
+              ? "text-gray-400 dark:text-gray-600"
+              : "text-primary-600 dark:text-primary-500",
+          )}
+        >
           {icon}
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <h4 className={cn(
-              'text-sm font-medium',
-              disabled ? 'text-gray-500 dark:text-gray-600' : 'text-gray-900 dark:text-white'
-            )}>
+            <h4
+              className={cn(
+                "text-sm font-medium",
+                disabled
+                  ? "text-gray-500 dark:text-gray-600"
+                  : "text-gray-900 dark:text-white",
+              )}
+            >
               {title}
             </h4>
-            {premium && (
-              <Lock className="h-3 w-3 text-yellow-600" />
-            )}
+            {premium && <Lock className="h-3 w-3 text-yellow-600" />}
           </div>
-          <p className={cn(
-            'text-xs mt-1',
-            disabled ? 'text-gray-400 dark:text-gray-600' : 'text-gray-500 dark:text-gray-400'
-          )}>
+          <p
+            className={cn(
+              "text-xs mt-1",
+              disabled
+                ? "text-gray-400 dark:text-gray-600"
+                : "text-gray-500 dark:text-gray-400",
+            )}
+          >
             {description}
           </p>
           {premium && (
@@ -633,28 +731,34 @@ function QuickActionButton({ title, description, icon, onClick, disabled = false
 // Helper Functions
 function getMetricIcon(label: string) {
   switch (label.toLowerCase()) {
-    case 'automation success rate':
-    case 'success rate':
+    case "automation success rate":
+    case "success rate":
       return <Target className="h-6 w-6" />;
-    case 'time saved this month':
-    case 'time saved':
+    case "time saved this month":
+    case "time saved":
       return <Clock className="h-6 w-6" />;
-    case 'cost savings generated':
-    case 'cost savings':
+    case "cost savings generated":
+    case "cost savings":
       return <DollarSign className="h-6 w-6" />;
-    case 'user satisfaction':
-    case 'satisfaction':
+    case "user satisfaction":
+    case "satisfaction":
       return <Award className="h-6 w-6" />;
     default:
       return <TrendingUp className="h-6 w-6" />;
   }
 }
 
-function getMetricColor(direction: 'up' | 'down' | 'stable'): 'blue' | 'green' | 'orange' | 'purple' {
+function getMetricColor(
+  direction: "up" | "down" | "stable",
+): "blue" | "green" | "orange" | "purple" {
   switch (direction) {
-    case 'up': return 'green';
-    case 'down': return 'orange';
-    case 'stable': return 'blue';
-    default: return 'purple';
+    case "up":
+      return "green";
+    case "down":
+      return "orange";
+    case "stable":
+      return "blue";
+    default:
+      return "purple";
   }
 }

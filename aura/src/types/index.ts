@@ -1,6 +1,6 @@
 /**
  * Type Definitions for WebAgent Aura
- * 
+ *
  * Comprehensive type definitions for the WebAgent frontend application.
  */
 
@@ -21,27 +21,27 @@ export interface User {
 }
 
 export enum SecurityRole {
-  SYSTEM_ADMIN = 'SYSTEM_ADMIN',
-  TENANT_ADMIN = 'TENANT_ADMIN',
-  AUTOMATION_MANAGER = 'AUTOMATION_MANAGER',
-  ANALYST = 'ANALYST',
-  AUDITOR = 'AUDITOR',
-  END_USER = 'END_USER',
+  SYSTEM_ADMIN = "SYSTEM_ADMIN",
+  TENANT_ADMIN = "TENANT_ADMIN",
+  AUTOMATION_MANAGER = "AUTOMATION_MANAGER",
+  ANALYST = "ANALYST",
+  AUDITOR = "AUDITOR",
+  END_USER = "END_USER",
 }
 
 export enum ThreatLevel {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 export enum TrustLevel {
-  VERY_LOW = 'very_low',
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  VERY_HIGH = 'very_high',
+  VERY_LOW = "very_low",
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  VERY_HIGH = "very_high",
 }
 
 // Zero Trust Types
@@ -106,10 +106,10 @@ export interface Tenant {
 }
 
 export enum ComplianceLevel {
-  INTERNAL = 'internal',
-  CONFIDENTIAL = 'confidential',
-  RESTRICTED = 'restricted',
-  TOP_SECRET = 'top_secret',
+  INTERNAL = "internal",
+  CONFIDENTIAL = "confidential",
+  RESTRICTED = "restricted",
+  TOP_SECRET = "top_secret",
 }
 
 // Security Event Types
@@ -160,18 +160,18 @@ export interface Task {
 }
 
 export enum TaskStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  IN_PROGRESS = "in_progress",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
 }
 
 export enum TaskPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent',
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export interface ExecutionPlan {
@@ -201,30 +201,30 @@ export interface ExecutionStep {
 }
 
 export enum ExecutionStatus {
-  DRAFT = 'draft',
-  READY = 'ready',
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
+  DRAFT = "draft",
+  READY = "ready",
+  RUNNING = "running",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
 }
 
 export enum StepType {
-  NAVIGATE = 'navigate',
-  CLICK = 'click',
-  TYPE = 'type',
-  WAIT = 'wait',
-  SCROLL = 'scroll',
-  EXTRACT = 'extract',
-  VALIDATE = 'validate',
+  NAVIGATE = "navigate",
+  CLICK = "click",
+  TYPE = "type",
+  WAIT = "wait",
+  SCROLL = "scroll",
+  EXTRACT = "extract",
+  VALIDATE = "validate",
 }
 
 export enum StepStatus {
-  PENDING = 'pending',
-  RUNNING = 'running',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  SKIPPED = 'skipped',
+  PENDING = "pending",
+  RUNNING = "running",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  SKIPPED = "skipped",
 }
 
 // UI and Component Types
@@ -250,19 +250,19 @@ export interface DashboardWidget {
 }
 
 export enum WidgetType {
-  METRIC = 'metric',
-  CHART = 'chart',
-  TABLE = 'table',
-  LIST = 'list',
-  STATUS = 'status',
-  SECURITY = 'security',
+  METRIC = "metric",
+  CHART = "chart",
+  TABLE = "table",
+  LIST = "list",
+  STATUS = "status",
+  SECURITY = "security",
 }
 
 export enum WidgetSize {
-  SMALL = 'small',
-  MEDIUM = 'medium',
-  LARGE = 'large',
-  FULL = 'full',
+  SMALL = "small",
+  MEDIUM = "medium",
+  LARGE = "large",
+  FULL = "full",
 }
 
 // API Response Types
@@ -304,16 +304,16 @@ export interface FormField {
 }
 
 export enum FieldType {
-  TEXT = 'text',
-  EMAIL = 'email',
-  PASSWORD = 'password',
-  NUMBER = 'number',
-  SELECT = 'select',
-  CHECKBOX = 'checkbox',
-  RADIO = 'radio',
-  TEXTAREA = 'textarea',
-  DATE = 'date',
-  FILE = 'file',
+  TEXT = "text",
+  EMAIL = "email",
+  PASSWORD = "password",
+  NUMBER = "number",
+  SELECT = "select",
+  CHECKBOX = "checkbox",
+  RADIO = "radio",
+  TEXTAREA = "textarea",
+  DATE = "date",
+  FILE = "file",
 }
 
 export interface SelectOption {
@@ -329,17 +329,17 @@ export interface ValidationRule {
 }
 
 export enum ValidationType {
-  REQUIRED = 'required',
-  MIN_LENGTH = 'minLength',
-  MAX_LENGTH = 'maxLength',
-  PATTERN = 'pattern',
-  EMAIL = 'email',
-  CUSTOM = 'custom',
+  REQUIRED = "required",
+  MIN_LENGTH = "minLength",
+  MAX_LENGTH = "maxLength",
+  PATTERN = "pattern",
+  EMAIL = "email",
+  CUSTOM = "custom",
 }
 
 // Theme and Preferences Types
 export interface UserPreferences {
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   language: string;
   timezone: string;
   notifications: NotificationPreferences;
@@ -356,7 +356,7 @@ export interface NotificationPreferences {
 }
 
 export interface DashboardPreferences {
-  layout: 'grid' | 'list';
+  layout: "grid" | "list";
   widgets: string[];
   refresh_interval: number;
   show_welcome: boolean;
@@ -381,4 +381,4 @@ export interface DemoUser {
 }
 
 // Export pricing types
-export * from './pricing';
+export * from "./pricing";

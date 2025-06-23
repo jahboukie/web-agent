@@ -1,8 +1,8 @@
 # WebAgent: Technical Development Production Document
 
-**Document Version:** 2.0  
-**Date:** June 19, 2025  
-**Authors:** Development Team Lead  
+**Document Version:** 2.0
+**Date:** June 19, 2025
+**Authors:** Development Team Lead
 **Target:** Claude Code & Augment Code AI Assistants + Human Development Team
 
 ---
@@ -33,7 +33,7 @@ WebAgent System
 ├── API Gateway (FastAPI)
 ├── Core Engine
 │   ├── WebParser (Reader Phase)
-│   ├── TaskPlanner (Planner Phase) 
+│   ├── TaskPlanner (Planner Phase)
 │   ├── ActionExecutor (Actor Phase)
 │   └── SecurityManager (Guardian Phase)
 ├── Database Layer (PostgreSQL + Redis)

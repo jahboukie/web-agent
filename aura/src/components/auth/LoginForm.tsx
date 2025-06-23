@@ -1,15 +1,23 @@
 /**
  * Login Form Component
- * 
+ *
  * Secure login form with MFA support, device fingerprinting,
  * and Zero Trust integration for WebAgent enterprise platform.
  */
 
-import React, { useState } from 'react';
-import { Eye, EyeOff, Shield, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
-import { apiService, type LoginCredentials } from '../../services';
-import { cn, isValidEmail } from '../../lib/utils';
-import { DemoLoginPanel } from './DemoLoginPanel';
+import React, { useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Shield,
+  Lock,
+  Mail,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
+import { apiService, type LoginCredentials } from "../../services";
+import { cn, isValidEmail } from "../../lib/utils";
+import { DemoLoginPanel } from "./DemoLoginPanel";
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -33,9 +41,9 @@ interface FormErrors {
 
 export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
   const [formData, setFormData] = useState<FormData>({
-    email: '',
-    password: '',
-    mfa_code: '',
+    email: "",
+    password: "",
+    mfa_code: "",
     remember_me: false,
   });
 
@@ -49,21 +57,21 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
     const newErrors: FormErrors = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     if (requiresMFA && !formData.mfa_code) {
-      newErrors.mfa_code = 'MFA code is required';
+      newErrors.mfa_code = "MFA code is required";
     } else if (requiresMFA && formData.mfa_code.length !== 6) {
-      newErrors.mfa_code = 'MFA code must be 6 digits';
+      newErrors.mfa_code = "MFA code must be 6 digits";
     }
 
     setErrors(newErrors);
@@ -71,7 +79,7 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
   };
 
   const handleDemoLogin = async (email: string, password: string) => {
-    setFormData(prev => ({ ...prev, email, password }));
+    setFormData((prev) => ({ ...prev, email, password }));
     setIsLoading(true);
     setErrors({});
 
@@ -84,14 +92,16 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
         const assessment = await apiService.getTrustAssessment();
         setTrustAssessment(assessment);
       } catch (assessmentError) {
-        console.warn('Trust assessment failed:', assessmentError);
+        console.warn("Trust assessment failed:", assessmentError);
       }
 
       onSuccess();
     } catch (error: any) {
-      console.error('Demo login failed:', error);
-      setErrors({ general: error.message || 'Demo login failed' });
-      onError(error.message || 'Demo login failed');
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Demo login failed:", error);
+      }
+      setErrors({ general: error.message || "Demo login failed" });
+      onError(error.message || "Demo login failed");
     } finally {
       setIsLoading(false);
     }
@@ -116,56 +126,64 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
       }
 
       const response = await apiService.login(credentials);
-      
+
       // Get Zero Trust assessment after successful login
       try {
         const assessment = await apiService.getTrustAssessment();
         setTrustAssessment(assessment);
-        
+
         // Check if additional verification is required
         if (assessment.required_actions?.length > 0) {
           // Handle required actions (e.g., device verification, location confirmation)
-          console.log('Required actions:', assessment.required_actions);
+          console.log("Required actions:", assessment.required_actions);
         }
       } catch (assessmentError) {
-        console.warn('Trust assessment failed:', assessmentError);
+        console.warn("Trust assessment failed:", assessmentError);
       }
 
       onSuccess();
     } catch (error: any) {
-      console.error('Login failed:', error);
-      
-      if (error.code === 'MFA_REQUIRED') {
-        setRequiresMFA(true);
-        setErrors({ general: 'Please enter your MFA code to continue' });
-      } else if (error.code === 'INVALID_MFA') {
-        setErrors({ mfa_code: 'Invalid MFA code. Please try again.' });
-      } else if (error.code === 'ACCOUNT_LOCKED') {
-        setErrors({ general: 'Account temporarily locked due to security concerns. Please contact support.' });
-      } else {
-        setErrors({ general: error.message || 'Login failed. Please check your credentials.' });
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Login failed:", error);
       }
-      
-      onError(error.message || 'Login failed');
+
+      if (error.code === "MFA_REQUIRED") {
+        setRequiresMFA(true);
+        setErrors({ general: "Please enter your MFA code to continue" });
+      } else if (error.code === "INVALID_MFA") {
+        setErrors({ mfa_code: "Invalid MFA code. Please try again." });
+      } else if (error.code === "ACCOUNT_LOCKED") {
+        setErrors({
+          general:
+            "Account temporarily locked due to security concerns. Please contact support.",
+        });
+      } else {
+        setErrors({
+          general:
+            error.message || "Login failed. Please check your credentials.",
+        });
+      }
+
+      onError(error.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field-specific errors when user starts typing
-    if (errors[field as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  };
+  const handleInputChange =
+    (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        e.target.type === "checkbox" ? e.target.checked : e.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear field-specific errors when user starts typing
+      if (errors[field as keyof FormErrors]) {
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
+    };
 
   return (
-    <div className={cn('w-full max-w-md mx-auto', className)}>
+    <div className={cn("w-full max-w-md mx-auto", className)}>
       <div className="card">
         <div className="card-header text-center">
           <div className="flex items-center justify-center mb-4">
@@ -188,7 +206,10 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Email address
               </label>
               <div className="relative">
@@ -201,12 +222,12 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                   autoComplete="email"
                   required
                   value={formData.email}
-                  onChange={handleInputChange('email')}
+                  onChange={handleInputChange("email")}
                   className={cn(
-                    'block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                    "block w-full pl-10 pr-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
                     errors.email
-                      ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                      ? "border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white",
                   )}
                   placeholder="Enter your email"
                   disabled={isLoading}
@@ -222,7 +243,10 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -231,16 +255,16 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                 </div>
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={formData.password}
-                  onChange={handleInputChange('password')}
+                  onChange={handleInputChange("password")}
                   className={cn(
-                    'block w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                    "block w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500",
                     errors.password
-                      ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                      ? "border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white",
                   )}
                   placeholder="Enter your password"
                   disabled={isLoading}
@@ -269,7 +293,10 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
             {/* MFA Code Field (shown when required) */}
             {requiresMFA && (
               <div>
-                <label htmlFor="mfa_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  htmlFor="mfa_code"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   MFA Code
                 </label>
                 <input
@@ -277,12 +304,12 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                   type="text"
                   maxLength={6}
                   value={formData.mfa_code}
-                  onChange={handleInputChange('mfa_code')}
+                  onChange={handleInputChange("mfa_code")}
                   className={cn(
-                    'block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg tracking-widest',
+                    "block w-full px-3 py-2 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg tracking-widest",
                     errors.mfa_code
-                      ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+                      ? "border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500"
+                      : "border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white",
                   )}
                   placeholder="000000"
                   disabled={isLoading}
@@ -306,11 +333,14 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                   id="remember_me"
                   type="checkbox"
                   checked={formData.remember_me}
-                  onChange={handleInputChange('remember_me')}
+                  onChange={handleInputChange("remember_me")}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   disabled={isLoading}
                 />
-                <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="remember_me"
+                  className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+                >
                   Remember me
                 </label>
               </div>
@@ -343,8 +373,9 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                   <CheckCircle className="h-5 w-5 text-blue-400" />
                   <div className="ml-3">
                     <p className="text-sm text-blue-800 dark:text-blue-400">
-                      Trust Score: {Math.round(trustAssessment.trust_score * 100)}% 
-                      ({trustAssessment.trust_level.replace('_', ' ')})
+                      Trust Score:{" "}
+                      {Math.round(trustAssessment.trust_score * 100)}% (
+                      {trustAssessment.trust_level.replace("_", " ")})
                     </p>
                   </div>
                 </div>
@@ -356,10 +387,10 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
               type="submit"
               disabled={isLoading}
               className={cn(
-                'w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white',
-                'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'transition-colors duration-200'
+                "w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white",
+                "bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-colors duration-200",
               )}
             >
               {isLoading ? (
@@ -368,7 +399,7 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
                   Signing in...
                 </div>
               ) : (
-                'Sign in'
+                "Sign in"
               )}
             </button>
           </form>
@@ -376,8 +407,11 @@ export function LoginForm({ onSuccess, onError, className }: LoginFormProps) {
 
         <div className="card-footer text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
-            <a href="/register" className="text-primary-600 hover:text-primary-500 dark:text-primary-400 font-medium">
+            Don't have an account?{" "}
+            <a
+              href="/register"
+              className="text-primary-600 hover:text-primary-500 dark:text-primary-400 font-medium"
+            >
               Sign up
             </a>
           </p>

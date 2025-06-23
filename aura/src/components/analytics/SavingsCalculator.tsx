@@ -1,22 +1,22 @@
 /**
  * Savings Calculator Component
- * 
+ *
  * Interactive calculator that demonstrates ROI and cost savings
  * to drive conversion through value demonstration.
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Calculator, 
-  DollarSign, 
-  TrendingUp, 
-  Clock, 
+import React, { useState, useEffect } from "react";
+import {
+  Calculator,
+  DollarSign,
+  TrendingUp,
+  Clock,
   Target,
   ArrowRight,
-  Sparkles
-} from 'lucide-react';
-import { analyticsService } from '../../services';
-import { cn } from '../../lib/utils';
+  Sparkles,
+} from "lucide-react";
+import { analyticsService } from "../../services";
+import { cn } from "../../lib/utils";
 
 interface CalculatorInputs {
   hourlyRate: number;
@@ -60,7 +60,7 @@ const InputField: React.FC<InputFieldProps> = ({
   step = 1,
   prefix,
   suffix,
-  description
+  description,
 }) => (
   <div className="space-y-2">
     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -84,7 +84,7 @@ const InputField: React.FC<InputFieldProps> = ({
           "bg-white dark:bg-gray-800 text-gray-900 dark:text-white",
           "focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
           prefix && "pl-8",
-          suffix && "pr-12"
+          suffix && "pr-12",
         )}
       />
       {suffix && (
@@ -104,7 +104,7 @@ interface ResultCardProps {
   value: string;
   subtitle?: string;
   icon: React.ReactNode;
-  color: 'blue' | 'green' | 'purple' | 'yellow';
+  color: "blue" | "green" | "purple" | "yellow";
   highlight?: boolean;
 }
 
@@ -114,30 +114,35 @@ const ResultCard: React.FC<ResultCardProps> = ({
   subtitle,
   icon,
   color,
-  highlight
+  highlight,
 }) => {
   const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    purple: 'bg-purple-500',
-    yellow: 'bg-yellow-500'
+    blue: "bg-blue-500",
+    green: "bg-green-500",
+    purple: "bg-purple-500",
+    yellow: "bg-yellow-500",
   };
 
   const bgClasses = {
-    blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    green: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800',
-    yellow: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+    blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+    green:
+      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    purple:
+      "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+    yellow:
+      "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
   };
 
   return (
-    <div className={cn(
-      "card border-2",
-      highlight ? bgClasses[color] : "border-gray-200 dark:border-gray-700"
-    )}>
+    <div
+      className={cn(
+        "card border-2",
+        highlight ? bgClasses[color] : "border-gray-200 dark:border-gray-700",
+      )}
+    >
       <div className="card-body">
         <div className="flex items-center space-x-3 mb-2">
-          <div className={cn('p-2 rounded-lg', colorClasses[color])}>
+          <div className={cn("p-2 rounded-lg", colorClasses[color])}>
             <div className="text-white">{icon}</div>
           </div>
           <h3 className="font-medium text-gray-900 dark:text-white">{title}</h3>
@@ -158,11 +163,13 @@ export const SavingsCalculator: React.FC = () => {
     hourlyRate: 75,
     hoursPerWeek: 40,
     automationTasks: 10,
-    timePerTask: 30
+    timePerTask: 30,
   });
 
   const [results, setResults] = useState<SavingsResults | null>(null);
-  const [selectedTier, setSelectedTier] = useState<'complete' | 'enterprise'>('complete');
+  const [selectedTier, setSelectedTier] = useState<"complete" | "enterprise">(
+    "complete",
+  );
 
   useEffect(() => {
     calculateSavings();
@@ -170,30 +177,30 @@ export const SavingsCalculator: React.FC = () => {
 
   const calculateSavings = () => {
     const { hourlyRate, hoursPerWeek, automationTasks, timePerTask } = inputs;
-    
+
     // Calculate time savings
     const weeklyTimeSaved = (automationTasks * timePerTask) / 60; // Convert minutes to hours
     const monthlyTimeSaved = weeklyTimeSaved * 4.33; // Average weeks per month
     const annualTimeSaved = weeklyTimeSaved * 52;
-    
+
     // Calculate value savings
     const weeklyValueSaved = weeklyTimeSaved * hourlyRate;
     const monthlyValueSaved = monthlyTimeSaved * hourlyRate;
     const annualValueSaved = annualTimeSaved * hourlyRate;
-    
+
     // Subscription costs
-    const subscriptionCost = selectedTier === 'complete' ? 399 : 1499;
-    
+    const subscriptionCost = selectedTier === "complete" ? 399 : 1499;
+
     // Net savings
     const netMonthlySavings = monthlyValueSaved - subscriptionCost;
-    const netAnnualSavings = annualValueSaved - (subscriptionCost * 12);
-    
+    const netAnnualSavings = annualValueSaved - subscriptionCost * 12;
+
     // ROI calculation
     const roiPercentage = (netAnnualSavings / (subscriptionCost * 12)) * 100;
-    
+
     // Payback period (months)
     const paybackPeriod = subscriptionCost / Math.max(monthlyValueSaved, 1);
-    
+
     setResults({
       weeklyTimeSaved,
       monthlyTimeSaved,
@@ -205,21 +212,21 @@ export const SavingsCalculator: React.FC = () => {
       netMonthlySavings,
       netAnnualSavings,
       roiPercentage,
-      paybackPeriod
+      paybackPeriod,
     });
   };
 
   const updateInput = (field: keyof CalculatorInputs, value: number) => {
-    setInputs(prev => ({ ...prev, [field]: value }));
+    setInputs((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleUpgrade = async () => {
-    await analyticsService.trackEvent('savings_calculator_upgrade', {
+    await analyticsService.trackEvent("savings_calculator_upgrade", {
       inputs,
       results,
-      selected_tier: selectedTier
+      selected_tier: selectedTier,
     });
-    
+
     window.location.href = `/billing/upgrade?tier=${selectedTier}_platform&calculator=true`;
   };
 
@@ -232,8 +239,9 @@ export const SavingsCalculator: React.FC = () => {
           ROI Savings Calculator
         </h2>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Calculate your potential savings with WebAgent's AI-powered automation. 
-          See how much time and money you could save with our Complete Platform.
+          Calculate your potential savings with WebAgent's AI-powered
+          automation. See how much time and money you could save with our
+          Complete Platform.
         </p>
       </div>
 
@@ -249,38 +257,38 @@ export const SavingsCalculator: React.FC = () => {
             <InputField
               label="Your Hourly Rate"
               value={inputs.hourlyRate}
-              onChange={(value) => updateInput('hourlyRate', value)}
+              onChange={(value) => updateInput("hourlyRate", value)}
               min={10}
               max={500}
               step={5}
               prefix="$"
               description="What do you charge per hour or your salary equivalent?"
             />
-            
+
             <InputField
               label="Hours Worked Per Week"
               value={inputs.hoursPerWeek}
-              onChange={(value) => updateInput('hoursPerWeek', value)}
+              onChange={(value) => updateInput("hoursPerWeek", value)}
               min={1}
               max={80}
               suffix="hrs"
               description="How many hours do you work per week?"
             />
-            
+
             <InputField
               label="Automation Tasks Per Week"
               value={inputs.automationTasks}
-              onChange={(value) => updateInput('automationTasks', value)}
+              onChange={(value) => updateInput("automationTasks", value)}
               min={1}
               max={100}
               suffix="tasks"
               description="How many repetitive tasks could be automated?"
             />
-            
+
             <InputField
               label="Time Per Task"
               value={inputs.timePerTask}
-              onChange={(value) => updateInput('timePerTask', value)}
+              onChange={(value) => updateInput("timePerTask", value)}
               min={1}
               max={240}
               suffix="min"
@@ -294,24 +302,24 @@ export const SavingsCalculator: React.FC = () => {
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => setSelectedTier('complete')}
+                  onClick={() => setSelectedTier("complete")}
                   className={cn(
                     "p-3 rounded-lg border text-sm font-medium transition-all",
-                    selectedTier === 'complete'
+                    selectedTier === "complete"
                       ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300",
                   )}
                 >
                   Complete Platform
                   <div className="text-xs text-gray-500">$399/mo</div>
                 </button>
                 <button
-                  onClick={() => setSelectedTier('enterprise')}
+                  onClick={() => setSelectedTier("enterprise")}
                   className={cn(
                     "p-3 rounded-lg border text-sm font-medium transition-all",
-                    selectedTier === 'enterprise'
+                    selectedTier === "enterprise"
                       ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300"
-                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300",
                   )}
                 >
                   Enterprise Platform
@@ -340,7 +348,7 @@ export const SavingsCalculator: React.FC = () => {
                     icon={<Clock className="h-5 w-5" />}
                     color="blue"
                   />
-                  
+
                   <ResultCard
                     title="Value Generated Monthly"
                     value={`$${results.monthlyValueSaved.toLocaleString()}`}
@@ -348,7 +356,7 @@ export const SavingsCalculator: React.FC = () => {
                     icon={<DollarSign className="h-5 w-5" />}
                     color="green"
                   />
-                  
+
                   <ResultCard
                     title="Net Monthly Savings"
                     value={`$${results.netMonthlySavings.toLocaleString()}`}
@@ -357,7 +365,7 @@ export const SavingsCalculator: React.FC = () => {
                     color="purple"
                     highlight={results.netMonthlySavings > 0}
                   />
-                  
+
                   <ResultCard
                     title="Annual ROI"
                     value={`${results.roiPercentage.toFixed(0)}%`}
@@ -380,14 +388,20 @@ export const SavingsCalculator: React.FC = () => {
                   Great ROI Potential!
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  You could save <strong>${results.netAnnualSavings.toLocaleString()}</strong> annually 
-                  with a {results.roiPercentage.toFixed(0)}% ROI. Start your automation journey today!
+                  You could save{" "}
+                  <strong>${results.netAnnualSavings.toLocaleString()}</strong>{" "}
+                  annually with a {results.roiPercentage.toFixed(0)}% ROI. Start
+                  your automation journey today!
                 </p>
-                <button 
+                <button
                   onClick={handleUpgrade}
                   className="btn btn-primary flex items-center justify-center space-x-2 mx-auto"
                 >
-                  <span>Start Saving with {selectedTier === 'complete' ? 'Complete' : 'Enterprise'} Platform</span>
+                  <span>
+                    Start Saving with{" "}
+                    {selectedTier === "complete" ? "Complete" : "Enterprise"}{" "}
+                    Platform
+                  </span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

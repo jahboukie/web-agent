@@ -28,7 +28,7 @@ A sleek, professional single-page landing page for WebAgent - the fully autonomo
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 
 ### Installation
@@ -84,18 +84,18 @@ The beta signup form is ready for integration with email services:
 ```javascript
 // Replace the handleSubmit function in app/page.tsx
 const handleSubmit = async (e) => {
-  e.preventDefault()
-  
-  const response = await fetch('/api/mailchimp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  })
-  
+  e.preventDefault();
+
+  const response = await fetch("/api/mailchimp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
   if (response.ok) {
-    setIsSubmitted(true)
+    setIsSubmitted(true);
   }
-}
+};
 ```
 
 ### ConvertKit Integration
@@ -103,21 +103,24 @@ const handleSubmit = async (e) => {
 ```javascript
 // Replace the handleSubmit function in app/page.tsx
 const handleSubmit = async (e) => {
-  e.preventDefault()
-  
-  const response = await fetch('https://api.convertkit.com/v3/forms/YOUR_FORM_ID/subscribe', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_key: 'YOUR_API_KEY',
-      email: email
-    })
-  })
-  
+  e.preventDefault();
+
+  const response = await fetch(
+    "https://api.convertkit.com/v3/forms/YOUR_FORM_ID/subscribe",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: "YOUR_API_KEY",
+        email: email,
+      }),
+    },
+  );
+
   if (response.ok) {
-    setIsSubmitted(true)
+    setIsSubmitted(true);
   }
-}
+};
 ```
 
 ## 🎨 Customization

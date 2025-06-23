@@ -1,25 +1,25 @@
 /**
  * Upgrade Opportunities Component
- * 
+ *
  * Strategic upgrade opportunities for conversion optimization.
  * Designed to maximize revenue through intelligent value demonstration.
  */
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Crown, 
-  TrendingUp, 
-  Clock, 
-  Zap, 
-  DollarSign, 
+import React, { useState, useEffect } from "react";
+import {
+  Crown,
+  TrendingUp,
+  Clock,
+  Zap,
+  DollarSign,
   ArrowRight,
   Sparkles,
   Target,
   Award,
-  AlertTriangle
-} from 'lucide-react';
-import { analyticsService } from '../../services';
-import { cn } from '../../lib/utils';
+  AlertTriangle,
+} from "lucide-react";
+import { analyticsService } from "../../services";
+import { cn } from "../../lib/utils";
 
 interface UpgradeOpportunity {
   type: string;
@@ -43,16 +43,19 @@ interface UpgradeCardProps {
   onUpgrade: (opportunity: UpgradeOpportunity) => void;
 }
 
-const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => {
+const UpgradeCard: React.FC<UpgradeCardProps> = ({
+  opportunity,
+  onUpgrade,
+}) => {
   const getTypeIcon = () => {
     switch (opportunity.type) {
-      case 'usage_limit':
+      case "usage_limit":
         return <AlertTriangle className="h-6 w-6 text-yellow-500" />;
-      case 'feature_unlock':
+      case "feature_unlock":
         return <Sparkles className="h-6 w-6 text-purple-500" />;
-      case 'performance_boost':
+      case "performance_boost":
         return <Zap className="h-6 w-6 text-blue-500" />;
-      case 'savings':
+      case "savings":
         return <DollarSign className="h-6 w-6 text-green-500" />;
       default:
         return <Crown className="h-6 w-6 text-yellow-500" />;
@@ -62,13 +65,13 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => 
   const getPriorityColor = () => {
     switch (opportunity.priority) {
       case 1:
-        return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20';
+        return "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20";
       case 2:
-        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20';
+        return "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20";
       case 3:
-        return 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20';
+        return "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20";
       default:
-        return 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50';
+        return "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50";
     }
   };
 
@@ -81,7 +84,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => 
         </div>
       );
     }
-    
+
     if (opportunity.limited_time_offer) {
       return (
         <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
@@ -90,15 +93,17 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => 
         </div>
       );
     }
-    
+
     return null;
   };
 
   return (
-    <div className={cn(
-      "card border-2 transition-all duration-200 hover:shadow-lg",
-      getPriorityColor()
-    )}>
+    <div
+      className={cn(
+        "card border-2 transition-all duration-200 hover:shadow-lg",
+        getPriorityColor(),
+      )}
+    >
       <div className="card-body">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
@@ -151,19 +156,26 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => 
         {opportunity.usage_percentage > 0 && (
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600 dark:text-gray-400">Current Usage</span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Current Usage
+              </span>
               <span className="font-medium text-gray-900 dark:text-white">
                 {opportunity.usage_percentage.toFixed(1)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div 
+              <div
                 className={cn(
                   "h-2 rounded-full transition-all duration-300",
-                  opportunity.usage_percentage > 80 ? "bg-red-500" : 
-                  opportunity.usage_percentage > 60 ? "bg-yellow-500" : "bg-blue-500"
+                  opportunity.usage_percentage > 80
+                    ? "bg-red-500"
+                    : opportunity.usage_percentage > 60
+                      ? "bg-yellow-500"
+                      : "bg-blue-500",
                 )}
-                style={{ width: `${Math.min(opportunity.usage_percentage, 100)}%` }}
+                style={{
+                  width: `${Math.min(opportunity.usage_percentage, 100)}%`,
+                }}
               />
             </div>
           </div>
@@ -174,7 +186,7 @@ const UpgradeCard: React.FC<UpgradeCardProps> = ({ opportunity, onUpgrade }) => 
           onClick={() => onUpgrade(opportunity)}
           className={cn(
             "w-full btn flex items-center justify-center space-x-2 transition-all duration-200",
-            opportunity.priority === 1 ? "btn-primary" : "btn-secondary"
+            opportunity.priority === 1 ? "btn-primary" : "btn-secondary",
           )}
         >
           <span>{opportunity.cta_text}</span>
@@ -208,8 +220,8 @@ export const UpgradeOpportunities: React.FC = () => {
       setOpportunities(data);
       setError(null);
     } catch (err) {
-      console.error('Failed to load upgrade opportunities:', err);
-      setError('Failed to load upgrade opportunities');
+      console.error("Failed to load upgrade opportunities:", err);
+      setError("Failed to load upgrade opportunities");
     } finally {
       setLoading(false);
     }
@@ -217,12 +229,12 @@ export const UpgradeOpportunities: React.FC = () => {
 
   const handleUpgrade = async (opportunity: UpgradeOpportunity) => {
     // Track conversion event
-    await analyticsService.trackEvent('upgrade_opportunity_clicked', {
+    await analyticsService.trackEvent("upgrade_opportunity_clicked", {
       type: opportunity.type,
       priority: opportunity.priority,
       current_tier: opportunity.current_tier,
       recommended_tier: opportunity.recommended_tier,
-      savings_amount: opportunity.savings_amount
+      savings_amount: opportunity.savings_amount,
     });
 
     // Redirect to upgrade flow
@@ -241,10 +253,7 @@ export const UpgradeOpportunities: React.FC = () => {
     return (
       <div className="text-center py-6">
         <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-        <button 
-          onClick={loadUpgradeOpportunities}
-          className="btn btn-primary"
-        >
+        <button onClick={loadUpgradeOpportunities} className="btn btn-primary">
           Retry
         </button>
       </div>
@@ -259,7 +268,8 @@ export const UpgradeOpportunities: React.FC = () => {
           You're All Set!
         </h3>
         <p className="text-gray-600 dark:text-gray-400">
-          No upgrade opportunities at this time. You're making great use of your current plan.
+          No upgrade opportunities at this time. You're making great use of your
+          current plan.
         </p>
       </div>
     );
@@ -278,7 +288,8 @@ export const UpgradeOpportunities: React.FC = () => {
         </div>
         <div className="text-right">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {opportunities.length} opportunity{opportunities.length !== 1 ? 's' : ''} available
+            {opportunities.length} opportunity
+            {opportunities.length !== 1 ? "s" : ""} available
           </p>
         </div>
       </div>
@@ -304,19 +315,25 @@ export const UpgradeOpportunities: React.FC = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">97%</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                97%
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Enterprise customers achieve automation success
               </p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">3x</p>
+              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                3x
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 ROI with Complete Platform vs individual tools
               </p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">$2,400</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                $2,400
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Average monthly savings for Enterprise users
               </p>

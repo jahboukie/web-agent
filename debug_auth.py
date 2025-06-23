@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
+
 import requests
-import json
 
 # Test authentication
 print("Testing authentication...")
 
-login_data = {
-    "username": "testuser",
-    "password": "Test123!"
-}
+login_data = {"username": "testuser", "password": "Test123!"}
 
 try:
     response = requests.post(
         "http://localhost:8000/api/v1/auth/login",
         data=login_data,  # Use data instead of json
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     print(f"Status Code: {response.status_code}")
     print(f"Response: {response.text}")

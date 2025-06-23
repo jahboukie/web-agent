@@ -49,6 +49,6 @@ When adding or updating documentation:
 
 ---
 
-**Last Updated:** June 19, 2025  
+**Last Updated:** June 19, 2025
 **Version:** 1.0
 EOF < /dev/null

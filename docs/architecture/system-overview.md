@@ -1,6 +1,6 @@
 # WebAgent System Architecture Overview
 
-**Last Updated:** June 19, 2025  
+**Last Updated:** June 19, 2025
 **Version:** 1.0
 
 ## Executive Summary
@@ -57,7 +57,7 @@ WebAgent is a production-ready AI system designed to execute natural language go
 - PostgreSQL for structured storage
 - Redis for caching
 
-### 2. TaskPlanner (Planner Phase)  
+### 2. TaskPlanner (Planner Phase)
 **Purpose:** Convert natural language goals into executable action sequences.
 
 **Key Responsibilities:**
@@ -112,7 +112,7 @@ WebAgent is a production-ready AI system designed to execute natural language go
 User Request → API Gateway → Task Creation → Database Storage → Queue for Planning
 ```
 
-### 2. Planning Flow  
+### 2. Planning Flow
 ```
 Task → WebParser → Semantic Analysis → TaskPlanner → Execution Plan → Validation
 ```

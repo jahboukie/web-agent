@@ -1,7 +1,7 @@
 /**
  * Enhanced Header Bar Component
  * Based on WebAgent Analytics Dashboard Wireframes
- * 
+ *
  * Features:
  * - Logo and branding
  * - User avatar and info
@@ -10,10 +10,10 @@
  * - Responsive design
  */
 
-import React, { useState } from 'react';
-import { Bell, ChevronDown, Crown, Zap, Shield, Star } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { cn } from '../../lib/utils';
+import React, { useState } from "react";
+import { Bell, ChevronDown, Crown, Zap, Shield, Star } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { cn } from "../../lib/utils";
 
 interface HeaderBarProps {
   className?: string;
@@ -23,7 +23,7 @@ interface HeaderBarProps {
 
 interface Notification {
   id: string;
-  type: 'info' | 'warning' | 'success' | 'upgrade';
+  type: "info" | "warning" | "success" | "upgrade";
   title: string;
   message: string;
   timestamp: string;
@@ -33,27 +33,27 @@ interface Notification {
 // Mock notifications - in real app, these would come from API
 const mockNotifications: Notification[] = [
   {
-    id: '1',
-    type: 'upgrade',
-    title: 'Upgrade Available',
-    message: 'Unlock advanced analytics with Complete Platform - Save 40%!',
-    timestamp: '2 hours ago',
+    id: "1",
+    type: "upgrade",
+    title: "Upgrade Available",
+    message: "Unlock advanced analytics with Complete Platform - Save 40%!",
+    timestamp: "2 hours ago",
     read: false,
   },
   {
-    id: '2',
-    type: 'success',
-    title: 'Automation Success',
-    message: 'Your workflow completed successfully with 98% accuracy',
-    timestamp: '4 hours ago',
+    id: "2",
+    type: "success",
+    title: "Automation Success",
+    message: "Your workflow completed successfully with 98% accuracy",
+    timestamp: "4 hours ago",
     read: false,
   },
   {
-    id: '3',
-    type: 'warning',
-    title: 'Usage Alert',
-    message: 'You\'ve used 85% of your monthly parsing quota',
-    timestamp: '1 day ago',
+    id: "3",
+    type: "warning",
+    title: "Usage Alert",
+    message: "You've used 85% of your monthly parsing quota",
+    timestamp: "1 day ago",
     read: true,
   },
 ];
@@ -68,26 +68,33 @@ const planIcons = {
 };
 
 const planColors = {
-  free: 'text-gray-600 bg-gray-100',
-  reader_pro: 'text-blue-600 bg-blue-100',
-  planner_pro: 'text-purple-600 bg-purple-100',
-  actor_pro: 'text-green-600 bg-green-100',
-  complete: 'text-orange-600 bg-orange-100',
-  enterprise: 'text-red-600 bg-red-100',
+  free: "text-gray-600 bg-gray-100",
+  reader_pro: "text-blue-600 bg-blue-100",
+  planner_pro: "text-purple-600 bg-purple-100",
+  actor_pro: "text-green-600 bg-green-100",
+  complete: "text-orange-600 bg-orange-100",
+  enterprise: "text-red-600 bg-red-100",
 };
 
-export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: HeaderBarProps) {
+export function HeaderBar({
+  className,
+  onUpgradeClick,
+  onNotificationClick,
+}: HeaderBarProps) {
   const { user } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Mock user plan - in real app, this would come from user context
-  const userPlan = user?.subscription_tier || 'free';
-  const planName = userPlan.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const userPlan = user?.subscription_tier || "free";
+  const planName = userPlan
+    .replace("_", " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
   const PlanIcon = planIcons[userPlan as keyof typeof planIcons] || Zap;
-  const planColorClass = planColors[userPlan as keyof typeof planColors] || planColors.free;
+  const planColorClass =
+    planColors[userPlan as keyof typeof planColors] || planColors.free;
 
-  const unreadCount = mockNotifications.filter(n => !n.read).length;
+  const unreadCount = mockNotifications.filter((n) => !n.read).length;
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
@@ -101,11 +108,13 @@ export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: He
   };
 
   return (
-    <header className={cn(
-      'bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700',
-      'px-4 py-3 flex items-center justify-between',
-      className
-    )}>
+    <header
+      className={cn(
+        "bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700",
+        "px-4 py-3 flex items-center justify-between",
+        className,
+      )}
+    >
       {/* Logo and Brand */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
@@ -113,8 +122,12 @@ export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: He
             <span className="text-white font-bold text-sm">W</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">WebAgent</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Analytics Dashboard</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              WebAgent
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Analytics Dashboard
+            </p>
           </div>
         </div>
       </div>
@@ -122,13 +135,15 @@ export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: He
       {/* Right Side: Plan Status, Notifications, User Menu */}
       <div className="flex items-center space-x-4">
         {/* Plan Status */}
-        <div className={cn(
-          'flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium',
-          planColorClass
-        )}>
+        <div
+          className={cn(
+            "flex items-center space-x-2 px-3 py-1.5 rounded-full text-sm font-medium",
+            planColorClass,
+          )}
+        >
           <PlanIcon className="h-4 w-4" />
           <span>{planName}</span>
-          {userPlan === 'free' && (
+          {userPlan === "free" && (
             <button
               onClick={handleUpgradeClick}
               className="ml-2 text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full hover:bg-blue-700 transition-colors"
@@ -156,25 +171,29 @@ export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: He
           {showNotifications && (
             <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  Notifications
+                </h3>
               </div>
               <div className="max-h-96 overflow-y-auto">
                 {mockNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
-                      'p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700',
-                      !notification.read && 'bg-blue-50 dark:bg-blue-900/20'
+                      "p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700",
+                      !notification.read && "bg-blue-50 dark:bg-blue-900/20",
                     )}
                   >
                     <div className="flex items-start space-x-3">
-                      <div className={cn(
-                        'w-2 h-2 rounded-full mt-2',
-                        notification.type === 'upgrade' && 'bg-orange-500',
-                        notification.type === 'success' && 'bg-green-500',
-                        notification.type === 'warning' && 'bg-yellow-500',
-                        notification.type === 'info' && 'bg-blue-500'
-                      )} />
+                      <div
+                        className={cn(
+                          "w-2 h-2 rounded-full mt-2",
+                          notification.type === "upgrade" && "bg-orange-500",
+                          notification.type === "success" && "bg-green-500",
+                          notification.type === "warning" && "bg-yellow-500",
+                          notification.type === "info" && "bg-blue-500",
+                        )}
+                      />
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 dark:text-white text-sm">
                           {notification.title}
@@ -207,12 +226,12 @@ export function HeaderBar({ className, onUpgradeClick, onNotificationClick }: He
           >
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">
-                {user?.full_name?.charAt(0) || 'U'}
+                {user?.full_name?.charAt(0) || "U"}
               </span>
             </div>
             <div className="hidden md:block text-left">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.full_name || 'User'}
+                {user?.full_name || "User"}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {user?.email}

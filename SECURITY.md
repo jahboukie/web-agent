@@ -2,9 +2,9 @@
 
 ## 🔒 **Security Issue Resolution**
 
-**Issue:** GitGuardian detected hardcoded credentials in repository  
-**Status:** ✅ RESOLVED  
-**Date:** June 19, 2025  
+**Issue:** GitGuardian detected hardcoded credentials in repository
+**Status:** ✅ RESOLVED
+**Date:** June 19, 2025
 
 ### **Changes Made:**
 

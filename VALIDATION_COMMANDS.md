@@ -1,6 +1,6 @@
 # WebAgent Phase 2B Validation Commands
 
-**Status:** Phase 2B COMPLETE - Ready for validation testing  
+**Status:** Phase 2B COMPLETE - Ready for validation testing
 **Implementation:** Background task processing architecture fully operational
 
 ---
@@ -193,7 +193,7 @@ open http://localhost:8000/docs
 ```json
 {
   "task_id": 123,
-  "status": "queued", 
+  "status": "queued",
   "message": "Webpage parsing started",
   "estimated_duration_seconds": 30,
   "check_status_url": "/api/v1/parse/123",
@@ -253,7 +253,7 @@ open http://localhost:8000/docs
      -H "Content-Type: application/json" \
      -d '{
        "email": "test@example.com",
-       "username": "testuser", 
+       "username": "testuser",
        "password": "Test123!",
        "confirm_password": "Test123!",
        "accept_terms": true

@@ -1,17 +1,17 @@
 /**
  * Components Index
- * 
+ *
  * Central export point for all WebAgent Aura components
  */
 
 // Analytics Components
-export * from './analytics';
+export * from "./analytics";
 
-// Billing Components  
-export * from './billing';
+// Billing Components
+export * from "./billing";
 
 // Main Components
-export { Dashboard } from './Dashboard';
+export { Dashboard } from "./Dashboard";
 
 // Security Components
-export { TrustScoreIndicator } from './security/TrustScoreIndicator';
+export { TrustScoreIndicator } from "./security/TrustScoreIndicator";
