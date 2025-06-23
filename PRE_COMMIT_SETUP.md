@@ -208,7 +208,7 @@ pre-commit run --hook-stage manual black ruff eslint
 # Backend tests
 pytest -v tests/
 
-# Frontend tests  
+# Frontend tests
 cd aura && npm test -- --watchAll=false
 
 # E2E tests
@@ -241,7 +241,7 @@ python validate_end_to_end.py
    ```bash
    # Review detected secrets
    detect-secrets audit .secrets.baseline
-   
+
    # Add false positive to baseline
    detect-secrets scan --baseline .secrets.baseline
    ```
@@ -284,7 +284,7 @@ git commit -m "test: verify pre-commit setup"
 Your WebAgent project now has enterprise-grade commit quality checks! Every commit that passes this pipeline is guaranteed to:
 
 - ✅ Follow consistent code style
-- ✅ Pass all linting checks  
+- ✅ Pass all linting checks
 - ✅ Have no security vulnerabilities
 - ✅ Pass all tests
 - ✅ Contain no accidentally committed secrets

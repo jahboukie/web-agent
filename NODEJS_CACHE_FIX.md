@@ -132,7 +132,7 @@ After this fix, your CI/CD should:
 This resolves another **infrastructure blocker** in your CI/CD pipeline. Combined with the previous fixes:
 
 1. ✅ **Dependency resolution** (tiktoken version conflict)
-2. ✅ **GitHub Actions deprecation** (v3 → v4 updates)  
+2. ✅ **GitHub Actions deprecation** (v3 → v4 updates)
 3. ✅ **Node.js caching** (missing package-lock.json)
 
 Your pipeline should now progress much further and show **actual test results** rather than setup failures.
@@ -141,7 +141,7 @@ Your pipeline should now progress much further and show **actual test results** 
 
 The CI/CD pipeline should now successfully:
 - Install Python dependencies
-- Install Node.js dependencies  
+- Install Node.js dependencies
 - Build the frontend
 - Run the actual tests
 

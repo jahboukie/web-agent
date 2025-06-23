@@ -242,7 +242,9 @@ class TestPerformanceLoadCritical:
         )
         p95_session_duration = statistics.quantiles(
             [r["total_duration"] for r in valid_results], n=20
-        )[18]  # 95th percentile
+        )[
+            18
+        ]  # 95th percentile
 
         all_operations = []
         for session in valid_results:
@@ -679,7 +681,9 @@ class TestPerformanceLoadCritical:
                     load_metrics["cpu_percent"] > 80
                     or load_metrics["memory_percent"] > 80
                 ):
-                    assert scaling_triggered, f"Auto-scaling should trigger at {load_level} users with high resource usage"
+                    assert (
+                        scaling_triggered
+                    ), f"Auto-scaling should trigger at {load_level} users with high resource usage"
 
             # Cool-down period between tests
             await asyncio.sleep(10)

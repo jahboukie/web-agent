@@ -257,13 +257,10 @@ class TestXSSPrevention:
                         ), f"Dangerous pattern '{pattern}' found in {field}: {task_data[field]}"
             else:
                 # Request should be rejected with validation error
-                assert (
-                    response.status_code
-                    in [
-                        400,
-                        422,
-                    ]
-                ), f"XSS payload should be rejected or sanitized, got {response.status_code}"
+                assert response.status_code in [
+                    400,
+                    422,
+                ], f"XSS payload should be rejected or sanitized, got {response.status_code}"
 
         # Test XSS in user profile updates
         for payload in xss_payloads:
@@ -363,14 +360,11 @@ class TestSQLInjectionPrevention:
             )
 
             # Should not cause database error or return unauthorized data
-            assert (
-                response.status_code
-                in [
-                    200,
-                    400,
-                    422,
-                ]
-            ), f"SQL injection should not cause server error, got {response.status_code}"
+            assert response.status_code in [
+                200,
+                400,
+                422,
+            ], f"SQL injection should not cause server error, got {response.status_code}"
 
             if response.status_code == 200:
                 # Should not return data from other users

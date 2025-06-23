@@ -14,6 +14,7 @@ packages = [{include = "app"}]
 python = "^3.11"
 # Core FastAPI stack
 fastapi = "^0.104.1"
+starlette = "^0.40.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 pydantic = "^2.5.0"
 pydantic-settings = "^2.1.0"
@@ -54,10 +55,10 @@ playwright = "^1.40.0"
 selenium = "^4.16.0"
 
 # Security & Encryption
-cryptography = "^41.0.7"
+cryptography = "^42.0.5"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-python-multipart = "^0.0.6"
+python-multipart = "^0.0.18"
 
 # HTTP & API
 httpx = "^0.25.2"
@@ -74,7 +75,7 @@ click = "^8.1.7"
 
 # Monitoring & Observability
 prometheus-client = "^0.19.0"
-sentry-sdk = {extras = ["fastapi"], version = "^1.38.0"}
+sentry-sdk = {extras = ["fastapi"], version = "^2.8.0"}
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -108,7 +109,7 @@ pytest-postgresql = "^5.0.0"
 pytest-redis = "^3.0.2"
 
 # Code Quality
-black = "^23.11.0"
+black = "^24.3.0"
 isort = "^5.12.0"
 flake8 = "^6.1.0"
 ruff = "^0.3.4"

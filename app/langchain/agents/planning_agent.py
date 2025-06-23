@@ -17,7 +17,8 @@ try:
     from langchain.agents import AgentExecutor, create_react_agent
     from langchain.memory import ConversationBufferWindowMemory
     from langchain_anthropic import ChatAnthropic
-    from langchain_core.messages import HumanMessage, SystemMessage
+
+    # from langchain_core.messages import HumanMessage, SystemMessage  # Unused imports
     from langchain_core.prompts import PromptTemplate
 except ImportError as e:
     # Graceful fallback if LangChain is not installed

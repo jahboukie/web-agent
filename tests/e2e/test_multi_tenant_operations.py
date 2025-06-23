@@ -140,13 +140,10 @@ class TestTenantIsolation:
                     )
 
                     # Should not be able to access other tenant's data
-                    assert (
-                        response.status_code
-                        in [
-                            404,
-                            403,
-                        ]
-                    ), f"{accessing_tenant} admin should not access {target_tenant} task {task.id}"
+                    assert response.status_code in [
+                        404,
+                        403,
+                    ], f"{accessing_tenant} admin should not access {target_tenant} task {task.id}"
 
                     # Try with regular user from different tenant
                     user_token = self._create_auth_token(accessing_users["user"])
@@ -156,13 +153,10 @@ class TestTenantIsolation:
                         f"/api/v1/tasks/{task.id}", headers=user_headers
                     )
 
-                    assert (
-                        response.status_code
-                        in [
-                            404,
-                            403,
-                        ]
-                    ), f"{accessing_tenant} user should not access {target_tenant} task {task.id}"
+                    assert response.status_code in [
+                        404,
+                        403,
+                    ], f"{accessing_tenant} user should not access {target_tenant} task {task.id}"
 
         # Test tenant-specific queries return only tenant data
         for tenant_name, users in tenant_users.items():
@@ -675,8 +669,8 @@ class TestPerTenantRateLimiting:
         successful_premium = [r for r in premium_responses if r["status_code"] == 200]
         successful_basic = [r for r in basic_responses if r["status_code"] == 200]
 
-        assert (
-            len(successful_premium) > len(successful_basic)
+        assert len(successful_premium) > len(
+            successful_basic
         ), f"Premium tenant should handle more requests: {len(successful_premium)} vs {len(successful_basic)}"
 
     def _create_auth_token(self, user):
