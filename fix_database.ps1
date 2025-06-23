@@ -12,7 +12,7 @@ try {
 } catch {
     Write-Host "❌ Migration failed: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "💡 Trying to create initial tables..." -ForegroundColor Yellow
-    
+
     # If migrations fail, try to run them one by one
     try {
         alembic stamp head

@@ -46,13 +46,13 @@ Write-Host "Frontend will be available at: http://localhost:3000" -ForegroundCol
 # Change to frontend directory and start
 if (Test-Path "aura") {
     Set-Location "aura"
-    
+
     # Check if node_modules exists
     if (-not (Test-Path "node_modules")) {
         Write-Host "📦 Installing frontend dependencies..." -ForegroundColor Yellow
         npm install
     }
-    
+
     Write-Host "✅ Starting frontend development server..." -ForegroundColor Blue
     npm run dev
 } else {

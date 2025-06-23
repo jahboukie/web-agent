@@ -110,14 +110,11 @@ class TestDashboardMetrics:
                 )
 
             # Activity should succeed
-            assert (
-                response.status_code
-                in [
-                    200,
-                    201,
-                    202,
-                ]
-            ), f"Activity {activity['action']} failed with status {response.status_code}"
+            assert response.status_code in [
+                200,
+                201,
+                202,
+            ], f"Activity {activity['action']} failed with status {response.status_code}"
 
             # Wait for metrics to update (allow for async processing)
             await asyncio.sleep(2)

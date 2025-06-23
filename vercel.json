@@ -6,7 +6,7 @@
       "use": "@vercel/node"
     },
     {
-      "src": "webagent-landing/package.json", 
+      "src": "webagent-landing/package.json",
       "use": "@vercel/next"
     },
     {
@@ -41,7 +41,7 @@
           "value": "DENY"
         },
         {
-          "key": "X-Content-Type-Options", 
+          "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
         {

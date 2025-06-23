@@ -283,7 +283,7 @@ class TestZeroKnowledgeEncryption:
             mock_hsm.generate_key_pair.return_value = {
                 "key_id": "hsm_key_12345",
                 "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...",
-                "private_key_ref": "hsm://key/12345",  # Reference only, not actual key
+                "private_key_ref": "hsm://key/12345",  # Reference only, not actual key  # pragma: allowlist secret
             }
 
             # Generate user encryption keys
@@ -436,7 +436,7 @@ class TestTenantIsolation:
             },
             headers=auth_headers["user"],
         )
-        assert response_status_code == 201
+        assert response_a.status_code == 201
         task_a_id = response_a.json()["id"]
 
         # User from Tenant B creates a task

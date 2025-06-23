@@ -21,9 +21,16 @@ from app.models.web_page import WebPage
 from app.models.interactive_element import InteractiveElement
 from app.models.execution_plan import ExecutionPlan, AtomicAction
 from app.models.security import (
-    UserCredential, UserPermission, AuditLog, SecurityPolicy,
-    EnterpriseTenant, EnterpriseRole, EnterprisePermission,
-    SSOConfiguration, ABACPolicy, AccessSession
+    UserCredential,
+    UserPermission,
+    AuditLog,
+    SecurityPolicy,
+    EnterpriseTenant,
+    EnterpriseRole,
+    EnterprisePermission,
+    SSOConfiguration,
+    ABACPolicy,
+    AccessSession,
 )
 from app.models.browser_session import BrowserSession
 from app.models.task_execution import TaskExecution, ContentBlock, ActionCapability
@@ -88,9 +95,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
