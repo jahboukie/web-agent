@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class WebhookConfigRequest(BaseModel):
@@ -16,8 +16,9 @@ class WebhookConfigRequest(BaseModel):
         default=["execution_completed"], description="List of events to subscribe to"
     )
 
-    @validator("events")
-    def validate_events(cls, v):
+    @field_validator("events")
+    @classmethod
+    def validate_events(cls, v: list[str]) -> list[str]:
         valid_events = [
             "execution_completed",
             "execution_progress",
