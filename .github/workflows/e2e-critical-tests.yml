@@ -118,14 +118,52 @@ jobs:
         sed -i 's/"headless": false/"headless": true/g' tests/e2e_config_ci.json
         sed -i 's/"record_videos": true/"record_videos": false/g' tests/e2e_config_ci.json
 
-    - name: Verify Python path and modules
+    - name: Debug Environment and File Structure
       run: |
-        echo "Python path:"
-        poetry run python -c "import sys; print('\n'.join(sys.path))"
-        echo "Checking if app module is importable:"
-        poetry run python -c "import app; print('✅ app module imported successfully')"
-        echo "Checking if app.models is importable:"
-        poetry run python -c "import app.models; print('✅ app.models imported successfully')"
+        echo "=== DEBUGGING CI ENVIRONMENT ==="
+        echo "--- Current Working Directory ---"
+        pwd
+
+        echo "--- File and Directory Listing (Top Level) ---"
+        ls -la
+
+        echo "--- App Directory Structure ---"
+        if [ -d "app" ]; then
+          echo "✅ app directory exists"
+          ls -la app/
+          echo "--- App Models Directory ---"
+          if [ -d "app/models" ]; then
+            echo "✅ app/models directory exists"
+            ls -la app/models/
+          else
+            echo "❌ app/models directory NOT found"
+          fi
+        else
+          echo "❌ app directory NOT found"
+        fi
+
+        echo "--- Critical Files Check ---"
+        echo "app/__init__.py exists:" $([ -f "app/__init__.py" ] && echo "✅ YES" || echo "❌ NO")
+        echo "app/models/__init__.py exists:" $([ -f "app/models/__init__.py" ] && echo "✅ YES" || echo "❌ NO")
+        echo "app/models/execution_plan.py exists:" $([ -f "app/models/execution_plan.py" ] && echo "✅ YES" || echo "❌ NO")
+
+        echo "--- Python Environment Info ---"
+        poetry run python -c "import sys; import os; print('Working Dir:', os.getcwd()); print('Python Version:', sys.version); print('Sys Path:'); [print(f'  {p}') for p in sys.path]"
+
+        echo "--- Poetry Project Info ---"
+        poetry show --tree | head -20
+
+        echo "--- Environment Variables ---"
+        echo "PYTHONPATH: ${PYTHONPATH:-'NOT SET'}"
+        echo "PWD: ${PWD}"
+
+        echo "--- Attempt Manual Import Test ---"
+        echo "Testing app module import:"
+        poetry run python -c "import app; print('✅ app module imported successfully'); print('app module location:', app.__file__)" || echo "❌ Failed to import app module"
+        echo "Testing app.models import:"
+        poetry run python -c "import app.models; print('✅ app.models imported successfully')" || echo "❌ Failed to import app.models"
+        echo "Testing app.models.execution_plan import:"
+        poetry run python -c "from app.models.execution_plan import ExecutionPlan, AtomicAction; print('✅ app.models.execution_plan imported successfully')" || echo "❌ Failed to import app.models.execution_plan"
       env:
         PYTHONPATH: .
 
