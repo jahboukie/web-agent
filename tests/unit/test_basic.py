@@ -54,11 +54,11 @@ def test_double_function(input_val, expected):
 def test_exception_handling():
     """Test exception handling."""
     with pytest.raises(ZeroDivisionError):
-        1 / 0
+        _ = 1 / 0  # Assign to underscore to indicate intentional discard
 
     with pytest.raises(KeyError):
         test_dict = {"a": 1}
-        test_dict["b"]  # This will raise KeyError
+        _ = test_dict["b"]  # This will raise KeyError
 
 
 class TestBasicClass:

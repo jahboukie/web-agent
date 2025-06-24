@@ -81,10 +81,28 @@ jobs:
     - name: Run type checking
       run: poetry run mypy app/
 
+    - name: Debug database connection
+      run: |
+        echo "DATABASE_URL: $DATABASE_URL"
+        echo "ASYNC_DATABASE_URL: $ASYNC_DATABASE_URL"
+        poetry run python -c "
+        import os
+        from app.core.config import settings
+        print(f'Settings DATABASE_URL: {settings.DATABASE_URL}')
+        print(f'Settings ASYNC_DATABASE_URL: {settings.ASYNC_DATABASE_URL}')
+        print(f'Environment: {settings.ENVIRONMENT}')
+        "
+      env:
+        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
+        SECRET_KEY: test-secret-key-for-ci-only
+        ENVIRONMENT: test
+
     - name: Run database migrations
       run: poetry run alembic upgrade head
       env:
         DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
         SECRET_KEY: test-secret-key-for-ci-only
         ENVIRONMENT: test
 
@@ -92,6 +110,7 @@ jobs:
       run: poetry run pytest tests/unit/ -v --cov=app --cov-report=xml
       env:
         DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
         REDIS_URL: redis://localhost:6379/0
         SECRET_KEY: test-secret-key-for-ci-only
         ENVIRONMENT: test
@@ -105,6 +124,7 @@ jobs:
         fi
       env:
         DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
         REDIS_URL: redis://localhost:6379/0
         SECRET_KEY: test-secret-key-for-ci-only
         ENVIRONMENT: test
