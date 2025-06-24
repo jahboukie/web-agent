@@ -9,7 +9,6 @@ import React, { useState, useEffect } from "react";
 import {
   CreditCard,
   Calendar,
-  DollarSign,
   Download,
   AlertCircle,
   CheckCircle,
@@ -21,20 +20,38 @@ import {
 import { analyticsService } from "../../services";
 import { cn } from "../../lib/utils";
 
+interface Subscription {
+  tier: string;
+  monthly_cost: number;
+}
+
+interface Invoice {
+  description: string;
+  date: string;
+  amount: number;
+  status: string;
+  download_url?: string;
+}
+
+interface Discount {
+  description: string;
+  amount: number;
+}
+
 interface BillingInfo {
-  subscription: any;
+  subscription: Subscription;
   payment_method_type: string;
   last_four_digits: string;
-  recent_invoices: any[];
-  payment_history: any[];
+  recent_invoices: Invoice[];
+  payment_history: Invoice[];
   next_charge_amount: number;
   next_charge_date: string;
   account_credits: number;
-  active_discounts: any[];
+  active_discounts: Discount[];
 }
 
 interface InvoiceItemProps {
-  invoice: any;
+  invoice: Invoice;
 }
 
 const InvoiceItem: React.FC<InvoiceItemProps> = ({ invoice }) => {

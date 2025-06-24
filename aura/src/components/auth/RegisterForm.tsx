@@ -14,7 +14,6 @@ import {
   Mail,
   User,
   AlertCircle,
-  CheckCircle,
   Building,
 } from "lucide-react";
 import { apiService, cryptoService, type RegisterData } from "../../services";
@@ -138,7 +137,7 @@ export function RegisterForm({
         signing_public_key: keyPair.signingPublicKey,
       };
 
-      const response = await apiService.register(registerData);
+      await apiService.register(registerData);
 
       setKeyGenerationProgress(100);
 
@@ -149,24 +148,26 @@ export function RegisterForm({
       );
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (process.env.NODE_ENV === "development") {
         console.warn("Registration failed:", error);
       }
 
-      if (error.code === "EMAIL_EXISTS") {
+      const errorObj = error as { code?: string; message?: string };
+
+      if (errorObj.code === "EMAIL_EXISTS") {
         setErrors({ email: "An account with this email already exists" });
-      } else if (error.code === "WEAK_PASSWORD") {
+      } else if (errorObj.code === "WEAK_PASSWORD") {
         setErrors({ password: "Password does not meet security requirements" });
-      } else if (error.code === "INVALID_TENANT") {
+      } else if (errorObj.code === "INVALID_TENANT") {
         setErrors({ tenant_id: "Invalid tenant ID" });
       } else {
         setErrors({
-          general: error.message || "Registration failed. Please try again.",
+          general: errorObj.message || "Registration failed. Please try again.",
         });
       }
 
-      onError(error.message || "Registration failed");
+      onError(errorObj.message || "Registration failed");
     } finally {
       setIsLoading(false);
       setKeyGenerationProgress(0);

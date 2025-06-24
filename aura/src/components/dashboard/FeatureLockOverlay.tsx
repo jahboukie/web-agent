@@ -16,7 +16,6 @@ import {
   Crown,
   Star,
   Shield,
-  Zap,
   ArrowRight,
   Sparkles,
 } from "lucide-react";
@@ -99,7 +98,6 @@ const planInfo = {
 export function FeatureLockOverlay({
   featureName,
   requiredPlan,
-  currentPlan = "free",
   onUpgradeClick,
   className,
   style = "blur",
