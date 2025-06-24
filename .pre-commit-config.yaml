@@ -20,7 +20,7 @@ repos:
       - id: isort
         files: ^app/.*\.py$|^tests/.*\.py$|.*\.py$
         exclude: ^(migrations/|alembic/)
-        args: ["--profile", "black", "--line-length", "88"]
+        args: ["--profile", "black", "--line-length", "88", "--force-single-line-imports"]
 
   # Python Linting (Ruff - fastest Python linter)
   - repo: https://github.com/astral-sh/ruff-pre-commit
