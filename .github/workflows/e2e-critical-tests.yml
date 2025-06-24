@@ -94,7 +94,7 @@ jobs:
 
     - name: Install Python dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-ansi
+      run: poetry install --no-interaction
 
     - name: Install Playwright browsers
       run: |
@@ -117,6 +117,17 @@ jobs:
         # Configure for CI environment
         sed -i 's/"headless": false/"headless": true/g' tests/e2e_config_ci.json
         sed -i 's/"record_videos": true/"record_videos": false/g' tests/e2e_config_ci.json
+
+    - name: Verify Python path and modules
+      run: |
+        echo "Python path:"
+        poetry run python -c "import sys; print('\n'.join(sys.path))"
+        echo "Checking if app module is importable:"
+        poetry run python -c "import app; print('✅ app module imported successfully')"
+        echo "Checking if app.models is importable:"
+        poetry run python -c "import app.models; print('✅ app.models imported successfully')"
+      env:
+        PYTHONPATH: .
 
     - name: Run database migrations
       run: |
@@ -232,7 +243,7 @@ jobs:
         virtualenvs-in-project: true
 
     - name: Install dependencies
-      run: poetry install --no-interaction --no-ansi
+      run: poetry install --no-interaction
 
     - name: Run Security Tests
       run: |
@@ -284,7 +295,7 @@ jobs:
         virtualenvs-in-project: true
 
     - name: Install dependencies
-      run: poetry install --no-interaction --no-ansi
+      run: poetry install --no-interaction
 
     - name: Run Performance Tests
       run: |
@@ -334,7 +345,7 @@ jobs:
         virtualenvs-in-project: true
 
     - name: Install dependencies
-      run: poetry install --no-interaction --no-ansi
+      run: poetry install --no-interaction
 
     - name: Run Billing Tests
       run: |
