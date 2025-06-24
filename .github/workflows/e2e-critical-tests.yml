@@ -123,6 +123,7 @@ jobs:
         poetry run alembic upgrade head
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/webagent_e2e_test
+        PYTHONPATH: .
 
     - name: Start backend server
       run: |
