@@ -5,12 +5,7 @@
  * context throughout the WebAgent Aura application.
  */
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { apiService, cryptoService, type User } from "../services";
 

@@ -30,7 +30,7 @@ export const SecurityRole = {
   END_USER: "END_USER",
 } as const;
 
-export type SecurityRole = typeof SecurityRole[keyof typeof SecurityRole];
+export type SecurityRole = (typeof SecurityRole)[keyof typeof SecurityRole];
 
 export const ThreatLevel = {
   LOW: "low",
@@ -39,7 +39,7 @@ export const ThreatLevel = {
   CRITICAL: "critical",
 } as const;
 
-export type ThreatLevel = typeof ThreatLevel[keyof typeof ThreatLevel];
+export type ThreatLevel = (typeof ThreatLevel)[keyof typeof ThreatLevel];
 
 export const TrustLevel = {
   VERY_LOW: "very_low",
@@ -49,7 +49,7 @@ export const TrustLevel = {
   VERY_HIGH: "very_high",
 } as const;
 
-export type TrustLevel = typeof TrustLevel[keyof typeof TrustLevel];
+export type TrustLevel = (typeof TrustLevel)[keyof typeof TrustLevel];
 
 // Zero Trust Types
 export interface TrustAssessment {
@@ -119,7 +119,8 @@ export const ComplianceLevel = {
   TOP_SECRET: "top_secret",
 } as const;
 
-export type ComplianceLevel = typeof ComplianceLevel[keyof typeof ComplianceLevel];
+export type ComplianceLevel =
+  (typeof ComplianceLevel)[keyof typeof ComplianceLevel];
 
 // Security Event Types
 export interface SecurityEvent {
@@ -176,7 +177,7 @@ export const TaskStatus = {
   CANCELLED: "cancelled",
 } as const;
 
-export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 
 export const TaskPriority = {
   LOW: "low",
@@ -185,7 +186,7 @@ export const TaskPriority = {
   URGENT: "urgent",
 } as const;
 
-export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
+export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority];
 
 export interface ExecutionPlan {
   id: number;
@@ -222,7 +223,8 @@ export const ExecutionStatus = {
   CANCELLED: "cancelled",
 } as const;
 
-export type ExecutionStatus = typeof ExecutionStatus[keyof typeof ExecutionStatus];
+export type ExecutionStatus =
+  (typeof ExecutionStatus)[keyof typeof ExecutionStatus];
 
 export const StepType = {
   NAVIGATE: "navigate",
@@ -234,7 +236,7 @@ export const StepType = {
   VALIDATE: "validate",
 } as const;
 
-export type StepType = typeof StepType[keyof typeof StepType];
+export type StepType = (typeof StepType)[keyof typeof StepType];
 
 export const StepStatus = {
   PENDING: "pending",
@@ -244,7 +246,7 @@ export const StepStatus = {
   SKIPPED: "skipped",
 } as const;
 
-export type StepStatus = typeof StepStatus[keyof typeof StepStatus];
+export type StepStatus = (typeof StepStatus)[keyof typeof StepStatus];
 
 // UI and Component Types
 export interface NavigationItem {
@@ -277,7 +279,7 @@ export const WidgetType = {
   SECURITY: "security",
 } as const;
 
-export type WidgetType = typeof WidgetType[keyof typeof WidgetType];
+export type WidgetType = (typeof WidgetType)[keyof typeof WidgetType];
 
 export const WidgetSize = {
   SMALL: "small",
@@ -286,7 +288,7 @@ export const WidgetSize = {
   FULL: "full",
 } as const;
 
-export type WidgetSize = typeof WidgetSize[keyof typeof WidgetSize];
+export type WidgetSize = (typeof WidgetSize)[keyof typeof WidgetSize];
 
 // API Response Types
 export interface ApiResponse<T = any> {
@@ -339,7 +341,7 @@ export const FieldType = {
   FILE: "file",
 } as const;
 
-export type FieldType = typeof FieldType[keyof typeof FieldType];
+export type FieldType = (typeof FieldType)[keyof typeof FieldType];
 
 export interface SelectOption {
   value: string | number;
@@ -356,7 +358,8 @@ export const ValidationType = {
   CUSTOM: "custom",
 } as const;
 
-export type ValidationType = typeof ValidationType[keyof typeof ValidationType];
+export type ValidationType =
+  (typeof ValidationType)[keyof typeof ValidationType];
 
 export interface ValidationRule {
   type: ValidationType;

@@ -141,44 +141,47 @@ export function Dashboard() {
       </div>
 
       {/* Upgrade Opportunities Banner */}
-      {stats?.upgrade_opportunities?.length && stats.upgrade_opportunities.length > 0 && (
-        <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-start space-x-4">
-            <Sparkles className="h-8 w-8 text-blue-600 flex-shrink-0" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                {stats?.upgrade_opportunities?.[0]?.title}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-3">
-                {stats?.upgrade_opportunities?.[0]?.description}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {stats?.upgrade_opportunities?.[0]?.value_props?.map((prop, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-md"
-                  >
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {prop}
-                  </span>
-                ))}
+      {stats?.upgrade_opportunities?.length &&
+        stats.upgrade_opportunities.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start space-x-4">
+              <Sparkles className="h-8 w-8 text-blue-600 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  {stats?.upgrade_opportunities?.[0]?.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-3">
+                  {stats?.upgrade_opportunities?.[0]?.description}
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {stats?.upgrade_opportunities?.[0]?.value_props?.map(
+                    (prop, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        {prop}
+                      </span>
+                    ),
+                  )}
+                </div>
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  onClick={() =>
+                    console.log(
+                      "Upgrade action:",
+                      stats?.upgrade_opportunities?.[0]?.cta_action,
+                    )
+                  }
+                >
+                  {stats?.upgrade_opportunities?.[0]?.cta_text}
+                  <ArrowUpRight className="h-4 w-4 ml-1 inline" />
+                </button>
               </div>
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                onClick={() =>
-                  console.log(
-                    "Upgrade action:",
-                    stats?.upgrade_opportunities?.[0]?.cta_action,
-                  )
-                }
-              >
-                {stats?.upgrade_opportunities?.[0]?.cta_text}
-                <ArrowUpRight className="h-4 w-4 ml-1 inline" />
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Success Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -394,7 +397,15 @@ interface StatCardProps {
   tooltip?: string;
 }
 
-function StatCard({ title, value, icon, color, trend, benchmark, tooltip }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  icon,
+  color,
+  trend,
+  benchmark,
+  tooltip,
+}: StatCardProps) {
   const colorClasses = {
     blue: "bg-blue-500",
     green: "bg-green-500",
