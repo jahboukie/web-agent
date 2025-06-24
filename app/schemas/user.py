@@ -256,7 +256,7 @@ class ThreatLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class EnterpriseUserCreate(UserCreate):
+class EnterpriseUserCreateSecure(UserCreate):
     """Enterprise user creation with security enhancements."""
 
     tenant_id: str | None = None

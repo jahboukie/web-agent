@@ -48,7 +48,7 @@ class PlanGenerationRequest(BaseModel):
         max_length=1000,
         description="Natural language description of what to accomplish",
     )
-    planning_options: PlanningOptions | None = Field(default_factory=PlanningOptions)
+    planning_options: PlanningOptions | None = Field(default_factory=lambda: PlanningOptions())
     context_hints: dict[str, Any] | None = Field(
         None, description="Additional context to help with planning"
     )
