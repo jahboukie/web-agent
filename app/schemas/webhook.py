@@ -1,9 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class WebhookConfigRequest(BaseModel):

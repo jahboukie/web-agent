@@ -1,13 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
-from app.models.execution_plan import ActionType
-from app.models.execution_plan import PlanStatus
-from app.models.execution_plan import StepStatus
+from app.models.execution_plan import ActionType, PlanStatus, StepStatus
 
 
 class PlanningOptions(BaseModel):
@@ -52,7 +48,9 @@ class PlanGenerationRequest(BaseModel):
         max_length=1000,
         description="Natural language description of what to accomplish",
     )
-    planning_options: PlanningOptions | None = Field(default_factory=lambda: PlanningOptions())
+    planning_options: PlanningOptions | None = Field(
+        default_factory=lambda: PlanningOptions()
+    )
     context_hints: dict[str, Any] | None = Field(
         None, description="Additional context to help with planning"
     )

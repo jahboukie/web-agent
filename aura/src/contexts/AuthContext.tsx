@@ -10,8 +10,8 @@ import React, {
   useContext,
   useEffect,
   useState,
-  ReactNode,
 } from "react";
+import type { ReactNode } from "react";
 import { apiService, cryptoService, type User } from "../services";
 
 interface AuthContextType {
@@ -127,12 +127,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Fetch updated user data
       const userData = await apiService.get<User>("/users/me");
       setUser(userData);
-    } catch (error) {
+    } catch (error: unknown) {
       if (process.env.NODE_ENV === "development") {
         console.warn("Failed to refresh user:", error);
       }
       // If refresh fails due to auth, logout
-      if (error.code === "UNAUTHORIZED") {
+      const errorObj = error as { code?: string };
+      if (errorObj.code === "UNAUTHORIZED") {
         logout();
       }
     }

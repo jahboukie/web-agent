@@ -15,34 +15,41 @@ export interface User {
   security_role: SecurityRole;
   trust_score: number;
   mfa_enabled: boolean;
+  subscription_tier?: string;
   last_login?: string;
   created_at: string;
   updated_at: string;
 }
 
-export enum SecurityRole {
-  SYSTEM_ADMIN = "SYSTEM_ADMIN",
-  TENANT_ADMIN = "TENANT_ADMIN",
-  AUTOMATION_MANAGER = "AUTOMATION_MANAGER",
-  ANALYST = "ANALYST",
-  AUDITOR = "AUDITOR",
-  END_USER = "END_USER",
-}
+export const SecurityRole = {
+  SYSTEM_ADMIN: "SYSTEM_ADMIN",
+  TENANT_ADMIN: "TENANT_ADMIN",
+  AUTOMATION_MANAGER: "AUTOMATION_MANAGER",
+  ANALYST: "ANALYST",
+  AUDITOR: "AUDITOR",
+  END_USER: "END_USER",
+} as const;
 
-export enum ThreatLevel {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  CRITICAL = "critical",
-}
+export type SecurityRole = typeof SecurityRole[keyof typeof SecurityRole];
 
-export enum TrustLevel {
-  VERY_LOW = "very_low",
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  VERY_HIGH = "very_high",
-}
+export const ThreatLevel = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
+} as const;
+
+export type ThreatLevel = typeof ThreatLevel[keyof typeof ThreatLevel];
+
+export const TrustLevel = {
+  VERY_LOW: "very_low",
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  VERY_HIGH: "very_high",
+} as const;
+
+export type TrustLevel = typeof TrustLevel[keyof typeof TrustLevel];
 
 // Zero Trust Types
 export interface TrustAssessment {
@@ -105,12 +112,14 @@ export interface Tenant {
   updated_at: string;
 }
 
-export enum ComplianceLevel {
-  INTERNAL = "internal",
-  CONFIDENTIAL = "confidential",
-  RESTRICTED = "restricted",
-  TOP_SECRET = "top_secret",
-}
+export const ComplianceLevel = {
+  INTERNAL: "internal",
+  CONFIDENTIAL: "confidential",
+  RESTRICTED: "restricted",
+  TOP_SECRET: "top_secret",
+} as const;
+
+export type ComplianceLevel = typeof ComplianceLevel[keyof typeof ComplianceLevel];
 
 // Security Event Types
 export interface SecurityEvent {
@@ -159,20 +168,24 @@ export interface Task {
   metadata?: Record<string, any>;
 }
 
-export enum TaskStatus {
-  PENDING = "pending",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  CANCELLED = "cancelled",
-}
+export const TaskStatus = {
+  PENDING: "pending",
+  IN_PROGRESS: "in_progress",
+  COMPLETED: "completed",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+} as const;
 
-export enum TaskPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  URGENT = "urgent",
-}
+export type TaskStatus = typeof TaskStatus[keyof typeof TaskStatus];
+
+export const TaskPriority = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  URGENT: "urgent",
+} as const;
+
+export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
 
 export interface ExecutionPlan {
   id: number;
@@ -200,32 +213,38 @@ export interface ExecutionStep {
   duration_ms?: number;
 }
 
-export enum ExecutionStatus {
-  DRAFT = "draft",
-  READY = "ready",
-  RUNNING = "running",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  CANCELLED = "cancelled",
-}
+export const ExecutionStatus = {
+  DRAFT: "draft",
+  READY: "ready",
+  RUNNING: "running",
+  COMPLETED: "completed",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+} as const;
 
-export enum StepType {
-  NAVIGATE = "navigate",
-  CLICK = "click",
-  TYPE = "type",
-  WAIT = "wait",
-  SCROLL = "scroll",
-  EXTRACT = "extract",
-  VALIDATE = "validate",
-}
+export type ExecutionStatus = typeof ExecutionStatus[keyof typeof ExecutionStatus];
 
-export enum StepStatus {
-  PENDING = "pending",
-  RUNNING = "running",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  SKIPPED = "skipped",
-}
+export const StepType = {
+  NAVIGATE: "navigate",
+  CLICK: "click",
+  TYPE: "type",
+  WAIT: "wait",
+  SCROLL: "scroll",
+  EXTRACT: "extract",
+  VALIDATE: "validate",
+} as const;
+
+export type StepType = typeof StepType[keyof typeof StepType];
+
+export const StepStatus = {
+  PENDING: "pending",
+  RUNNING: "running",
+  COMPLETED: "completed",
+  FAILED: "failed",
+  SKIPPED: "skipped",
+} as const;
+
+export type StepStatus = typeof StepStatus[keyof typeof StepStatus];
 
 // UI and Component Types
 export interface NavigationItem {
@@ -249,21 +268,25 @@ export interface DashboardWidget {
   lastUpdated?: string;
 }
 
-export enum WidgetType {
-  METRIC = "metric",
-  CHART = "chart",
-  TABLE = "table",
-  LIST = "list",
-  STATUS = "status",
-  SECURITY = "security",
-}
+export const WidgetType = {
+  METRIC: "metric",
+  CHART: "chart",
+  TABLE: "table",
+  LIST: "list",
+  STATUS: "status",
+  SECURITY: "security",
+} as const;
 
-export enum WidgetSize {
-  SMALL = "small",
-  MEDIUM = "medium",
-  LARGE = "large",
-  FULL = "full",
-}
+export type WidgetType = typeof WidgetType[keyof typeof WidgetType];
+
+export const WidgetSize = {
+  SMALL: "small",
+  MEDIUM: "medium",
+  LARGE: "large",
+  FULL: "full",
+} as const;
+
+export type WidgetSize = typeof WidgetSize[keyof typeof WidgetSize];
 
 // API Response Types
 export interface ApiResponse<T = any> {
@@ -303,18 +326,20 @@ export interface FormField {
   description?: string;
 }
 
-export enum FieldType {
-  TEXT = "text",
-  EMAIL = "email",
-  PASSWORD = "password",
-  NUMBER = "number",
-  SELECT = "select",
-  CHECKBOX = "checkbox",
-  RADIO = "radio",
-  TEXTAREA = "textarea",
-  DATE = "date",
-  FILE = "file",
-}
+export const FieldType = {
+  TEXT: "text",
+  EMAIL: "email",
+  PASSWORD: "password",
+  NUMBER: "number",
+  SELECT: "select",
+  CHECKBOX: "checkbox",
+  RADIO: "radio",
+  TEXTAREA: "textarea",
+  DATE: "date",
+  FILE: "file",
+} as const;
+
+export type FieldType = typeof FieldType[keyof typeof FieldType];
 
 export interface SelectOption {
   value: string | number;
@@ -322,19 +347,21 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
+export const ValidationType = {
+  REQUIRED: "required",
+  MIN_LENGTH: "minLength",
+  MAX_LENGTH: "maxLength",
+  PATTERN: "pattern",
+  EMAIL: "email",
+  CUSTOM: "custom",
+} as const;
+
+export type ValidationType = typeof ValidationType[keyof typeof ValidationType];
+
 export interface ValidationRule {
   type: ValidationType;
   value?: any;
   message: string;
-}
-
-export enum ValidationType {
-  REQUIRED = "required",
-  MIN_LENGTH = "minLength",
-  MAX_LENGTH = "maxLength",
-  PATTERN = "pattern",
-  EMAIL = "email",
-  CUSTOM = "custom",
 }
 
 // Theme and Preferences Types

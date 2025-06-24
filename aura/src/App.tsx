@@ -6,7 +6,7 @@
  * security monitoring.
  */
 
-import React, { useState, useEffect } from "react";
+// React imports handled by JSX transform
 import {
   BrowserRouter as Router,
   Routes,
@@ -61,15 +61,13 @@ function AppLayout() {
 
 // Login Page Component
 function LoginPage() {
-  const [error, setError] = useState<string>("");
-
   const handleSuccess = () => {
     // Navigation will be handled by the auth context
     window.location.href = "/dashboard";
   };
 
   const handleError = (error: string) => {
-    setError(error);
+    console.error("Login error:", error);
   };
 
   return (
@@ -81,15 +79,13 @@ function LoginPage() {
 
 // Register Page Component
 function RegisterPage() {
-  const [error, setError] = useState<string>("");
-
   const handleSuccess = () => {
     // Navigation will be handled by the auth context
     window.location.href = "/dashboard";
   };
 
   const handleError = (error: string) => {
-    setError(error);
+    console.error("Registration error:", error);
   };
 
   return (
