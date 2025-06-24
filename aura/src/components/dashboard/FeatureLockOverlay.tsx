@@ -11,14 +11,7 @@
  */
 
 import React from "react";
-import {
-  Lock,
-  Crown,
-  Star,
-  Shield,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+import { Lock, Crown, Star, Shield, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export interface FeatureLockOverlayProps {
