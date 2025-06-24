@@ -1,13 +1,9 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
-from app.models.execution_plan import ActionType
-from app.models.execution_plan import PlanStatus
-from app.models.execution_plan import StepStatus
+from app.models.execution_plan import ActionType, PlanStatus, StepStatus
 
 
 class PlanningOptions(BaseModel):
