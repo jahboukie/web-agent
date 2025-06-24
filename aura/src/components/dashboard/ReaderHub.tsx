@@ -18,8 +18,6 @@ import {
   Zap,
   TrendingUp,
   BarChart3,
-  PieChart,
-  Clock,
 } from "lucide-react";
 import { FeatureLockOverlay } from "./FeatureLockOverlay";
 import { UsageCounter } from "./UsageCounter";
@@ -72,8 +70,8 @@ export function ReaderHub({
   const [activeTab, setActiveTab] = useState<
     "overview" | "performance" | "accuracy" | "sites"
   >("overview");
-  const [readerData, setReaderData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [readerData, setReaderData] = useState<typeof mockParsingData | null>(null);
+  const [, setIsLoading] = useState(true);
   const isProUser =
     userPlan === "reader_pro" ||
     userPlan === "complete" ||
@@ -168,7 +166,7 @@ export function ReaderHub({
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as "overview" | "performance" | "accuracy" | "sites")}
                 className={cn(
                   "flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors",
                   activeTab === tab.id
@@ -194,7 +192,7 @@ export function ReaderHub({
                 Parsing Volume (7 days)
               </h3>
               <div className="space-y-3">
-                {mockParsingData.volume.map((day, index) => (
+                {mockParsingData.volume.map((day) => (
                   <div key={day.date} className="flex items-center space-x-3">
                     <span className="text-sm text-gray-500 w-16">
                       {new Date(day.date).toLocaleDateString("en-US", {
