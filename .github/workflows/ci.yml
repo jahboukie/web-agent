@@ -62,11 +62,7 @@ jobs:
         path: .venv
         key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
-
-    - name: Install project
+    - name: Install dependencies and project
       run: poetry install --no-interaction
 
     - name: Install Playwright browsers
