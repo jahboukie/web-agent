@@ -1,10 +1,17 @@
 # === FORCE UPDATE ===
 from .browser_session import BrowserSession, BrowserType, SessionStatus
-from .execution_plan import ActionType, AtomicAction, ExecutionPlan, PlanStatus, PlanTemplate
+from .execution_plan import (
+    ActionType,
+    AtomicAction,
+    ExecutionPlan,
+    PlanStatus,
+    PlanTemplate,
+    StepStatus,
+)
 from .interactive_element import ElementType, InteractionType, InteractiveElement
 from .security import (
-    AccessSession,
     ABACPolicy,
+    AccessSession,
     AuditEventType,
     AuditLog,
     CredentialType,
@@ -29,25 +36,45 @@ from .user import User
 from .web_page import WebPage
 
 __all__ = [
+    # User and authentication
     "User",
-    "Task", "TaskStatus", "TaskPriority",
-    "TaskExecution", "ExecutionStatus", "ExecutionTrigger",
+    "UserCredential",
+    "CredentialType",
+    "UserPermission",
+    "PermissionScope",
+    "AccessSession",
+    "SSOConfiguration",
+    # Task management
+    "Task",
+    "TaskStatus",
+    "TaskPriority",
+    "TaskExecution",
+    "ExecutionStatus",
+    "ExecutionTrigger",
+    # Web parsing and elements
     "WebPage",
-    "InteractiveElement", "ElementType", "InteractionType",
+    "InteractiveElement",
+    "ElementType",
+    "InteractionType",
     "ContentBlock",
     "ActionCapability",
-    "ExecutionPlan", "PlanStatus",
-    "AtomicAction", "ActionType",
+    # Execution planning
+    "ExecutionPlan",
+    "PlanStatus",
+    "AtomicAction",
+    "ActionType",
+    "StepStatus",
     "PlanTemplate",
-    "UserCredential", "CredentialType",
-    "UserPermission", "PermissionScope",
+    # Security and permissions
     "SecurityPolicy",
-    "AuditLog", "AuditEventType",
-    "BrowserSession", "SessionStatus", "BrowserType",
-    "AccessSession",
-    "ABACPolicy",
-    "EnterprisePermission",
-    "EnterpriseRole",
+    "AuditLog",
+    "AuditEventType",
     "EnterpriseTenant",
-    "SSOConfiguration",
+    "EnterpriseRole",
+    "EnterprisePermission",
+    "ABACPolicy",
+    # Browser management
+    "BrowserSession",
+    "SessionStatus",
+    "BrowserType",
 ]

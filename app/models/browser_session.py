@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Boolean, DateTime
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -85,6 +85,6 @@ class BrowserSession(Base):
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="browser_sessions")
-    task: Mapped["Task" | None] = relationship(back_populates="browser_sessions")
-    current_page: Mapped["WebPage" | None] = relationship(back_populates="browser_sessions")
+    task: Mapped["Task" | None] = relationship(back_populates="browser_sessions") # type: ignore
+    current_page: Mapped["WebPage" | None] = relationship(back_populates="browser_sessions") # type: ignore
     executions: Mapped[list["TaskExecution"]] = relationship(back_populates="browser_session")

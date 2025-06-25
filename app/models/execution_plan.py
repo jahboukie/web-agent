@@ -171,7 +171,7 @@ class AtomicAction(Base):
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=func.now())
 
     execution_plan: Mapped["ExecutionPlan"] = relationship(back_populates="atomic_actions")
-    target_element: Mapped["InteractiveElement" | None] = relationship(back_populates="actions_taken")
+    target_element: Mapped["InteractiveElement" | None] = relationship(back_populates="actions_taken") # type: ignore
 
 class PlanTemplate(Base):
     __tablename__ = "plan_templates"

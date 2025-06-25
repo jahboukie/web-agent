@@ -11,9 +11,10 @@ from sqlalchemy.sql import func
 from app.db.base import Base
 
 if TYPE_CHECKING:
-    from app.models.browser_session import BrowserSession
-    from app.models.security import AuditLog, UserCredential
-    from app.models.task import Task
+    from .browser_session import BrowserSession
+    from .security import AuditLog, UserCredential
+    from .task import Task
+
 
 class User(Base):
     __tablename__ = "users"
@@ -50,3 +51,4 @@ class User(Base):
     credentials: Mapped[list["UserCredential"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
     browser_sessions: Mapped[list["BrowserSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
