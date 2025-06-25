@@ -93,8 +93,12 @@ jobs:
         key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install Python dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction
+      run: |
+        # Force fresh install to avoid cache issues
+        poetry install --no-interaction --no-ansi
+        # Verify critical dependencies
+        poetry run python -c "import structlog; print('✅ structlog installed')"
+        poetry run python -c "from app.core.logging import get_logger; print('✅ app.core.logging working')"
 
     - name: Install Playwright browsers
       run: |
@@ -118,52 +122,51 @@ jobs:
         sed -i 's/"headless": false/"headless": true/g' tests/e2e_config_ci.json
         sed -i 's/"record_videos": true/"record_videos": false/g' tests/e2e_config_ci.json
 
-    - name: Debug Environment and File Structure
+    - name: Verify Test Dependencies and Environment
       run: |
-        echo "=== DEBUGGING CI ENVIRONMENT ==="
-        echo "--- Current Working Directory ---"
-        pwd
+        echo "=== VERIFYING CI TEST ENVIRONMENT ==="
+        
+        echo "--- Poetry Dependencies Status ---"
+        poetry show | grep -E "(structlog|langchain|pytest)"
+        
+        echo "--- Critical Module Import Tests ---"
+        poetry run python -c "
+import sys; sys.path.insert(0, '.')
+print('Testing critical imports...')
 
-        echo "--- File and Directory Listing (Top Level) ---"
-        ls -la
+try:
+    import structlog
+    print('✅ structlog: OK')
+except Exception as e:
+    print(f'❌ structlog: {e}')
+    
+try:
+    from app.core.logging import get_logger
+    print('✅ app.core.logging: OK')
+except Exception as e:
+    print(f'❌ app.core.logging: {e}')
 
-        echo "--- App Directory Structure ---"
-        if [ -d "app" ]; then
-          echo "✅ app directory exists"
-          ls -la app/
-          echo "--- App Models Directory ---"
-          if [ -d "app/models" ]; then
-            echo "✅ app/models directory exists"
-            ls -la app/models/
+try:
+    from tests.e2e_comprehensive_runner import WebAgentE2ERunner
+    print('✅ e2e_comprehensive_runner: OK')
+except Exception as e:
+    print(f'❌ e2e_comprehensive_runner: {e}')
+
+try:
+    from app.models.execution_plan import ExecutionPlan, AtomicAction
+    print('✅ app.models.execution_plan: OK')
+except Exception as e:
+    print(f'❌ app.models.execution_plan: {e}')
+"
+        
+        echo "--- Test Files Existence Check ---"
+        for test_file in tests/e2e/test_agent_execution_critical.py tests/e2e/test_subscription_billing_critical.py; do
+          if [ -f "$test_file" ]; then
+            echo "✅ $test_file exists"
           else
-            echo "❌ app/models directory NOT found"
+            echo "❌ $test_file NOT found"
           fi
-        else
-          echo "❌ app directory NOT found"
-        fi
-
-        echo "--- Critical Files Check ---"
-        echo "app/__init__.py exists:" $([ -f "app/__init__.py" ] && echo "✅ YES" || echo "❌ NO")
-        echo "app/models/__init__.py exists:" $([ -f "app/models/__init__.py" ] && echo "✅ YES" || echo "❌ NO")
-        echo "app/models/execution_plan.py exists:" $([ -f "app/models/execution_plan.py" ] && echo "✅ YES" || echo "❌ NO")
-
-        echo "--- Python Environment Info ---"
-        poetry run python -c "import sys; import os; print('Working Dir:', os.getcwd()); print('Python Version:', sys.version); print('Sys Path:'); [print(f'  {p}') for p in sys.path]"
-
-        echo "--- Poetry Project Info ---"
-        poetry show --tree | head -20
-
-        echo "--- Environment Variables ---"
-        echo "PYTHONPATH: ${PYTHONPATH:-'NOT SET'}"
-        echo "PWD: ${PWD}"
-
-        echo "--- Attempt Manual Import Test ---"
-        echo "Testing app module import:"
-        poetry run python -c "import app; print('✅ app module imported successfully'); print('app module location:', app.__file__)" || echo "❌ Failed to import app module"
-        echo "Testing app.models import:"
-        poetry run python -c "import app.models; print('✅ app.models imported successfully')" || echo "❌ Failed to import app.models"
-        echo "Testing app.models.execution_plan import:"
-        poetry run python -c "from app.models.execution_plan import ExecutionPlan, AtomicAction; print('✅ app.models.execution_plan imported successfully')" || echo "❌ Failed to import app.models.execution_plan"
+        done
       env:
         PYTHONPATH: .
 
@@ -207,21 +210,43 @@ jobs:
 
     - name: Run Critical Path Tests
       run: |
-        if [ -f "tests/run_critical_e2e_tests.py" ]; then
-          poetry run python tests/run_critical_e2e_tests.py \
-            --suite critical_path \
-            --parallel \
-            --verbose
+        echo "=== EXECUTING CRITICAL PATH TESTS ==="
+        
+        # First, verify test runner dependencies
+        if poetry run python -c "from tests.e2e_comprehensive_runner import WebAgentE2ERunner" 2>/dev/null; then
+          echo "✅ E2E test infrastructure available"
+          
+          if [ -f "tests/run_critical_e2e_tests.py" ]; then
+            echo "▶️  Running critical E2E tests via test runner..."
+            poetry run python tests/run_critical_e2e_tests.py \
+              --suite critical_path \
+              --parallel \
+              --verbose
+          else
+            echo "❌ Test runner script not found"
+            exit 1
+          fi
         else
-          echo "E2E test runner not found, running basic tests instead..."
-          poetry run pytest tests/unit/ -v
+          echo "⚠️  E2E test infrastructure not available, running fallback tests..."
+          
+          # Run individual test files directly
+          echo "▶️  Running critical tests directly with pytest..."
+          poetry run pytest \
+            tests/e2e/test_agent_execution_critical.py \
+            tests/e2e/test_subscription_billing_critical.py::TestSubscriptionBillingCritical::test_free_tier_feature_gating_comprehensive \
+            -v \
+            --tb=short \
+            --capture=no \
+            -m "critical" \
+            --timeout=1800 \
+            --maxfail=3
         fi
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/webagent_e2e_test
         REDIS_URL: redis://localhost:6379/15
         API_BASE_URL: http://localhost:8000
         FRONTEND_URL: http://localhost:3000
-      continue-on-error: true
+        PYTHONPATH: .
 
     - name: Upload test artifacts
       uses: actions/upload-artifact@v4

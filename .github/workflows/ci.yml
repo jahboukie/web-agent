@@ -63,7 +63,10 @@ jobs:
         key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies and project
-      run: poetry install --no-interaction
+      run: |
+        poetry install --no-interaction --no-ansi
+        # Verify installation
+        poetry run python -c "import structlog; print('Dependencies installed successfully')"
 
     - name: Install Playwright browsers
       run: poetry run playwright install chromium
