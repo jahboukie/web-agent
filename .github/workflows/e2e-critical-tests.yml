@@ -7,11 +7,6 @@ on:
     branches: [ main, develop ]
     types: [opened, synchronize, reopened]
 
-env:
-  PYTHON_VERSION: "3.11"
-  POSTGRES_VERSION: "15"
-  REDIS_VERSION: "7"
-
 jobs:
   backend-tests:
     name: Backend Tests & Checks
@@ -30,7 +25,10 @@ jobs:
 
     services:
       postgres:
-        image: postgres:${{ env.POSTGRES_VERSION }}
+        # --- START OF EDITED SECTION ---
+        # Hardcoded the version to fix the workflow validation error.
+        image: postgres:15
+        # --- END OF EDITED SECTION ---
         env:
           POSTGRES_DB: webagent_test
           POSTGRES_USER: postgres
@@ -43,7 +41,10 @@ jobs:
         ports:
           - 5432:5432
       redis:
-        image: redis:${{ env.REDIS_VERSION }}
+        # --- START OF EDITED SECTION ---
+        # Hardcoded the version to fix the workflow validation error.
+        image: redis:7
+        # --- END OF EDITED SECTION ---
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -59,7 +60,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        python-version: "3.11"
 
     - name: Install Poetry
       uses: snok/install-poetry@v1
@@ -68,7 +69,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: .venv
-        key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+        key: venv-${{ runner.os }}-python-${{ env.python-version }}-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       run: poetry install --no-interaction --no-ansi
@@ -78,7 +79,7 @@ jobs:
 
     - name: Run formatting check (Ruff)
       run: poetry run ruff format --check .
-      
+
     - name: Run type checking (MyPy)
       run: poetry run mypy app/
 
@@ -87,8 +88,9 @@ jobs:
 
     - name: Run unit and integration tests
       run: poetry run pytest
-      
+
     - name: Upload coverage report
+      if: always()
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
