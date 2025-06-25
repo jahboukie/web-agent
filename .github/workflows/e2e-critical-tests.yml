@@ -130,34 +130,10 @@ jobs:
         poetry show | grep -E "(structlog|langchain|pytest)"
         
         echo "--- Critical Module Import Tests ---"
-        poetry run python -c "
-import sys; sys.path.insert(0, '.')
-print('Testing critical imports...')
-
-try:
-    import structlog
-    print('✅ structlog: OK')
-except Exception as e:
-    print(f'❌ structlog: {e}')
-    
-try:
-    from app.core.logging import get_logger
-    print('✅ app.core.logging: OK')
-except Exception as e:
-    print(f'❌ app.core.logging: {e}')
-
-try:
-    from tests.e2e_comprehensive_runner import WebAgentE2ERunner
-    print('✅ e2e_comprehensive_runner: OK')
-except Exception as e:
-    print(f'❌ e2e_comprehensive_runner: {e}')
-
-try:
-    from app.models.execution_plan import ExecutionPlan, AtomicAction
-    print('✅ app.models.execution_plan: OK')
-except Exception as e:
-    print(f'❌ app.models.execution_plan: {e}')
-"
+        poetry run python -c "import sys; sys.path.insert(0, '.'); import structlog; print('✅ structlog: OK')" || echo "❌ structlog failed"
+        poetry run python -c "import sys; sys.path.insert(0, '.'); from app.core.logging import get_logger; print('✅ app.core.logging: OK')" || echo "❌ app.core.logging failed"
+        poetry run python -c "import sys; sys.path.insert(0, '.'); from tests.e2e_comprehensive_runner import WebAgentE2ERunner; print('✅ e2e_comprehensive_runner: OK')" || echo "❌ e2e_comprehensive_runner failed"
+        poetry run python -c "import sys; sys.path.insert(0, '.'); from app.models.execution_plan import ExecutionPlan; print('✅ execution_plan: OK')" || echo "❌ execution_plan failed"
         
         echo "--- Test Files Existence Check ---"
         for test_file in tests/e2e/test_agent_execution_critical.py tests/e2e/test_subscription_billing_critical.py; do

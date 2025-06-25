@@ -74,39 +74,20 @@ jobs:
     - name: Run linting
       run: |
         echo "=== RUNNING CODE QUALITY CHECKS ==="
+        echo "▶️  Checking code formatting and imports..."
         
-        echo "▶️  Running Black formatter check..."
-        if poetry run black --check . --diff; then
-          echo "✅ Black formatting: PASSED"
-        else
-          echo "⚠️  Black formatting: FAILED (will auto-fix in future)"
-        fi
+        # Run linting but don't fail the build
+        poetry run black --check . --diff || echo "⚠️  Black formatting needs attention"
+        poetry run isort --check-only . --diff || echo "⚠️  Import sorting needs attention"
+        poetry run ruff check . || echo "⚠️  Ruff linting needs attention"
         
-        echo "▶️  Running isort import sorting check..."
-        if poetry run isort --check-only . --diff; then
-          echo "✅ Import sorting: PASSED"
-        else
-          echo "⚠️  Import sorting: FAILED (will auto-fix in future)"
-        fi
-        
-        echo "▶️  Running Ruff linting check..."
-        if poetry run ruff check . --output-format=github; then
-          echo "✅ Ruff linting: PASSED"
-        else
-          echo "⚠️  Ruff linting: FAILED (will auto-fix in future)"
-        fi
-        
-        echo "📝 Note: Linting issues are reported but not blocking CI while we stabilize the pipeline"
+        echo "✅ Code quality checks completed (non-blocking)"
 
     - name: Run type checking
       run: |
         echo "▶️  Running MyPy type checking..."
-        if poetry run mypy app/; then
-          echo "✅ Type checking: PASSED"
-        else
-          echo "⚠️  Type checking: FAILED (will be addressed progressively)"
-          echo "📝 Focus: Critical dependency issues resolved first"
-        fi
+        poetry run mypy app/ || echo "⚠️  Type checking needs attention"
+        echo "✅ Type checking completed (non-blocking)"
       continue-on-error: true
 
     - name: Debug database connection

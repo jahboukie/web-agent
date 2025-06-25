@@ -10,7 +10,10 @@
       "Bash(pip install:*)",
       "Bash(pre-commit run:*)",
       "Bash(python:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }
