@@ -15,6 +15,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
+      ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
+      REDIS_URL: redis://localhost:6379/0
+      # detect-secrets-disable
+      SECRET_KEY: a-secure-32-character-test-key-for-ci-only!
+      ENVIRONMENT: test
+
     services:
       postgres:
         image: postgres:15
@@ -75,12 +83,12 @@ jobs:
       run: |
         echo "=== RUNNING CODE QUALITY CHECKS ==="
         echo "▶️  Checking code formatting and imports..."
-        
+
         # Run linting but don't fail the build
         poetry run black --check . --diff || echo "⚠️  Black formatting needs attention"
         poetry run isort --check-only . --diff || echo "⚠️  Import sorting needs attention"
         poetry run ruff check . || echo "⚠️  Ruff linting needs attention"
-        
+
         echo "✅ Code quality checks completed (non-blocking)"
 
     - name: Run type checking
@@ -101,28 +109,12 @@ jobs:
         print(f'Settings ASYNC_DATABASE_URL: {settings.ASYNC_DATABASE_URL}')
         print(f'Environment: {settings.ENVIRONMENT}')
         "
-      env:
-        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
-        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
-        SECRET_KEY: test-secret-key-for-ci-only
-        ENVIRONMENT: test
 
     - name: Run database migrations
       run: poetry run alembic upgrade head
-      env:
-        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
-        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
-        SECRET_KEY: test-secret-key-for-ci-only
-        ENVIRONMENT: test
 
     - name: Run unit tests
       run: poetry run pytest tests/unit/ -v --cov=app --cov-report=xml
-      env:
-        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
-        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
-        REDIS_URL: redis://localhost:6379/0
-        SECRET_KEY: test-secret-key-for-ci-only
-        ENVIRONMENT: test
 
     - name: Run integration tests (if they exist)
       run: |
@@ -131,12 +123,6 @@ jobs:
         else
           echo "No integration tests found, skipping..."
         fi
-      env:
-        DATABASE_URL: postgresql://webagent:test_password_ci@localhost:5432/webagent_test
-        ASYNC_DATABASE_URL: postgresql+asyncpg://webagent:test_password_ci@localhost:5432/webagent_test
-        REDIS_URL: redis://localhost:6379/0
-        SECRET_KEY: test-secret-key-for-ci-only
-        ENVIRONMENT: test
       continue-on-error: true
 
     - name: Upload coverage to Codecov

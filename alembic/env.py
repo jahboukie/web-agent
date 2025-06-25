@@ -4,10 +4,15 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
-from alembic import context
+from alembic import context # type: ignore
 
-# Add the project root to the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# --- START OF EDITED SECTION ---
+# Add the project root directory to the Python path using an absolute path
+# to ensure modules are found correctly in any environment.
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+# --- END OF EDITED SECTION ---
 
 # Import our application configuration and models
 from app.core.config import settings
