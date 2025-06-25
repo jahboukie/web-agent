@@ -235,7 +235,7 @@ class MemoryPressureScenario(ChaosScenario):
         self.memory_hogs.append(thread)
 
         print(
-            f"Started memory pressure scenario targeting {target_memory // (1024*1024)}MB"
+            f"Started memory pressure scenario targeting {target_memory // (1024 * 1024)}MB"
         )
 
     async def stop(self):

@@ -61,7 +61,7 @@ async def quick_test():
                 progress = status_data.get("progress_percentage", 0)
                 step = status_data.get("current_step", "unknown")
 
-                print(f"   Check {i+1}: {status} | {progress}% | {step}")
+                print(f"   Check {i + 1}: {status} | {progress}% | {step}")
 
                 if status in ["completed", "failed"]:
                     break

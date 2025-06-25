@@ -369,7 +369,7 @@ class TestAgentExecutionFlow:
             task = planning_service.generate_plan_async(
                 test_db,
                 task_id=result.task_id,
-                user_goal=f"Complete task {i+1}",
+                user_goal=f"Complete task {i + 1}",
                 planning_options={"planning_timeout_seconds": 90},
                 user_id=user.id,
             )

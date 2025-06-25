@@ -127,9 +127,7 @@ class Settings(BaseSettings):
 
     # Zero Trust Configuration
     ENABLE_ZERO_TRUST: bool = True
-    ZERO_TRUST_POLICY: str = (
-        "standard_access"  # "critical_systems", "sensitive_data", "standard_access", "public_access"
-    )
+    ZERO_TRUST_POLICY: str = "standard_access"  # "critical_systems", "sensitive_data", "standard_access", "public_access"
     CONTINUOUS_VERIFICATION_INTERVAL: int = 1800  # seconds
     DEVICE_TRUST_REQUIRED: bool = True
     LOCATION_VERIFICATION_REQUIRED: bool = True

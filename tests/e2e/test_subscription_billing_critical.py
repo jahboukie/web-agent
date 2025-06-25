@@ -326,8 +326,9 @@ class TestSubscriptionBillingCritical:
             )  # Charge for Complete Platform
             expected_proration = expected_charge - expected_credit
 
-            assert abs(upgrade_result.proration_amount - expected_proration) < Decimal(
-                "0.01"
+            assert (
+                abs(upgrade_result.proration_amount - expected_proration)
+                < Decimal("0.01")
             ), f"Proration calculation incorrect: {upgrade_result.proration_amount} vs {expected_proration}"
 
             assert upgrade_result.credit_amount == expected_credit
@@ -354,8 +355,8 @@ class TestSubscriptionBillingCritical:
             current_daily_rate = Decimal("399") / Decimal("30")
             expected_refund = current_daily_rate * days_remaining
 
-            assert abs(downgrade_result.refund_amount - expected_refund) < Decimal(
-                "0.01"
+            assert (
+                abs(downgrade_result.refund_amount - expected_refund) < Decimal("0.01")
             ), f"Refund calculation incorrect: {downgrade_result.refund_amount} vs {expected_refund}"
 
         # Test 3: Bundle savings calculation

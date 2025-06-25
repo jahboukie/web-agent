@@ -179,7 +179,7 @@ class AnalyticsSystemValidator:
                 print(f"   ✅ Found {len(opportunities)} upgrade opportunities")
 
                 for i, opp in enumerate(opportunities[:3]):  # Show first 3
-                    print(f"   💡 Opportunity {i+1}: {opp.get('title', 'Unknown')}")
+                    print(f"   💡 Opportunity {i + 1}: {opp.get('title', 'Unknown')}")
                     print(f"      Type: {opp.get('type', 'unknown')}")
                     print(f"      Priority: {opp.get('priority', 'unknown')}")
                     if opp.get("savings_amount", 0) > 0:

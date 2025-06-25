@@ -354,7 +354,7 @@ class DashboardFlowTester:
         print(f"Passed: {passed_tests} ✅")
         print(f"Failed: {failed_tests} ❌")
         print(
-            f"Success Rate: {(passed_tests/total_tests*100):.1f}%"
+            f"Success Rate: {(passed_tests / total_tests * 100):.1f}%"
             if total_tests > 0
             else "0%"
         )

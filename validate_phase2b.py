@@ -132,7 +132,7 @@ async def validate_phase2b():
                         print("\n🎯 Sample Interactive Elements:")
                         for i, element in enumerate(elements[:3]):  # Show first 3
                             print(
-                                f"   {i+1}. {element.get('tag_name', 'unknown')} - {element.get('semantic_role', 'unknown')}"
+                                f"   {i + 1}. {element.get('tag_name', 'unknown')} - {element.get('semantic_role', 'unknown')}"
                             )
                             print(
                                 f"      Text: {element.get('text_content', '')[:50]}..."

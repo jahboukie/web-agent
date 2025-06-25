@@ -111,10 +111,10 @@ class TestTenantIsolation:
                     test_db,
                     user_id=users["user"].id,
                     task_data={
-                        "title": f"{tenant_name} Confidential Task {i+1}",
-                        "description": f"Sensitive data for {tenant_name} - Task {i+1}",
+                        "title": f"{tenant_name} Confidential Task {i + 1}",
+                        "description": f"Sensitive data for {tenant_name} - Task {i + 1}",
                         "goal": f"Process confidential {tenant_name} information",
-                        "target_url": f"https://{users['tenant'].domain}/internal/task{i+1}",
+                        "target_url": f"https://{users['tenant'].domain}/internal/task{i + 1}",
                     },
                 )
                 tasks.append(task)
@@ -140,10 +140,13 @@ class TestTenantIsolation:
                     )
 
                     # Should not be able to access other tenant's data
-                    assert response.status_code in [
-                        404,
-                        403,
-                    ], f"{accessing_tenant} admin should not access {target_tenant} task {task.id}"
+                    assert (
+                        response.status_code
+                        in [
+                            404,
+                            403,
+                        ]
+                    ), f"{accessing_tenant} admin should not access {target_tenant} task {task.id}"
 
                     # Try with regular user from different tenant
                     user_token = self._create_auth_token(accessing_users["user"])
@@ -153,10 +156,13 @@ class TestTenantIsolation:
                         f"/api/v1/tasks/{task.id}", headers=user_headers
                     )
 
-                    assert response.status_code in [
-                        404,
-                        403,
-                    ], f"{accessing_tenant} user should not access {target_tenant} task {task.id}"
+                    assert (
+                        response.status_code
+                        in [
+                            404,
+                            403,
+                        ]
+                    ), f"{accessing_tenant} user should not access {target_tenant} task {task.id}"
 
         # Test tenant-specific queries return only tenant data
         for tenant_name, users in tenant_users.items():
@@ -669,8 +675,8 @@ class TestPerTenantRateLimiting:
         successful_premium = [r for r in premium_responses if r["status_code"] == 200]
         successful_basic = [r for r in basic_responses if r["status_code"] == 200]
 
-        assert len(successful_premium) > len(
-            successful_basic
+        assert (
+            len(successful_premium) > len(successful_basic)
         ), f"Premium tenant should handle more requests: {len(successful_premium)} vs {len(successful_basic)}"
 
     def _create_auth_token(self, user):
@@ -738,9 +744,9 @@ class TestPerTenantRateLimiting:
                     test_db,
                     user_id=small_user.id,
                     task_data={
-                        "title": f"Task {i+1}",
-                        "description": f"Test task {i+1}",
-                        "goal": f"Complete task {i+1}",
+                        "title": f"Task {i + 1}",
+                        "description": f"Test task {i + 1}",
+                        "goal": f"Complete task {i + 1}",
                     },
                 )
                 created_tasks.append(task)
@@ -764,10 +770,10 @@ class TestPerTenantRateLimiting:
             try:
                 user = await UserService.create_user(
                     test_db,
-                    email=f"user{i+2}@small.business.com",
-                    username=f"small_user_{i+2}",
+                    email=f"user{i + 2}@small.business.com",
+                    username=f"small_user_{i + 2}",
                     password="SmallUser123!",
-                    full_name=f"Small Business User {i+2}",
+                    full_name=f"Small Business User {i + 2}",
                     tenant_id=tenant_small.id,
                 )
                 created_users.append(user)

@@ -211,7 +211,7 @@ class WebpageAnalysisTool(WebAgentBaseTool):
         for i, block in enumerate(content_blocks[:10]):  # Limit output
             block_type = block.get("type", "unknown")
             content = block.get("content", "")[:100]  # First 100 chars
-            analysis.append(f"  {i+1}. {block_type}: {content}...")
+            analysis.append(f"  {i + 1}. {block_type}: {content}...")
 
         return "\n".join(analysis)
 

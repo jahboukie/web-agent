@@ -51,7 +51,7 @@ class BillingService:
             active_discounts.append(
                 {
                     "type": "annual_discount",
-                    "description": f"{subscription.annual_discount*100:.0f}% Annual Discount",
+                    "description": f"{subscription.annual_discount * 100:.0f}% Annual Discount",
                     "amount": subscription.monthly_cost * subscription.annual_discount,
                 }
             )

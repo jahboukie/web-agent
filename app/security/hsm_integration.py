@@ -649,23 +649,15 @@ class GoogleCloudKMSInterface(HSMInterface):
         if KeyUsage.ENCRYPT_DECRYPT in key_usage:
             purpose = kms.CryptoKey.CryptoKeyPurpose.ENCRYPT_DECRYPT
             if key_type == KeyType.AES_256:
-                algorithm = (
-                    kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION
-                )
+                algorithm = kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION
             else:
-                algorithm = (
-                    kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_2048_SHA256
-                )
+                algorithm = kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_DECRYPT_OAEP_2048_SHA256
         elif KeyUsage.SIGN_VERIFY in key_usage:
             purpose = kms.CryptoKey.CryptoKeyPurpose.ASYMMETRIC_SIGN
-            algorithm = (
-                kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_2048_SHA256
-            )
+            algorithm = kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.RSA_SIGN_PKCS1_2048_SHA256
         else:
             purpose = kms.CryptoKey.CryptoKeyPurpose.ENCRYPT_DECRYPT
-            algorithm = (
-                kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION
-            )
+            algorithm = kms.CryptoKeyVersion.CryptoKeyVersionAlgorithm.GOOGLE_SYMMETRIC_ENCRYPTION
 
         return purpose, algorithm
 

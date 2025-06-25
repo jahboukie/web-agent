@@ -648,10 +648,13 @@ class TestEnterpriseSecurityCompliance:
                             ), f"Script tags not stripped in {endpoint_config['endpoint']}.{field}"
                     else:
                         # Input rejection is also acceptable
-                        assert response.status_code in [
-                            400,
-                            422,
-                        ], f"Should reject or sanitize XSS in {endpoint_config['endpoint']}.{field}"
+                        assert (
+                            response.status_code
+                            in [
+                                400,
+                                422,
+                            ]
+                        ), f"Should reject or sanitize XSS in {endpoint_config['endpoint']}.{field}"
 
         # Test SQL injection prevention
         for endpoint_config in test_endpoints:

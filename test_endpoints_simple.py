@@ -93,7 +93,7 @@ def main():
     print(f"Total Tests: {total}")
     print(f"Passed: {passed}")
     print(f"Failed: {failed}")
-    print(f"Success Rate: {(passed/total*100):.1f}%")
+    print(f"Success Rate: {(passed / total * 100):.1f}%")
 
     if failed == 0:
         print("\n🎉 ALL TESTS PASSED! Ready for deployment!")

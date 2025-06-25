@@ -464,7 +464,7 @@ class WebAgentE2ERunner:
         <body>
             <div class="header">
                 <h1>WebAgent E2E Test Report</h1>
-                <p>Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC</p>
+                <p>Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")} UTC</p>
                 <p>Duration: {metrics.total_duration_seconds:.2f} seconds</p>
                 <p>Success Rate: {metrics.success_rate:.1f}%</p>
             </div>
@@ -507,7 +507,7 @@ class WebAgentE2ERunner:
                     <td>{result.category}</td>
                     <td class="{status_class}">{result.status.upper()}</td>
                     <td>{result.duration_seconds:.2f}s</td>
-                    <td>{result.error_message or ''}</td>
+                    <td>{result.error_message or ""}</td>
                 </tr>
             """
 

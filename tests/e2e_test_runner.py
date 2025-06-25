@@ -332,28 +332,28 @@ class E2ETestRunner:
         <body>
             <div class="header">
                 <h1>WebAgent E2E Test Report</h1>
-                <p>Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
-                <p class="{'success' if summary['overall_success'] else 'failure'}">
-                    Overall Status: {'PASS' if summary['overall_success'] else 'FAIL'}
+                <p>Generated: {datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")}</p>
+                <p class="{"success" if summary["overall_success"] else "failure"}">
+                    Overall Status: {"PASS" if summary["overall_success"] else "FAIL"}
                 </p>
             </div>
 
             <div class="metrics">
                 <div class="metric-card">
                     <h3>Execution Time</h3>
-                    <p>{summary['execution_summary']['total_duration_formatted']}</p>
+                    <p>{summary["execution_summary"]["total_duration_formatted"]}</p>
                 </div>
                 <div class="metric-card">
                     <h3>Category Success Rate</h3>
-                    <p>{summary['category_metrics']['category_success_rate']:.1%}</p>
+                    <p>{summary["category_metrics"]["category_success_rate"]:.1%}</p>
                 </div>
                 <div class="metric-card">
                     <h3>Test Success Rate</h3>
-                    <p>{summary['test_metrics']['test_success_rate']:.1%}</p>
+                    <p>{summary["test_metrics"]["test_success_rate"]:.1%}</p>
                 </div>
                 <div class="metric-card">
                     <h3>Critical Failures</h3>
-                    <p>{len(summary['critical_failures'])}</p>
+                    <p>{len(summary["critical_failures"])}</p>
                 </div>
             </div>
 
@@ -368,9 +368,9 @@ class E2ETestRunner:
 
             html += f"""
             <div class="category-result {status_class}">
-                <h3>{category_name.replace('_', ' ').title()} - {status_text}</h3>
-                <p>Duration: {result['duration_seconds']:.1f}s</p>
-                {f"<p>Error: {result.get('error', 'N/A')}</p>" if not result['success'] else ""}
+                <h3>{category_name.replace("_", " ").title()} - {status_text}</h3>
+                <p>Duration: {result["duration_seconds"]:.1f}s</p>
+                {f"<p>Error: {result.get('error', 'N/A')}</p>" if not result["success"] else ""}
             </div>
             """
 
