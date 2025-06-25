@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, Column, DateTime
+from sqlalchemy import JSON, Boolean, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -63,9 +63,9 @@ class Task(Base):
     requires_approval: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Results and errors
-    result_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    result_data: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    error_details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    error_details: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
 
     # Background processing fields
     background_task_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
@@ -75,7 +75,7 @@ class Task(Base):
     processing_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Progress tracking
-    progress_details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    progress_details: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
     estimated_completion_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Resource tracking
