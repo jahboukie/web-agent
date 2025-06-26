@@ -445,9 +445,11 @@ class ZeroTrustEngine:
             else:
                 # Check for impossible travel (velocity analysis)
                 last_location = await self._get_last_user_location(user_id)
-                if last_location and context.timestamp: # type: ignore
+                if last_location and context.timestamp:  # type: ignore
                     travel_analysis = await self._analyze_travel_velocity(
-                        last_location, current_location, context.timestamp # type: ignore
+                        last_location,
+                        current_location,
+                        context.timestamp,  # type: ignore
                     )
                     if travel_analysis["impossible_travel"]:
                         score -= 0.4
@@ -465,9 +467,11 @@ class ZeroTrustEngine:
                 score -= 0.1  # Slight reduction for VPN usage
 
             # Update location history
-            if context.timestamp: # type: ignore
+            if context.timestamp:  # type: ignore
                 await self._update_location_history(
-                    user_id, current_location, context.timestamp # type: ignore
+                    user_id,
+                    current_location,
+                    context.timestamp,  # type: ignore
                 )
 
             return max(min(score, 1.0), 0.0)
@@ -668,7 +672,7 @@ class ZeroTrustEngine:
 
             # Time-based risks
             current_hour = (
-                context.timestamp.hour if context.timestamp else datetime.utcnow().hour # type: ignore
+                context.timestamp.hour if context.timestamp else datetime.utcnow().hour  # type: ignore
             )
             if current_hour < 6 or current_hour > 22:  # Outside business hours
                 user_patterns = await self._get_user_time_patterns(user_id)
@@ -728,7 +732,7 @@ class ZeroTrustEngine:
             if trust_factors.network_trust_score > 0:
                 confidence += 1 / total_factors
 
-            if context.timestamp: # type: ignore
+            if context.timestamp:  # type: ignore
                 confidence += 1 / total_factors
 
             # Adjust for data quality
@@ -903,15 +907,17 @@ class ZeroTrustEngine:
             # Return locations where user has accessed from multiple times
             location_counts: dict[str, int] = {}
             for access in self.location_history[user_id]:
-                location_key = f"{access.get('country')}_{access.get('city', 'unknown')}"
-                location_counts[location_key] = (
-                    location_counts.get(location_key, 0) + 1
+                location_key = (
+                    f"{access.get('country')}_{access.get('city', 'unknown')}"
                 )
+                location_counts[location_key] = location_counts.get(location_key, 0) + 1
 
             # Consider locations with 3+ accesses as "known"
             known_locations = []
             for access in self.location_history[user_id]:
-                location_key = f"{access.get('country')}_{access.get('city', 'unknown')}"
+                location_key = (
+                    f"{access.get('country')}_{access.get('city', 'unknown')}"
+                )
                 if location_counts.get(location_key, 0) >= 3:
                     known_locations.append(access)
 
@@ -1041,9 +1047,7 @@ class ZeroTrustEngine:
         # For now, return empty list
         return []
 
-    async def _extract_behavioral_features(
-        self, context: AccessContext
-    ) -> list[float]:
+    async def _extract_behavioral_features(self, context: AccessContext) -> list[float]:
         """Extract behavioral features for ML analysis."""
 
         try:
