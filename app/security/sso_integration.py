@@ -17,7 +17,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.schemas.user import SecurityRole, SSOUser # type: ignore
+from app.schemas.user import SecurityRole, SSOUser  # type: ignore
 
 logger = get_logger(__name__)
 
