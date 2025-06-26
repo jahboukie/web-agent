@@ -2,13 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel
-from pydantic import EmailStr
-from pydantic import Field
-from pydantic import field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
