@@ -11,12 +11,13 @@ This module provides:
 
 import asyncio
 import uuid
+from asyncio import Queue, Task
 from datetime import datetime
-from typing import Any
+from typing import Any, Collection
 
-import psutil
+import psutil  # type: ignore[import-untyped]
 import structlog
-from playwright.async_api import Browser, BrowserContext, async_playwright
+from playwright.async_api import Browser, BrowserContext, Playwright, async_playwright
 
 from app.core.config import settings
 
@@ -26,18 +27,18 @@ logger = structlog.get_logger(__name__)
 class BrowserPoolManager:
     """Manages a pool of browser contexts for efficient resource utilization."""
 
-    def __init__(self):
-        self.pool_size = getattr(settings, "BROWSER_POOL_SIZE", 5)
-        self.max_context_age_minutes = getattr(
+    def __init__(self) -> None:
+        self.pool_size: int = getattr(settings, "BROWSER_POOL_SIZE", 5)
+        self.max_context_age_minutes: int = getattr(
             settings, "BROWSER_CONTEXT_MAX_AGE_MINUTES", 30
         )
-        self.max_memory_mb = getattr(settings, "BROWSER_MAX_MEMORY_MB", 512)
+        self.max_memory_mb: int = getattr(settings, "BROWSER_MAX_MEMORY_MB", 512)
 
         # Pool management
-        self.available_contexts: asyncio.Queue = asyncio.Queue(maxsize=self.pool_size)
-        self.active_contexts: dict[str, dict] = {}  # context_id -> context_info
+        self.available_contexts: Queue[dict[str, Any]] = Queue(maxsize=self.pool_size)
+        self.active_contexts: dict[str, dict[str, Any]] = {}
         self.browser: Browser | None = None
-        self.playwright = None
+        self.playwright: Playwright | None = None
 
         # Stats
         self.contexts_created = 0
@@ -45,10 +46,10 @@ class BrowserPoolManager:
         self.contexts_cleanup = 0
 
         # Cleanup task
-        self._cleanup_task: asyncio.Task | None = None
+        self._cleanup_task: Task[None] | None = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the browser pool."""
         if self._initialized:
             return
@@ -89,7 +90,7 @@ class BrowserPoolManager:
             logger.error("Failed to initialize browser pool", error=str(e))
             raise
 
-    async def _populate_pool(self):
+    async def _populate_pool(self) -> None:
         """Pre-populate the pool with browser contexts."""
         for _ in range(self.pool_size):
             try:
@@ -106,27 +107,24 @@ class BrowserPoolManager:
 
         context_id = str(uuid.uuid4())
 
-        # Anti-detection context options
-        context_options = {
-            "viewport": {"width": 1920, "height": 1080},
-            "user_agent": (
+        # Create context with explicitly named arguments
+        browser_context = await self.browser.new_context(
+            viewport={"width": 1920, "height": 1080},
+            user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             ),
-            "locale": "en-US",
-            "timezone_id": "America/New_York",
-            "permissions": ["geolocation"],
-            "extra_http_headers": {
+            locale="en-US",
+            timezone_id="America/New_York",
+            permissions=["geolocation"],
+            extra_http_headers={
                 "Accept-Language": "en-US,en;q=0.9",
                 "Accept-Encoding": "gzip, deflate, br",
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
                 "Connection": "keep-alive",
                 "Upgrade-Insecure-Requests": "1",
             },
-        }
-
-        # Create context
-        browser_context = await self.browser.new_context(**context_options)
+        )
 
         # Add stealth scripts
         await browser_context.add_init_script(
@@ -153,7 +151,7 @@ class BrowserPoolManager:
         """
         )
 
-        context_info = {
+        context_info: dict[str, Any] = {
             "id": context_id,
             "context": browser_context,
             "created_at": datetime.utcnow(),
@@ -175,6 +173,7 @@ class BrowserPoolManager:
 
         try:
             # Try to get an available context
+            context_info: dict[str, Any]
             try:
                 context_info = await asyncio.wait_for(
                     self.available_contexts.get(), timeout=10.0
@@ -210,7 +209,7 @@ class BrowserPoolManager:
             )
             raise
 
-    async def release_context(self, task_id: int, context: BrowserContext):
+    async def release_context(self, task_id: int, context: BrowserContext) -> None:
         """Release browser context back to pool or cleanup."""
         context_info = None
 
@@ -266,9 +265,10 @@ class BrowserPoolManager:
         except Exception as e:
             logger.error("Error releasing context", task_id=task_id, error=str(e))
             # Ensure cleanup on error
-            await self._cleanup_context(context_info)
+            if context_info:
+                await self._cleanup_context(context_info)
 
-    async def _reset_context(self, context_info: dict[str, Any]):
+    async def _reset_context(self, context_info: dict[str, Any]) -> None:
         """Reset context state for reuse."""
         try:
             context = context_info["context"]
@@ -293,7 +293,7 @@ class BrowserPoolManager:
             )
             raise
 
-    async def _cleanup_context(self, context_info: dict[str, Any]):
+    async def _cleanup_context(self, context_info: dict[str, Any]) -> None:
         """Clean up browser context resources."""
         try:
             context = context_info["context"]
@@ -327,7 +327,7 @@ class BrowserPoolManager:
             logger.error("Failed to check memory usage", error=str(e))
             return False
 
-    async def _periodic_cleanup(self):
+    async def _periodic_cleanup(self) -> None:
         """Periodic cleanup task for stale contexts."""
         while True:
             try:
@@ -414,7 +414,7 @@ class BrowserPoolManager:
             logger.error("Failed to get pool stats", error=str(e))
             return {"error": str(e)}
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the browser pool and cleanup all resources."""
         try:
             logger.info("Shutting down browser pool")

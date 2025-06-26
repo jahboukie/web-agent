@@ -1,4 +1,6 @@
-from pydantic import Field, validator
+from __future__ import annotations
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -203,20 +205,23 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = True
 
-    @validator("DATABASE_URL")
-    def validate_database_url(cls, v):
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
         if not v.startswith(("postgresql://", "postgresql+psycopg2://", "sqlite:///")):
             raise ValueError("Database URL must be PostgreSQL or SQLite")
         return v
 
-    @validator("SECRET_KEY")
-    def validate_secret_key(cls, v):
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def validate_secret_key(cls, v: str) -> str:
         if len(v) < 32:
             raise ValueError("Secret key must be at least 32 characters long")
         return v
 
-    @validator("ZK_KEY_DERIVATION_ITERATIONS")
-    def validate_kdf_iterations(cls, v):
+    @field_validator("ZK_KEY_DERIVATION_ITERATIONS")
+    @classmethod
+    def validate_kdf_iterations(cls, v: int) -> int:
         if v < 100000:
             raise ValueError(
                 "Key derivation iterations must be at least 100,000 for security"

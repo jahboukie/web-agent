@@ -4,6 +4,8 @@ Billing Service
 Manages billing, payments, and subscription lifecycle for WebAgent's revenue-optimized pricing.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
@@ -21,7 +23,7 @@ class BillingService:
     Billing and payment management service for subscription lifecycle.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.subscription_service = SubscriptionService()
 
     async def get_billing_info(self, db: AsyncSession, user_id: int) -> BillingInfo:
@@ -44,15 +46,16 @@ class BillingService:
 
         # Account credits and discounts
         account_credits = 0.0
-        active_discounts = []
+        active_discounts: list[dict[str, str]] = []
 
         # Add annual discount if applicable
         if subscription.annual_discount > 0:
+            discount_amount = subscription.monthly_cost * subscription.annual_discount
             active_discounts.append(
                 {
                     "type": "annual_discount",
                     "description": f"{subscription.annual_discount * 100:.0f}% Annual Discount",
-                    "amount": subscription.monthly_cost * subscription.annual_discount,
+                    "amount": f"{discount_amount:.2f}",
                 }
             )
 
@@ -108,7 +111,7 @@ class BillingService:
         user_id: int,
         target_tier: str,
         billing_cycle: str = "monthly",
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         """
         Create a checkout session for subscription upgrade.
         """
@@ -125,19 +128,22 @@ class BillingService:
 
         tier = SubscriptionTier(target_tier)
         monthly_cost = self.subscription_service.get_tier_cost(tier)
+        annual_discount_obj = self.subscription_service.PRICING_TIERS[tier].get(
+            "annual_discount", 0.0
+        )
+        annual_discount = (
+            float(annual_discount_obj) if isinstance(annual_discount_obj, (int, float)) else 0.0
+        )
 
         # Calculate final amount based on billing cycle
         if billing_cycle == "annual":
-            annual_discount = self.subscription_service.PRICING_TIERS[tier].get(
-                "annual_discount", 0.0
-            )
             final_amount = monthly_cost * 12 * (1 - annual_discount)
         else:
             final_amount = monthly_cost
 
         # This would integrate with Stripe or other payment processor
         # For now, return sample checkout session
-        checkout_session = {
+        checkout_session: dict[str, Any] = {
             "session_id": f"cs_{user_id}_{target_tier}_{int(datetime.utcnow().timestamp())}",
             "checkout_url": f"https://checkout.stripe.com/pay/cs_test_sample#{target_tier}",
             "amount": final_amount,
@@ -196,7 +202,9 @@ class BillingService:
             )
             return False
 
-    async def _record_payment(self, user_id: int, session_id: str, target_tier: str):
+    async def _record_payment(
+        self, user_id: int, session_id: str, target_tier: str
+    ) -> None:
         """
         Record payment in billing system.
         """
@@ -211,7 +219,7 @@ class BillingService:
         # Implementation would store payment record in database
         pass
 
-    async def _send_upgrade_confirmation(self, user_id: int, target_tier: str):
+    async def _send_upgrade_confirmation(self, user_id: int, target_tier: str) -> None:
         """
         Send upgrade confirmation email.
         """
@@ -225,7 +233,7 @@ class BillingService:
 
     async def calculate_proration(
         self, db: AsyncSession, user_id: int, target_tier: str
-    ) -> dict[str, float]:
+    ) -> dict[str, Any]:
         """
         Calculate proration for mid-cycle upgrades.
         """
@@ -241,6 +249,9 @@ class BillingService:
             current_subscription.current_period_end
             - current_subscription.current_period_start
         ).days
+
+        if days_in_period == 0:
+            days_in_period = 30  # Avoid division by zero
 
         # Calculate proration
         from app.schemas.analytics import SubscriptionTier
@@ -264,7 +275,7 @@ class BillingService:
         return {
             "current_credit": current_credit,
             "target_charge": target_charge,
-            "net_amount": max(0, net_amount),  # Never negative
+            "net_amount": max(0.0, net_amount),  # Never negative
             "days_remaining": days_remaining,
             "proration_date": now.isoformat(),
         }
@@ -288,20 +299,26 @@ class BillingService:
             "storage_gb": 1.00,  # $1.00 per GB
         }
 
-        overage_charges = {}
+        overage_charges: dict[str, float] = {}
         total_overage = 0.0
 
         for limit_type, limit_value in subscription.limits.items():
-            if limit_value == "unlimited":
+            if limit_value == "unlimited" or not isinstance(limit_value, (int, float)):
                 continue
 
+            limit_value_num = float(limit_value)
             usage_attr = f"{limit_type}_used"
             if hasattr(subscription.usage, usage_attr):
-                current_usage = getattr(subscription.usage, usage_attr)
+                current_usage_obj = getattr(subscription.usage, usage_attr)
+                current_usage = (
+                    float(current_usage_obj)
+                    if isinstance(current_usage_obj, (int, float))
+                    else 0.0
+                )
 
-                if current_usage > limit_value:
-                    overage_units = current_usage - limit_value
-                    overage_cost = overage_units * overage_rates.get(limit_type, 0)
+                if current_usage > limit_value_num:
+                    overage_units = current_usage - limit_value_num
+                    overage_cost = overage_units * overage_rates.get(limit_type, 0.0)
                     overage_charges[limit_type] = overage_cost
                     total_overage += overage_cost
 
@@ -317,7 +334,7 @@ class BillingService:
         """
 
         # Sample discount codes
-        discount_codes = {
+        discount_codes: dict[str, dict[str, Any]] = {
             "WELCOME20": {
                 "type": "percentage",
                 "value": 0.20,

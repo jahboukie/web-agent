@@ -1,7 +1,7 @@
 """
 Webpage Cache Service for intelligent caching of parsing results.
 
-This service provides:
+This module provides:
 - Redis-based caching for webpage parsing results
 - Content-aware cache keys for efficient lookups
 - TTL management and cache invalidation
@@ -27,10 +27,10 @@ logger = structlog.get_logger(__name__)
 class WebpageCacheService:
     """Service for caching webpage parsing results with intelligent key management."""
 
-    def __init__(self):
-        self.redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379/0")
-        self.default_ttl = getattr(settings, "REDIS_CACHE_TTL", 3600)  # 1 hour
-        self.max_cache_size = getattr(settings, "MAX_CACHE_SIZE_MB", 100)
+    def __init__(self) -> None:
+        self.redis_url: str = getattr(settings, "REDIS_URL", "redis://localhost:6379/0")
+        self.default_ttl: int = getattr(settings, "REDIS_CACHE_TTL", 3600)  # 1 hour
+        self.max_cache_size: int = getattr(settings, "MAX_CACHE_SIZE_MB", 100)
 
         # Cache key prefixes
         self.WEBPAGE_PREFIX = "webpage:"
@@ -41,7 +41,7 @@ class WebpageCacheService:
         self.redis_client: redis.Redis | None = None
         self._initialized = False
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize Redis connection."""
         if self._initialized:
             return
@@ -66,7 +66,9 @@ class WebpageCacheService:
             # Continue without caching if Redis is not available
             self.redis_client = None
 
-    def _generate_cache_key(self, url: str, options: dict[str, Any] = None) -> str:
+    def _generate_cache_key(
+        self, url: str, options: dict[str, Any] | None = None
+    ) -> str:
         """Generate a content-aware cache key for the webpage."""
 
         # Parse URL to get consistent format
@@ -105,7 +107,7 @@ class WebpageCacheService:
         return cache_key
 
     async def get_cached_result(
-        self, url: str, options: dict[str, Any] = None
+        self, url: str, options: dict[str, Any] | None = None
     ) -> WebPageParseResponse | None:
         """Get cached parsing result if available."""
 
@@ -146,7 +148,7 @@ class WebpageCacheService:
         self,
         url: str,
         result: WebPageParseResponse,
-        options: dict[str, Any] = None,
+        options: dict[str, Any] | None = None,
         ttl: int | None = None,
     ) -> bool:
         """Cache parsing result with intelligent TTL."""
@@ -159,7 +161,7 @@ class WebpageCacheService:
             ttl = ttl or self._calculate_intelligent_ttl(url, result)
 
             # Prepare data for caching
-            cache_data = result.dict()
+            cache_data = result.model_dump()
             cache_data["cached_at"] = datetime.utcnow().isoformat()
             cache_data["cache_ttl"] = ttl
 
@@ -220,8 +222,10 @@ class WebpageCacheService:
 
     async def _store_cache_metadata(
         self, cache_key: str, url: str, result: WebPageParseResponse, ttl: int
-    ):
+    ) -> None:
         """Store metadata about cached entries."""
+        if not self.redis_client:
+            return
 
         try:
             metadata_key = f"{self.METADATA_PREFIX}{cache_key}"
@@ -248,8 +252,10 @@ class WebpageCacheService:
                 "Failed to store cache metadata", cache_key=cache_key, error=str(e)
             )
 
-    async def _update_cache_stats(self, cache_key: str, operation: str):
+    async def _update_cache_stats(self, cache_key: str, operation: str) -> None:
         """Update cache statistics."""
+        if not self.redis_client:
+            return
 
         try:
             stats_key = (
@@ -257,8 +263,8 @@ class WebpageCacheService:
             )
 
             # Increment counters
-            await self.redis_client.hincrby(stats_key, f"{operation}_count", 1)
-            await self.redis_client.hincrby(stats_key, "total_operations", 1)
+            await self.redis_client.hincrby(stats_key, f"{operation}_count", 1) # type: ignore
+            await self.redis_client.hincrby(stats_key, "total_operations", 1) # type: ignore
 
             # Set expiry for stats (keep for 7 days)
             await self.redis_client.expire(stats_key, 7 * 24 * 3600)
@@ -266,7 +272,9 @@ class WebpageCacheService:
         except Exception as e:
             logger.error("Failed to update cache stats", error=str(e))
 
-    async def invalidate_cache(self, url: str, options: dict[str, Any] = None) -> bool:
+    async def invalidate_cache(
+        self, url: str, options: dict[str, Any] | None = None
+    ) -> bool:
         """Invalidate cached result for a specific URL."""
 
         if not self.redis_client:
@@ -300,7 +308,7 @@ class WebpageCacheService:
             stats_key = f"{self.STATS_PREFIX}daily:{today}"
 
             # Get daily stats
-            daily_stats = await self.redis_client.hgetall(stats_key)
+            daily_stats = await self.redis_client.hgetall(stats_key) # type: ignore
 
             # Get Redis info
             redis_info = await self.redis_client.info("memory")
@@ -309,7 +317,7 @@ class WebpageCacheService:
             hits = int(daily_stats.get("hit_count", 0))
             misses = int(daily_stats.get("miss_count", 0))
             total = hits + misses
-            hit_rate = (hits / total * 100) if total > 0 else 0
+            hit_rate = (hits / total * 100) if total > 0 else 0.0
 
             return {
                 "date": today,
