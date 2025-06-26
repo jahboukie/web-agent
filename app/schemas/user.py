@@ -354,7 +354,10 @@ class EnterpriseUserProfile(UserProfile):
     manager_id: int | None = None
 
     # Zero Trust Security
-    trust_score: float = 0.5  # 0.0 = no trust, 1.0 = full trust
+    trust_score: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Zero Trust score: 0.0 = no trust, 1.0 = full trust",
+    )
     last_risk_assessment: datetime | None = None
     current_threat_level: ThreatLevel = ThreatLevel.LOW
     failed_login_attempts: int = 0

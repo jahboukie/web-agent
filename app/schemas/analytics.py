@@ -312,7 +312,8 @@ class AnalyticsDashboard(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
     cache_expires_at: datetime
 
-    @field_validator("cache_expires_at", pre=True, always=True)
+    @field_validator("cache_expires_at", mode="before")
+    @classmethod
     def set_cache_expiry(cls, v: Any, values: Any) -> Any:
         if v is None:
             # Cache for 5 minutes for real-time feel

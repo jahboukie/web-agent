@@ -214,18 +214,25 @@ class SubscriptionService:
         # Get current usage (would be calculated from actual usage)
         usage_metrics = await self._calculate_current_usage(db, user_id)
 
+        # Safely extract and cast tier configuration values
+        limits = tier_config.get("limits", {})
+        monthly_cost = tier_config.get("monthly_cost", 0.0)
+        annual_discount = tier_config.get("annual_discount", 0.0)
+        features = tier_config.get("features", [])
+        restrictions = tier_config.get("restrictions", [])
+
         return UserSubscription(
             tier=tier,
             status=SubscriptionStatus.ACTIVE,
             current_period_start=current_period_start,
             current_period_end=current_period_end,
-            limits=dict(tier_config.get("limits", {})),
+            limits=limits if isinstance(limits, dict) else {},
             usage=usage_metrics,
-            monthly_cost=float(tier_config.get("monthly_cost", 0.0)),
-            annual_discount=float(tier_config.get("annual_discount", 0.0)),
+            monthly_cost=float(monthly_cost),
+            annual_discount=float(annual_discount),
             next_billing_date=current_period_end + timedelta(days=1),
-            features=list(tier_config.get("features", [])),
-            restrictions=list(tier_config.get("restrictions", [])),
+            features=features if isinstance(features, list) else [],
+            restrictions=restrictions if isinstance(restrictions, list) else [],
         )
 
     async def _calculate_current_usage(
@@ -260,19 +267,22 @@ class SubscriptionService:
         """
         Get usage limits for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier].get("limits", {})
+        limits = self.PRICING_TIERS[tier].get("limits", {})
+        return limits if isinstance(limits, dict) else {}
 
     def get_tier_features(self, tier: SubscriptionTier) -> list[str]:
         """
         Get features available for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier].get("features", [])
+        features = self.PRICING_TIERS[tier].get("features", [])
+        return features if isinstance(features, list) else []
 
     def get_tier_cost(self, tier: SubscriptionTier) -> float:
         """
         Get monthly cost for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier].get("monthly_cost", 0.0)
+        cost = self.PRICING_TIERS[tier].get("monthly_cost", 0.0)
+        return float(cost)
 
     def calculate_upgrade_savings(
         self, current_tier: SubscriptionTier, target_tier: SubscriptionTier
