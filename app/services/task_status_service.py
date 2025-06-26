@@ -137,7 +137,7 @@ class TaskStatusService:
                 select(Task.processing_started_at).where(Task.id == task_id)
             )
             processing_started_at = result.scalar_one_or_none()
-            
+
             logger.info(
                 "🔧 COMPLETE_TASK: Task times retrieved",
                 task_id=task_id,
@@ -163,7 +163,9 @@ class TaskStatusService:
                 update_data["actual_duration_seconds"] = actual_duration
 
             if performance_metrics:
-                logger.info("🔧 COMPLETE_TASK: Adding performance metrics", task_id=task_id)
+                logger.info(
+                    "🔧 COMPLETE_TASK: Adding performance metrics", task_id=task_id
+                )
                 result = await db.execute(
                     select(Task.progress_details).where(Task.id == task_id)
                 )
@@ -176,7 +178,7 @@ class TaskStatusService:
 
             logger.info("🔧 COMPLETE_TASK: Executing database update", task_id=task_id)
             await db.execute(update(Task).where(Task.id == task_id).values(update_data))
-            
+
             logger.info("🔧 COMPLETE_TASK: Committing transaction", task_id=task_id)
             await db.commit()
             logger.info("✅ COMPLETE_TASK: Transaction committed", task_id=task_id)
@@ -227,7 +229,7 @@ class TaskStatusService:
             existing_details = task.progress_details
             if not isinstance(existing_details, dict):
                 existing_details = {}
-            
+
             existing_details["last_error"] = {
                 "message": str(error),
                 "type": type(error).__name__,
@@ -281,8 +283,10 @@ class TaskStatusService:
             now_utc = datetime.utcnow()
             if task.estimated_completion_at and task.status == TaskStatus.IN_PROGRESS:
                 if task.estimated_completion_at.tzinfo is None:
-                    task.estimated_completion_at = task.estimated_completion_at.replace(tzinfo=None)
-                
+                    task.estimated_completion_at = task.estimated_completion_at.replace(
+                        tzinfo=None
+                    )
+
                 remaining = task.estimated_completion_at - now_utc.replace(tzinfo=None)
                 if remaining.total_seconds() > 0:
                     estimated_remaining = int(remaining.total_seconds())
@@ -290,11 +294,15 @@ class TaskStatusService:
             elapsed_seconds = None
             if task.processing_started_at:
                 if task.processing_started_at.tzinfo is None:
-                     task.processing_started_at = task.processing_started_at.replace(tzinfo=None)
+                    task.processing_started_at = task.processing_started_at.replace(
+                        tzinfo=None
+                    )
                 elapsed = now_utc.replace(tzinfo=None) - task.processing_started_at
                 elapsed_seconds = int(elapsed.total_seconds())
 
-            progress_details = task.progress_details if isinstance(task.progress_details, dict) else {}
+            progress_details = (
+                task.progress_details if isinstance(task.progress_details, dict) else {}
+            )
 
             return {
                 "task_id": task.id,
@@ -304,8 +312,16 @@ class TaskStatusService:
                 "worker_id": task.worker_id,
                 "queue_name": task.queue_name,
                 "created_at": task.created_at.isoformat() if task.created_at else None,
-                "processing_started_at": task.processing_started_at.isoformat() if task.processing_started_at else None,
-                "estimated_completion_at": task.estimated_completion_at.isoformat() if task.estimated_completion_at else None,
+                "processing_started_at": (
+                    task.processing_started_at.isoformat()
+                    if task.processing_started_at
+                    else None
+                ),
+                "estimated_completion_at": (
+                    task.estimated_completion_at.isoformat()
+                    if task.estimated_completion_at
+                    else None
+                ),
                 "estimated_remaining_seconds": estimated_remaining,
                 "elapsed_seconds": elapsed_seconds,
                 "memory_usage_mb": task.memory_usage_mb,
@@ -314,7 +330,12 @@ class TaskStatusService:
                 "retry_count": task.retry_count,
                 "max_retries": task.max_retries,
                 "progress_details": progress_details,
-                "result_data": task.result_data if task.status == TaskStatus.COMPLETED and isinstance(task.result_data, dict) else None,
+                "result_data": (
+                    task.result_data
+                    if task.status == TaskStatus.COMPLETED
+                    and isinstance(task.result_data, dict)
+                    else None
+                ),
             }
         except Exception as e:
             logger.error("Failed to get task status", task_id=task_id, error=str(e))
@@ -350,7 +371,7 @@ class TaskStatusService:
         """Cleanup tasks that have been processing too long."""
         try:
             cutoff_time = datetime.utcnow() - timedelta(minutes=timeout_minutes)
-            
+
             result = await db.execute(
                 select(Task).where(
                     Task.status == TaskStatus.IN_PROGRESS,
@@ -358,7 +379,7 @@ class TaskStatusService:
                 )
             )
             stale_tasks = result.scalars().all()
-            
+
             count = 0
             for task in stale_tasks:
                 success = await TaskStatusService.fail_task(
@@ -369,7 +390,7 @@ class TaskStatusService:
                 )
                 if success:
                     count += 1
-            
+
             logger.info("Cleaned up stale tasks", count=count)
             return count
         except Exception as e:
@@ -386,24 +407,35 @@ class TaskStatusService:
             query = select(Task).where(Task.created_at >= since)
             if user_id is not None:
                 query = query.where(Task.user_id == user_id)
-            
+
             result = await db.execute(query)
             tasks = result.scalars().all()
-            
+
             total_tasks = len(tasks)
-            completed_tasks = len([t for t in tasks if t.status == TaskStatus.COMPLETED])
+            completed_tasks = len(
+                [t for t in tasks if t.status == TaskStatus.COMPLETED]
+            )
             failed_tasks = len([t for t in tasks if t.status == TaskStatus.FAILED])
-            in_progress_tasks = len([t for t in tasks if t.status == TaskStatus.IN_PROGRESS])
+            in_progress_tasks = len(
+                [t for t in tasks if t.status == TaskStatus.IN_PROGRESS]
+            )
             pending_tasks = len([t for t in tasks if t.status == TaskStatus.PENDING])
-            
+
             completed_durations = [
                 t.actual_duration_seconds
                 for t in tasks
-                if t.status == TaskStatus.COMPLETED and t.actual_duration_seconds is not None
+                if t.status == TaskStatus.COMPLETED
+                and t.actual_duration_seconds is not None
             ]
-            avg_duration = sum(completed_durations) / len(completed_durations) if completed_durations else 0.0
-            
-            success_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+            avg_duration = (
+                sum(completed_durations) / len(completed_durations)
+                if completed_durations
+                else 0.0
+            )
+
+            success_rate = (
+                (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+            )
 
             return {
                 "period_hours": hours,

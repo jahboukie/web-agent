@@ -5,9 +5,8 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, DateTime
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -52,16 +51,22 @@ class InteractiveElement(Base):
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
     dom_path: Mapped[str] = mapped_column(String(1000))
-    
+
     possible_interactions: Mapped[list[InteractionType]] = mapped_column(JSON)
     is_interactive: Mapped[bool] = mapped_column(Boolean, default=False)
-    
+
     inferred_label: Mapped[str | None] = mapped_column(String(500), nullable=True)
     confidence_score: Mapped[float] = mapped_column(Float, default=0.0)
 
-    discovered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    discovered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    last_seen_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
 
     # Relationships
-    web_page: Mapped["WebPage"] = relationship(back_populates="interactive_elements")
-    actions_taken: Mapped[list["AtomicAction"]] = relationship(back_populates="target_element")
+    web_page: Mapped[WebPage] = relationship(back_populates="interactive_elements")
+    actions_taken: Mapped[list[AtomicAction]] = relationship(
+        back_populates="target_element"
+    )
