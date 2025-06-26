@@ -8484,7 +8484,7 @@ version = "6.2.0.20250514"
 description = "Typing stubs for bleach"
 optional = false
 python-versions = ">=3.9"
-groups = ["typing"]
+groups = ["dev", "typing"]
 files = [
     {file = "types_bleach-6.2.0.20250514-py3-none-any.whl", hash = "sha256:380cb74f0db1e3c3b2e0cde217221108e975e07e95ef0970c9d41f7cd4e8ea3c"},
     {file = "types_bleach-6.2.0.20250514.tar.gz", hash = "sha256:38c2e51d9cac51dc70c1b66121a11f4dad8bbf47fbad494bb7a77d8b8f3c4323"},
@@ -8514,7 +8514,7 @@ version = "1.1.11.20250516"
 description = "Typing stubs for html5lib"
 optional = false
 python-versions = ">=3.9"
-groups = ["typing"]
+groups = ["dev", "typing"]
 files = [
     {file = "types_html5lib-1.1.11.20250516-py3-none-any.whl", hash = "sha256:5e407b14b1bd2b9b1107cbd1e2e19d4a0c46d60febd231c7ab7313d7405663c1"},
     {file = "types_html5lib-1.1.11.20250516.tar.gz", hash = "sha256:65043a6718c97f7d52567cc0cdf41efbfc33b1f92c6c0c5e19f60a7ec69ae720"},
@@ -8538,7 +8538,7 @@ version = "5.9.5.20240516"
 description = "Typing stubs for psutil"
 optional = false
 python-versions = ">=3.8"
-groups = ["typing"]
+groups = ["dev", "typing"]
 files = [
     {file = "types-psutil-5.9.5.20240516.tar.gz", hash = "sha256:bb296f59fc56458891d0feb1994717e548a1bcf89936a2877df8792b822b4696"},
     {file = "types_psutil-5.9.5.20240516-py3-none-any.whl", hash = "sha256:83146ded949a10167d9895e567b3b71e53ebc5e23fd8363eab62b3c76cce7b89"},
@@ -9607,4 +9607,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "d73254d5590727c6d458ee663fa9519ae06432e39f8673ac82e2cb64fa6460b6"
+content-hash = "cc958d77c3cb5f0dafc9ab92da1b935cb4584a9c10b9ac6049e5a5a8a5b53707"

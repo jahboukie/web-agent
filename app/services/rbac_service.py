@@ -5,6 +5,8 @@ Database-backed Role-Based Access Control service that integrates
 Claude Code's RBAC engine with the new enterprise database models.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -19,11 +21,10 @@ from app.models.security import (
     EnterprisePermission,
     EnterpriseRole,
     EnterpriseTenant,
-    user_tenant_roles,
 )
-from app.models.user import User
+from app.models.user import User, user_tenant_roles
 from app.schemas.enterprise import EnterpriseRoleCreate
-from app.schemas.user import UserTenantRoleAssignment
+from app.schemas.user import AccessContext, DeviceInfo, UserTenantRoleAssignment
 from app.security.rbac_engine import Permission, enterprise_access_control
 from app.security.zero_trust import zero_trust_engine
 
@@ -38,10 +39,10 @@ class EnterpriseRBACService:
     integration to Claude Code's existing RBAC engine.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.rbac_engine = enterprise_access_control.rbac_engine
-        self._permission_cache = {}
-        self._role_cache = {}
+        self._permission_cache: dict[str, Any] = {}
+        self._role_cache: dict[str, Any] = {}
 
     async def initialize_system_permissions(self, db: AsyncSession) -> None:
         """Initialize system permissions in database from RBAC engine."""
@@ -54,7 +55,7 @@ class EnterpriseRBACService:
             existing_permissions = {p.permission_id: p for p in result.scalars().all()}
 
             # Define permission categories and mappings
-            permission_mappings = {
+            permission_mappings: dict[Permission, tuple[str, str, str, bool]] = {
                 # User Management
                 Permission.USERS_CREATE: ("users", "user", "create", False),
                 Permission.USERS_READ: ("users", "user", "read", False),
@@ -514,21 +515,22 @@ class EnterpriseRBACService:
         db: AsyncSession,
         user_id: int,
         tenant_id: int | None = None,
-        session_data: dict[str, Any] = None,
+        session_data: dict[str, Any] | None = None,
     ) -> AccessSession:
         """Create a new access session with Zero Trust verification."""
 
+        if session_data is None:
+            session_data = {}
+
         try:
             import secrets
-
-            from app.models.security import AccessSession
 
             session_id = f"sess_{secrets.token_hex(16)}"
             expires_at = datetime.utcnow() + timedelta(hours=8)  # Default 8 hours
 
             # Calculate initial trust score based on context
             initial_trust_score = await self._calculate_initial_trust_score(
-                user_id, session_data or {}
+                user_id, session_data
             )
 
             # Create access session
@@ -537,32 +539,18 @@ class EnterpriseRBACService:
                 user_id=user_id,
                 tenant_id=tenant_id,
                 is_active=True,
-                is_sso_session=(
-                    session_data.get("is_sso", False) if session_data else False
-                ),
-                sso_session_id=(
-                    session_data.get("sso_session_id") if session_data else None
-                ),
-                device_fingerprint=(
-                    session_data.get("device_fingerprint") if session_data else None
-                ),
-                ip_address=session_data.get("ip_address") if session_data else None,
-                user_agent=session_data.get("user_agent") if session_data else None,
-                geolocation=session_data.get("geolocation", {}) if session_data else {},
+                is_sso_session=session_data.get("is_sso", False),
+                sso_session_id=session_data.get("sso_session_id"),
+                device_fingerprint=session_data.get("device_fingerprint"),
+                ip_address=session_data.get("ip_address"),
+                user_agent=session_data.get("user_agent"),
+                geolocation=session_data.get("geolocation", {}),
                 initial_trust_score=initial_trust_score,
                 current_trust_score=initial_trust_score,
-                risk_factors=(
-                    session_data.get("risk_factors", []) if session_data else []
-                ),
+                risk_factors=session_data.get("risk_factors", []),
                 expires_at=expires_at,
-                requires_mfa=(
-                    session_data.get("requires_mfa", False) if session_data else False
-                ),
-                requires_device_trust=(
-                    session_data.get("requires_device_trust", False)
-                    if session_data
-                    else False
-                ),
+                requires_mfa=session_data.get("requires_mfa", False),
+                requires_device_trust=session_data.get("requires_device_trust", False),
             )
 
             db.add(access_session)
@@ -585,26 +573,28 @@ class EnterpriseRBACService:
         try:
             if settings.ENABLE_ZERO_TRUST:
                 # Create AccessContext from session data
-                from app.schemas.user import AccessContext, DeviceInfo
-
                 device_info = None
                 if session_data.get("device_fingerprint"):
                     device_info = DeviceInfo(
                         device_id=session_data.get("device_fingerprint"),
-                        device_type=session_data.get("device_type", "unknown"),
-                        user_agent=session_data.get("user_agent", ""),
-                        encrypted=session_data.get("device_encrypted", False),
+                        device_type=session_data.get("device_type", "desktop"),
+                        os_name=session_data.get("os_name", "unknown"),
+                        os_version=session_data.get("os_version", "unknown"),
+                        is_encrypted=session_data.get("is_encrypted", False),
+                        device_fingerprint=session_data.get("device_fingerprint"),
                     )
 
                 access_context = AccessContext(
-                    timestamp=datetime.utcnow(),
-                    source_ip=session_data.get("ip_address"),
-                    user_agent=session_data.get("user_agent"),
-                    device_info=device_info,
+                    ip_address=session_data.get("ip_address", "0.0.0.0"),
                     geolocation=session_data.get("geolocation", {}),
-                    network_type=session_data.get("network_type", "unknown"),
+                    device_info=device_info,  # type: ignore # We know it can be None, handled by engine
+                    network_type=session_data.get("network_type", "home"),
+                    time_of_access=datetime.utcnow(),
+                    user_agent=session_data.get("user_agent", ""),
+                    session_duration=session_data.get("session_duration", 0),
                     mfa_verified=session_data.get("mfa_verified", False),
-                    risk_score=0.0,  # Will be calculated by Zero Trust engine
+                    sso_authenticated=session_data.get("sso_authenticated", False),
+                    auth_timestamp=session_data.get("auth_timestamp"),
                 )
 
                 # Get Zero Trust assessment

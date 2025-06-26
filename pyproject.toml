@@ -90,6 +90,8 @@ pytest-cov = "^4.1.0"
 pytest-mock = "^3.12.0"
 httpx = "^0.25.2"
 factory-boy = "^3.3.0"
+types-psutil = "^5.9.5.20240516"
+types-bleach = "^6.0.0.20240416"
 
 # E2E Testing Framework
 playwright = "^1.40.0"
