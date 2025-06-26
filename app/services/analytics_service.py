@@ -5,6 +5,8 @@ Revenue-optimized analytics service for WebAgent's 2025 pricing model.
 Implements intelligent upgrade detection and conversion optimization.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -12,10 +14,11 @@ import structlog
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.execution_plan import ExecutionPlan
-from app.models.task import Task
+from app.models.execution_plan import ExecutionPlan, PlanStatus
+from app.models.task import Task, TaskStatus
 from app.schemas.analytics import (
     AnalyticsDashboard,
+    BillingInfo,
     ComponentMetrics,
     ComponentType,
     ConversionMetrics,
@@ -38,7 +41,7 @@ class AnalyticsService:
     Analytics service for revenue-optimized dashboard and conversion tracking.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.subscription_service = SubscriptionService()
         self.billing_service = BillingService()
 
@@ -55,10 +58,12 @@ class AnalyticsService:
         subscription = await self.subscription_service.get_user_subscription(
             db, user_id
         )
-        billing_info = await self.billing_service.get_billing_info(db, user_id)
+        billing_info: BillingInfo = await self.billing_service.get_billing_info(
+            db, user_id
+        )
 
         # Get usage metrics
-        usage_metrics = await self.get_usage_metrics(db, user_id, hours=24)
+        usage_metrics = await self.get_usage_metrics(db, user_id, hours=720)
 
         # Get platform analytics
         platform_analytics = await self.get_platform_analytics(db, user_id)
@@ -119,27 +124,23 @@ class AnalyticsService:
         execution_query = select(func.count(ExecutionPlan.id)).where(
             and_(
                 ExecutionPlan.user_id == user_id,
-                ExecutionPlan.status == "completed",
+                ExecutionPlan.status == PlanStatus.COMPLETED,
                 ExecutionPlan.created_at >= cutoff_time,
             )
         )
         executions_used = (await db.execute(execution_query)).scalar() or 0
 
         # Calculate success rates
-        total_tasks = (
-            await db.execute(select(func.count(Task.id)).where(Task.user_id == user_id))
-        ).scalar() or 0
+        total_tasks_query = select(func.count(Task.id)).where(Task.user_id == user_id)
+        total_tasks = (await db.execute(total_tasks_query)).scalar() or 0
 
-        successful_tasks = (
-            await db.execute(
-                select(func.count(Task.id)).where(
-                    and_(Task.user_id == user_id, Task.status == "completed")
-                )
-            )
-        ).scalar() or 0
+        successful_tasks_query = select(func.count(Task.id)).where(
+            and_(Task.user_id == user_id, Task.status == TaskStatus.COMPLETED)
+        )
+        successful_tasks = (await db.execute(successful_tasks_query)).scalar() or 0
 
         parse_success_rate = (
-            (successful_tasks / total_tasks * 100) if total_tasks > 0 else 0
+            (successful_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
         )
 
         # Generate trend data
@@ -191,9 +192,16 @@ class AnalyticsService:
         # Usage-based upgrade opportunities
         if subscription.tier == SubscriptionTier.FREE:
             # Check if approaching limits
-            parse_usage_pct = (usage_metrics.parses_used / 200) * 100
-            plan_usage_pct = (usage_metrics.plans_used / 20) * 100
-            execution_usage_pct = (usage_metrics.executions_used / 10) * 100
+            parse_usage_pct = (
+                (usage_metrics.parses_used / 200) * 100
+                if usage_metrics.parses_used
+                else 0.0
+            )
+            plan_usage_pct = (
+                (usage_metrics.plans_used / 20) * 100
+                if usage_metrics.plans_used
+                else 0.0
+            )
 
             if parse_usage_pct > 80:
                 opportunities.append(
@@ -339,15 +347,15 @@ class AnalyticsService:
         # Calculate net savings and ROI
         net_savings = labor_cost_saved - subscription_cost
         roi_percentage = (
-            (net_savings / max(subscription_cost, 1)) * 100
+            (net_savings / max(subscription_cost, 1.0)) * 100
             if subscription_cost > 0
-            else 0
+            else 0.0
         )
 
         # Calculate payback period
         daily_savings = labor_cost_saved / 30
         payback_period_days = (
-            int(subscription_cost / max(daily_savings, 1)) if daily_savings > 0 else 0
+            int(subscription_cost / max(daily_savings, 1.0)) if daily_savings > 0 else 0
         )
 
         # Annual value projection
@@ -479,8 +487,12 @@ class AnalyticsService:
         )
 
     async def track_event(
-        self, db: AsyncSession, user_id: int, event_type: str, event_data: dict
-    ):
+        self,
+        db: AsyncSession,
+        user_id: int,
+        event_type: str,
+        event_data: dict[str, Any],
+    ) -> None:
         """Track analytics events for conversion optimization."""
         logger.info(
             "Tracking analytics event",

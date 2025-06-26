@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic.fields import FieldValidationInfo  # type: ignore
 
 from app.models.task import TaskPriority, TaskStatus
 from app.schemas.execution_plan import ExecutionPlan
@@ -66,7 +67,7 @@ class Task(TaskBase):
 
     @field_validator("progress_percentage")
     @classmethod
-    def validate_progress(cls, v: int, values: Any) -> int:
+    def validate_progress(cls, v: int, info: FieldValidationInfo) -> int:
         if v < 0 or v > 100:
             raise ValueError("Progress percentage must be between 0 and 100")
         return v

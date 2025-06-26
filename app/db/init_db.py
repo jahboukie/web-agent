@@ -1,7 +1,8 @@
 import os
+from typing import Any
 
 import structlog
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -44,7 +45,7 @@ async def create_superuser(db: AsyncSession) -> User:
     logger.info("Checking for existing superuser")
 
     # Check if any superuser exists
-    result = await db.execute(select(User).where(User.is_superuser == True))
+    result = await db.execute(select(User).where(User.is_superuser))
     existing_superuser = result.scalar_one_or_none()
 
     if existing_superuser:
@@ -75,6 +76,7 @@ async def create_superuser(db: AsyncSession) -> User:
 
     except Exception as e:
         logger.error("Failed to create superuser", error=str(e))
+        await db.rollback()
         raise
 
 
@@ -89,7 +91,7 @@ async def create_test_data(db: AsyncSession) -> None:
 
     # Create test users
     default_test_password = os.getenv("WEBAGENT_TEST_PASSWORD", "Testpass123!")
-    test_users = [
+    test_users: list[dict[str, Any]] = [
         {
             "email": "test1@example.com",
             "username": "testuser1",
@@ -135,7 +137,7 @@ async def create_test_data(db: AsyncSession) -> None:
     logger.info("Test data creation completed")
 
 
-async def check_database_health(db: AsyncSession) -> dict:
+async def check_database_health(db: AsyncSession) -> dict[str, Any]:
     """
     Check database health and return status information.
 
@@ -151,18 +153,14 @@ async def check_database_health(db: AsyncSession) -> dict:
         result.scalar()
 
         # Count users
-        from sqlalchemy import func
-
         user_count_result = await db.execute(select(func.count(User.id)))
         user_count = user_count_result.scalar()
 
         # Check for superuser
-        superuser_result = await db.execute(
-            select(User).where(User.is_superuser == True)
-        )
+        superuser_result = await db.execute(select(User).where(User.is_superuser))
         has_superuser = superuser_result.scalar_one_or_none() is not None
 
-        health_status = {
+        health_status: dict[str, Any] = {
             "status": "healthy",
             "database_connection": True,
             "user_count": user_count,

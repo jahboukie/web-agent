@@ -252,7 +252,7 @@ class BillingService:
             - current_subscription.current_period_start
         ).days
 
-        if days_in_period == 0:
+        if days_in_period <= 0:
             days_in_period = 30  # Avoid division by zero
 
         # Calculate proration
@@ -260,7 +260,7 @@ class BillingService:
 
         target_tier_enum = SubscriptionTier(target_tier)
 
-        current_daily_rate = current_subscription.monthly_cost / days_in_period
+        current_daily_rate = float(current_subscription.monthly_cost) / days_in_period
         target_daily_rate = (
             self.subscription_service.get_tier_cost(target_tier_enum) / days_in_period
         )
