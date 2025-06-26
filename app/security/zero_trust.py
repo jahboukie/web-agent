@@ -5,6 +5,8 @@ Comprehensive Zero Trust implementation with continuous verification,
 trust score calculation, device assessment, and behavioral analysis.
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import uuid
@@ -14,8 +16,8 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
-from sklearn.ensemble import IsolationForest
-from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import IsolationForest  # type: ignore[import-untyped]
+from sklearn.preprocessing import StandardScaler  # type: ignore[import-untyped]
 
 from app.core.logging import get_logger
 from app.schemas.user import AccessContext, DeviceInfo
@@ -186,18 +188,19 @@ class ZeroTrustEngine:
     trust score calculation, device assessment, and behavioral analysis.
     """
 
-    def __init__(self):
-        self.trust_cache = {}
-        self.device_registry = {}
-        self.behavioral_model = None
-        self.threat_intelligence_cache = {}
-        self.location_history = {}
-        self.access_patterns = {}
+    def __init__(self) -> None:
+        self.trust_cache: dict[str, Any] = {}
+        self.device_registry: dict[str, Any] = {}
+        self.behavioral_model: IsolationForest | None = None
+        self.threat_intelligence_cache: dict[str, Any] = {}
+        self.location_history: dict[int, list[dict[str, Any]]] = {}
+        self.access_patterns: dict[str, Any] = {}
+        self.scaler: StandardScaler | None = None
 
         # Initialize ML models for behavioral analysis
         self._initialize_behavioral_models()
 
-    def _initialize_behavioral_models(self):
+    def _initialize_behavioral_models(self) -> None:
         """Initialize machine learning models for behavioral analysis."""
 
         try:
@@ -347,16 +350,17 @@ class ZeroTrustEngine:
             score += 0.3
 
             # MFA enabled = +0.4
-            if context.mfa_verified:
+            if getattr(context, "mfa_verified", False):
                 score += 0.4
 
             # SSO authentication = +0.2
-            if hasattr(context, "sso_authenticated") and context.sso_authenticated:
+            if getattr(context, "sso_authenticated", False):
                 score += 0.2
 
             # Recent authentication = +0.1
-            if hasattr(context, "auth_timestamp"):
-                auth_age = (datetime.utcnow() - context.auth_timestamp).total_seconds()
+            auth_timestamp = getattr(context, "auth_timestamp", None)
+            if auth_timestamp:
+                auth_age = (datetime.utcnow() - auth_timestamp).total_seconds()
                 if auth_age < 3600:  # Within 1 hour
                     score += 0.1
 
@@ -378,9 +382,6 @@ class ZeroTrustEngine:
             score = 0.0
             device_info = context.device_info
 
-            if not device_info:
-                return 0.1  # Unknown device, minimal trust
-
             # Check device registration status
             device_status = await self._get_device_status(user_id, device_info)
 
@@ -394,16 +395,13 @@ class ZeroTrustEngine:
                 score += 0.1  # Unknown device
 
             # Device compliance checks
-            if hasattr(device_info, "encrypted") and device_info.encrypted:
+            if getattr(device_info, "is_encrypted", False):
                 score += 0.2
 
-            if (
-                hasattr(device_info, "antivirus_enabled")
-                and device_info.antivirus_enabled
-            ):
+            if getattr(device_info, "antivirus_enabled", False):
                 score += 0.1
 
-            if hasattr(device_info, "os_updated") and device_info.os_updated:
+            if getattr(device_info, "os_updated", False):
                 score += 0.1
 
             # Device fingerprint consistency
@@ -447,9 +445,9 @@ class ZeroTrustEngine:
             else:
                 # Check for impossible travel (velocity analysis)
                 last_location = await self._get_last_user_location(user_id)
-                if last_location:
+                if last_location and context.timestamp: # type: ignore
                     travel_analysis = await self._analyze_travel_velocity(
-                        last_location, current_location, context.timestamp
+                        last_location, current_location, context.timestamp # type: ignore
                     )
                     if travel_analysis["impossible_travel"]:
                         score -= 0.4
@@ -463,13 +461,14 @@ class ZeroTrustEngine:
             score -= country_risk * 0.2
 
             # VPN/Proxy detection
-            if await self._detect_vpn_proxy(context.source_ip):
+            if await self._detect_vpn_proxy(getattr(context, "source_ip", "")):
                 score -= 0.1  # Slight reduction for VPN usage
 
             # Update location history
-            await self._update_location_history(
-                user_id, current_location, context.timestamp
-            )
+            if context.timestamp: # type: ignore
+                await self._update_location_history(
+                    user_id, current_location, context.timestamp # type: ignore
+                )
 
             return max(min(score, 1.0), 0.0)
 
@@ -490,9 +489,11 @@ class ZeroTrustEngine:
                 return 0.5  # Insufficient data for behavioral analysis
 
             # Extract behavioral features
-            current_features = await self._extract_behavioral_features(context)
+            current_features_list = await self._extract_behavioral_features(context)
             historical_features = [
-                await self._extract_behavioral_features(access)
+                await self._extract_behavioral_features(
+                    AccessContext(**access)  # type: ignore
+                )
                 for access in access_history
             ]
 
@@ -502,11 +503,10 @@ class ZeroTrustEngine:
             # Prepare data for ML model
             try:
                 historical_array = np.array(historical_features)
-                current_array = np.array([current_features])
+                current_array = np.array([current_features_list])
 
-                # Fit model on historical data (if not already fitted)
-                if not hasattr(self.behavioral_model, "decision_function"):
-                    self.behavioral_model.fit(historical_array)
+                # Fit model on historical data
+                self.behavioral_model.fit(historical_array)
 
                 # Calculate anomaly score
                 anomaly_score = self.behavioral_model.decision_function(current_array)[
@@ -515,7 +515,7 @@ class ZeroTrustEngine:
 
                 # Convert anomaly score to trust score (higher anomaly = lower trust)
                 # Anomaly scores typically range from -0.5 to 0.5
-                trust_score = max(0.0, min(1.0, (anomaly_score + 0.5)))
+                trust_score = max(0.0, min(1.0, 0.5 - anomaly_score))
 
                 return trust_score
 
@@ -534,23 +534,23 @@ class ZeroTrustEngine:
 
         try:
             score = 0.7  # Neutral starting point
-
-            if not context.source_ip:
+            source_ip = getattr(context, "source_ip", "")
+            if not source_ip:
                 return 0.3  # Unknown IP, reduced trust
 
             # IP reputation check
-            ip_reputation = await self._get_ip_reputation(context.source_ip)
+            ip_reputation = await self._get_ip_reputation(source_ip)
             score += (ip_reputation - 0.5) * 0.4  # Scale reputation to trust impact
 
             # Threat intelligence check
-            threat_intel = await self._check_threat_intelligence(context.source_ip)
+            threat_intel = await self._check_threat_intelligence(source_ip)
             if threat_intel.get("malicious", False):
                 score -= 0.5
             elif threat_intel.get("suspicious", False):
                 score -= 0.2
 
             # Network type assessment
-            network_type = await self._identify_network_type(context.source_ip)
+            network_type = await self._identify_network_type(source_ip)
             if network_type == "corporate":
                 score += 0.2
             elif network_type == "residential":
@@ -561,7 +561,7 @@ class ZeroTrustEngine:
                 score -= 0.3
 
             # Rate limiting / abuse detection
-            request_rate = await self._check_request_rate(context.source_ip)
+            request_rate = await self._check_request_rate(source_ip)
             if request_rate > 100:  # requests per minute
                 score -= 0.2
             elif request_rate > 50:
@@ -580,12 +580,10 @@ class ZeroTrustEngine:
 
         try:
             score = 0.8  # High starting point for session factors
-
+            session_start_time = getattr(context, "session_start_time", None)
             # Session age
-            if hasattr(context, "session_start_time"):
-                session_age = (
-                    datetime.utcnow() - context.session_start_time
-                ).total_seconds()
+            if session_start_time:
+                session_age = (datetime.utcnow() - session_start_time).total_seconds()
                 if session_age > 28800:  # 8 hours
                     score -= 0.3
                 elif session_age > 14400:  # 4 hours
@@ -661,7 +659,7 @@ class ZeroTrustEngine:
     ) -> list[BehavioralRiskFactor]:
         """Identify specific risk factors based on context and trust factors."""
 
-        risk_factors = []
+        risk_factors: list[BehavioralRiskFactor] = []
 
         try:
             # Location-based risks
@@ -669,7 +667,9 @@ class ZeroTrustEngine:
                 risk_factors.append(BehavioralRiskFactor.UNUSUAL_LOCATION)
 
             # Time-based risks
-            current_hour = datetime.utcnow().hour
+            current_hour = (
+                context.timestamp.hour if context.timestamp else datetime.utcnow().hour # type: ignore
+            )
             if current_hour < 6 or current_hour > 22:  # Outside business hours
                 user_patterns = await self._get_user_time_patterns(user_id)
                 if not user_patterns.get("night_access_normal", False):
@@ -682,7 +682,8 @@ class ZeroTrustEngine:
             # Behavioral risks
             if trust_factors.behavioral_trust_score < 0.3:
                 # Check for rapid requests
-                request_rate = await self._check_request_rate(context.source_ip)
+                source_ip = getattr(context, "source_ip", "")
+                request_rate = await self._check_request_rate(source_ip)
                 if request_rate > 100:
                     risk_factors.append(BehavioralRiskFactor.RAPID_REQUESTS)
 
@@ -727,7 +728,7 @@ class ZeroTrustEngine:
             if trust_factors.network_trust_score > 0:
                 confidence += 1 / total_factors
 
-            if context.timestamp:
+            if context.timestamp: # type: ignore
                 confidence += 1 / total_factors
 
             # Adjust for data quality
@@ -783,7 +784,7 @@ class ZeroTrustEngine:
     ) -> dict[str, Any]:
         """Generate session restrictions based on trust assessment."""
 
-        restrictions = {}
+        restrictions: dict[str, Any] = {}
 
         try:
             # Time-based restrictions
@@ -900,16 +901,18 @@ class ZeroTrustEngine:
                 return []
 
             # Return locations where user has accessed from multiple times
-            location_counts = {}
+            location_counts: dict[str, int] = {}
             for access in self.location_history[user_id]:
-                location_key = f"{access['country']}_{access.get('city', 'unknown')}"
-                location_counts[location_key] = location_counts.get(location_key, 0) + 1
+                location_key = f"{access.get('country')}_{access.get('city', 'unknown')}"
+                location_counts[location_key] = (
+                    location_counts.get(location_key, 0) + 1
+                )
 
             # Consider locations with 3+ accesses as "known"
             known_locations = []
             for access in self.location_history[user_id]:
-                location_key = f"{access['country']}_{access.get('city', 'unknown')}"
-                if location_counts[location_key] >= 3:
+                location_key = f"{access.get('country')}_{access.get('city', 'unknown')}"
+                if location_counts.get(location_key, 0) >= 3:
                     known_locations.append(access)
 
             return known_locations
@@ -926,14 +929,16 @@ class ZeroTrustEngine:
         try:
             from math import asin, cos, radians, sin, sqrt
 
-            lat1, lon1 = loc1.get("latitude", 0), loc1.get("longitude", 0)
-            lat2, lon2 = loc2.get("latitude", 0), loc2.get("longitude", 0)
+            lat1, lon1 = loc1.get("latitude", 0.0), loc1.get("longitude", 0.0)
+            lat2, lon2 = loc2.get("latitude", 0.0), loc2.get("longitude", 0.0)
 
             # Haversine formula
-            lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-            dlat = lat2 - lat1
-            dlon = lon2 - lon1
-            a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+            lat1_rad, lon1_rad, lat2_rad, lon2_rad = map(
+                radians, [lat1, lon1, lat2, lon2]
+            )
+            dlat = lat2_rad - lat1_rad
+            dlon = lon2_rad - lon1_rad
+            a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
             c = 2 * asin(sqrt(a))
             r = 6371  # Radius of earth in kilometers
 
@@ -964,14 +969,17 @@ class ZeroTrustEngine:
             distance = self._calculate_location_distance(
                 last_location, current_location
             )
-            time_diff = (
-                current_time - last_location.get("timestamp", current_time)
-            ).total_seconds() / 3600
-
-            if time_diff <= 0:
+            last_timestamp = last_location.get("timestamp")
+            if not isinstance(last_timestamp, datetime):
                 return {"impossible_travel": False, "suspicious_travel": False}
 
-            velocity = distance / time_diff  # km/h
+            time_diff_seconds = (current_time - last_timestamp).total_seconds()
+            time_diff_hours = time_diff_seconds / 3600.0
+
+            if time_diff_hours <= 0:
+                return {"impossible_travel": False, "suspicious_travel": False}
+
+            velocity = distance / time_diff_hours  # km/h
 
             # Impossible travel: >1000 km/h (faster than commercial aircraft)
             # Suspicious travel: >500 km/h (very fast travel)
@@ -1011,7 +1019,7 @@ class ZeroTrustEngine:
 
     async def _update_location_history(
         self, user_id: int, location: dict[str, Any], timestamp: datetime
-    ):
+    ) -> None:
         """Update user's location history."""
 
         if user_id not in self.location_history:
@@ -1033,24 +1041,26 @@ class ZeroTrustEngine:
         # For now, return empty list
         return []
 
-    async def _extract_behavioral_features(self, context: AccessContext) -> list[float]:
+    async def _extract_behavioral_features(
+        self, context: AccessContext
+    ) -> list[float]:
         """Extract behavioral features for ML analysis."""
 
         try:
-            features = []
-
+            features: list[float] = []
+            timestamp = getattr(context, "timestamp", datetime.utcnow())
             # Time-based features
-            hour = context.timestamp.hour if context.timestamp else 12
-            day_of_week = context.timestamp.weekday() if context.timestamp else 1
+            hour = timestamp.hour
+            day_of_week = timestamp.weekday()
             features.extend([hour / 24.0, day_of_week / 7.0])
 
             # Location features (if available)
             if context.geolocation:
                 lat = (
-                    context.geolocation.get("latitude", 0) / 90.0
+                    context.geolocation.get("latitude", 0.0) / 90.0
                 )  # Normalize to -1 to 1
                 lon = (
-                    context.geolocation.get("longitude", 0) / 180.0
+                    context.geolocation.get("longitude", 0.0) / 180.0
                 )  # Normalize to -1 to 1
                 features.extend([lat, lon])
             else:
@@ -1066,9 +1076,7 @@ class ZeroTrustEngine:
                 features.append(0.5)
 
             # Network features
-            features.append(
-                context.risk_score if hasattr(context, "risk_score") else 0.5
-            )
+            features.append(getattr(context, "risk_score", 0.5))
 
             return features
 
@@ -1083,15 +1091,19 @@ class ZeroTrustEngine:
 
         try:
             score = 0.5  # Neutral starting point
-
+            timestamp = getattr(context, "timestamp", datetime.utcnow())
             # Simple time pattern analysis
-            current_hour = context.timestamp.hour if context.timestamp else 12
-            historical_hours = [access.get("hour", 12) for access in access_history]
+            current_hour = timestamp.hour
+            historical_hours = [
+                access.get("hour", 12)
+                for access in access_history
+                if isinstance(access.get("hour"), int)
+            ]
 
             if historical_hours:
                 # Check if current hour is within normal range
                 hour_variance = (
-                    np.var(historical_hours) if len(historical_hours) > 1 else 0
+                    np.var(historical_hours) if len(historical_hours) > 1 else 0.0
                 )
                 hour_mean = np.mean(historical_hours)
 

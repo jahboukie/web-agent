@@ -5,6 +5,8 @@ Scalable token blacklist implementation with Redis persistence,
 automatic expiration, and high-performance operations.
 """
 
+from __future__ import annotations
+
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -42,7 +44,7 @@ class RedisTokenBlacklist:
     - Batch operations for efficiency
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.redis_client: redis.Redis | None = None
         self.key_prefix = "webagent:blacklist:"
         self.audit_prefix = "webagent:audit:blacklist:"
@@ -100,23 +102,12 @@ class RedisTokenBlacklist:
     ) -> bool:
         """
         Add token to blacklist.
-
-        Args:
-            token: JWT token to blacklist
-            reason: Reason for blacklisting
-            user_id: User ID associated with token
-            ttl_seconds: TTL for blacklist entry (defaults to token expiration)
-            ip_address: IP address of the request
-            user_agent: User agent of the request
-
-        Returns:
-            bool: True if successfully blacklisted
         """
-        try:
-            if not self.redis_client:
-                logger.error("Redis client not initialized")
-                return False
+        if not self.redis_client:
+            logger.error("Redis client not initialized for blacklisting")
+            return False
 
+        try:
             token_hash = self._hash_token(token)
             token_key = self._get_token_key(token_hash)
 
@@ -135,18 +126,20 @@ class RedisTokenBlacklist:
             )
 
             # Store in Redis with TTL
-            entry_data = {
+            entry_data: dict[str, Any] = { # type: ignore
                 "token_hash": blacklist_entry.token_hash,
-                "user_id": blacklist_entry.user_id,
+                "user_id": str(blacklist_entry.user_id)
+                if blacklist_entry.user_id
+                else "",
                 "reason": blacklist_entry.reason,
                 "blacklisted_at": blacklist_entry.blacklisted_at.isoformat(),
                 "expires_at": (
                     blacklist_entry.expires_at.isoformat()
                     if blacklist_entry.expires_at
-                    else None
+                    else ""
                 ),
-                "ip_address": blacklist_entry.ip_address,
-                "user_agent": blacklist_entry.user_agent,
+                "ip_address": blacklist_entry.ip_address or "",
+                "user_agent": blacklist_entry.user_agent or "",
             }
 
             # Use pipeline for atomic operations
@@ -167,14 +160,14 @@ class RedisTokenBlacklist:
 
             # Store audit log
             audit_key = self._get_audit_key(token_hash)
-            audit_data = {
+            audit_data: dict[str, Any] = { # type: ignore
                 "action": "blacklist",
                 "token_hash": token_hash,
-                "user_id": user_id,
+                "user_id": str(user_id) if user_id else "",
                 "reason": reason,
                 "timestamp": datetime.utcnow().isoformat(),
-                "ip_address": ip_address,
-                "user_agent": user_agent,
+                "ip_address": ip_address or "",
+                "user_agent": user_agent or "",
             }
             pipe.hset(audit_key, mapping=audit_data)
             if ttl_seconds:
@@ -205,31 +198,25 @@ class RedisTokenBlacklist:
     async def is_blacklisted(self, token: str) -> bool:
         """
         Check if token is blacklisted.
-
-        Args:
-            token: JWT token to check
-
-        Returns:
-            bool: True if token is blacklisted
         """
-        try:
-            if not self.redis_client:
-                return False
+        if not self.redis_client:
+            return False
 
+        try:
             token_hash = self._hash_token(token)
             token_key = self._get_token_key(token_hash)
 
             exists = await self.redis_client.exists(token_key)
-
-            if exists:
+            result = bool(exists)
+            if result:
                 # Log the blacklist hit for monitoring
-                await self.redis_client.hincrby(self.stats_key, "blacklist_hits", 1)
+                await self.redis_client.hincrby(self.stats_key, "blacklist_hits", 1) # type: ignore
 
                 logger.debug(
                     "Blacklisted token access attempt", token_hash=token_hash[:12]
                 )
 
-            return bool(exists)
+            return result
 
         except Exception as e:
             logger.error(f"Failed to check token blacklist: {str(e)}")
@@ -239,23 +226,16 @@ class RedisTokenBlacklist:
     async def remove_token(self, token: str, reason: str = "manual_removal") -> bool:
         """
         Remove token from blacklist.
-
-        Args:
-            token: JWT token to remove
-            reason: Reason for removal
-
-        Returns:
-            bool: True if successfully removed
         """
-        try:
-            if not self.redis_client:
-                return False
+        if not self.redis_client:
+            return False
 
+        try:
             token_hash = self._hash_token(token)
             token_key = self._get_token_key(token_hash)
 
             # Get token info before deletion for audit
-            token_info = await self.redis_client.hgetall(token_key)
+            token_info = await self.redis_client.hgetall(token_key) # type: ignore
 
             if not token_info:
                 return False
@@ -270,12 +250,12 @@ class RedisTokenBlacklist:
 
             # Remove from user's blacklisted tokens
             if user_id:
-                user_key = self._get_user_key(user_id)
+                user_key = self._get_user_key(int(user_id))
                 pipe.srem(user_key, token_hash)
 
             # Add removal audit log
             audit_key = self._get_audit_key(token_hash)
-            removal_audit = {
+            removal_audit: dict[str, Any] = { # type: ignore
                 "action": "remove",
                 "token_hash": token_hash,
                 "user_id": user_id,
@@ -307,20 +287,13 @@ class RedisTokenBlacklist:
     async def blacklist_user_tokens(self, user_id: int, reason: str) -> int:
         """
         Blacklist all tokens for a user.
-
-        Args:
-            user_id: User ID
-            reason: Reason for blacklisting
-
-        Returns:
-            int: Number of tokens blacklisted
         """
-        try:
-            if not self.redis_client:
-                return 0
+        if not self.redis_client:
+            return 0
 
+        try:
             user_key = self._get_user_key(user_id)
-            token_hashes = await self.redis_client.smembers(user_key)
+            token_hashes = await self.redis_client.smembers(user_key) # type: ignore
 
             if not token_hashes:
                 return 0
@@ -360,17 +333,13 @@ class RedisTokenBlacklist:
     async def cleanup_expired_tokens(self) -> int:
         """
         Clean up expired blacklist entries.
-
-        Returns:
-            int: Number of entries cleaned up
         """
-        try:
-            if not self.redis_client:
-                return 0
+        if not self.redis_client:
+            return 0
 
+        try:
             # Redis TTL handles automatic expiration, but we can clean up
             # any entries that should have expired but didn't due to edge cases
-
             cursor = 0
             cleaned = 0
 
@@ -378,11 +347,14 @@ class RedisTokenBlacklist:
                 cursor, keys = await self.redis_client.scan(
                     cursor=cursor, match=f"{self.key_prefix}token:*", count=100
                 )
+                if not isinstance(keys, list):
+                    break
 
                 for key in keys:
-                    token_info = await self.redis_client.hgetall(key)
-                    if token_info and token_info.get("expires_at"):
-                        expires_at = datetime.fromisoformat(token_info["expires_at"])
+                    token_info = await self.redis_client.hgetall(key) # type: ignore
+                    expires_at_str = token_info.get("expires_at")
+                    if token_info and expires_at_str:
+                        expires_at = datetime.fromisoformat(expires_at_str)
                         if expires_at < datetime.utcnow():
                             await self.redis_client.delete(key)
                             cleaned += 1
@@ -390,10 +362,10 @@ class RedisTokenBlacklist:
                 if cursor == 0:
                     break
 
-            if cleaned > 0:
+            if cleaned > 0 and self.redis_client:
                 await self.redis_client.hincrby(
                     self.stats_key, "expired_cleaned", cleaned
-                )
+                ) # type: ignore
                 logger.info(f"Cleaned up {cleaned} expired blacklist entries")
 
             return cleaned
@@ -402,13 +374,13 @@ class RedisTokenBlacklist:
             logger.error(f"Failed to cleanup expired tokens: {str(e)}")
             return 0
 
-    async def get_blacklist_stats(self) -> dict:
+    async def get_blacklist_stats(self) -> dict[str, Any]: # type: ignore
         """Get blacklist statistics."""
-        try:
-            if not self.redis_client:
-                return {}
+        if not self.redis_client:
+            return {}
 
-            stats = await self.redis_client.hgetall(self.stats_key)
+        try:
+            stats = await self.redis_client.hgetall(self.stats_key) # type: ignore
 
             # Add real-time counts
             token_count = 0
@@ -418,6 +390,8 @@ class RedisTokenBlacklist:
                 cursor, keys = await self.redis_client.scan(
                     cursor=cursor, match=f"{self.key_prefix}token:*", count=100
                 )
+                if not isinstance(keys, list):
+                    break
                 token_count += len(keys)
 
                 if cursor == 0:
@@ -432,19 +406,18 @@ class RedisTokenBlacklist:
             logger.error(f"Failed to get blacklist stats: {str(e)}")
             return {}
 
-    async def get_user_blacklisted_tokens(self, user_id: int) -> list[dict]:
+    async def get_user_blacklisted_tokens(self, user_id: int) -> list[dict[str, Any]]: # type: ignore
         """Get blacklisted tokens for a user."""
+        if not self.redis_client:
+            return []
         try:
-            if not self.redis_client:
-                return []
-
             user_key = self._get_user_key(user_id)
-            token_hashes = await self.redis_client.smembers(user_key)
+            token_hashes = await self.redis_client.smembers(user_key) # type: ignore
 
-            tokens = []
+            tokens: list[dict[str, Any]] = [] # type: ignore
             for token_hash in token_hashes:
                 token_key = self._get_token_key(token_hash)
-                token_info = await self.redis_client.hgetall(token_key)
+                token_info = await self.redis_client.hgetall(token_key) # type: ignore
                 if token_info:
                     tokens.append(token_info)
 
@@ -459,9 +432,9 @@ class RedisTokenBlacklist:
 class InMemoryTokenBlacklist:
     """Fallback in-memory token blacklist."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._blacklisted_tokens: set[str] = set()
-        self._audit_log: list[dict] = []
+        self._audit_log: list[dict[str, Any]] = [] # type: ignore
 
     async def initialize(self) -> None:
         """Initialize (no-op for in-memory)."""
@@ -475,7 +448,9 @@ class InMemoryTokenBlacklist:
         """Create secure hash of token."""
         return hashlib.sha256(token.encode()).hexdigest()
 
-    async def blacklist_token(self, token: str, reason: str, **kwargs) -> bool:
+    async def blacklist_token(
+        self, token: str, reason: str, **kwargs: Any # type: ignore
+    ) -> bool:
         """Add token to blacklist."""
         try:
             token_hash = self._hash_token(token)
@@ -523,7 +498,7 @@ class InMemoryTokenBlacklist:
         """Cleanup expired tokens (no-op for in-memory)."""
         return 0
 
-    async def get_blacklist_stats(self) -> dict:
+    async def get_blacklist_stats(self) -> dict[str, Any]: # type: ignore
         """Get blacklist statistics."""
         return {
             "active_blacklisted_tokens": str(len(self._blacklisted_tokens)),
@@ -533,7 +508,7 @@ class InMemoryTokenBlacklist:
 
 
 # Global enterprise token blacklist
-enterprise_token_blacklist: RedisTokenBlacklist | None = None
+enterprise_token_blacklist: RedisTokenBlacklist | InMemoryTokenBlacklist | None = None
 
 
 async def initialize_token_blacklist() -> None:
@@ -550,15 +525,17 @@ async def initialize_token_blacklist() -> None:
             logger.info("Redis token blacklist initialized")
         else:
             # Fallback to in-memory
-            enterprise_token_blacklist = InMemoryTokenBlacklist()
-            await enterprise_token_blacklist.initialize()
+            in_memory_blacklist = InMemoryTokenBlacklist()
+            await in_memory_blacklist.initialize()
+            enterprise_token_blacklist = in_memory_blacklist
             logger.warning("Using fallback in-memory token blacklist")
 
     except Exception as e:
         logger.error(f"Failed to initialize token blacklist: {str(e)}")
         # Last resort fallback
-        enterprise_token_blacklist = InMemoryTokenBlacklist()
-        await enterprise_token_blacklist.initialize()
+        in_memory_fallback = InMemoryTokenBlacklist()
+        await in_memory_fallback.initialize()
+        enterprise_token_blacklist = in_memory_fallback
 
 
 async def cleanup_token_blacklist() -> None:
