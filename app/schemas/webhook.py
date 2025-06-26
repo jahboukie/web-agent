@@ -9,8 +9,8 @@ class WebhookConfigRequest(BaseModel):
 
     webhook_urls: list[str] = Field(
         description="List of webhook URLs to receive notifications",
-        min_items=1,
-        max_items=10,
+        min_length=1,
+        max_length=10,
     )
     events: list[str] = Field(
         default=["execution_completed"], description="List of events to subscribe to"

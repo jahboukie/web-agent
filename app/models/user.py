@@ -2,17 +2,25 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+from typing import Any
 
-from sqlalchemy import JSON, Boolean, DateTime, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import JSON
+from sqlalchemy import Boolean
+from sqlalchemy import DateTime
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base
 
 if TYPE_CHECKING:
     from .browser_session import BrowserSession
-    from .security import AuditLog, UserCredential
+    from .security import AuditLog
+    from .security import UserCredential
     from .task import Task
 
 

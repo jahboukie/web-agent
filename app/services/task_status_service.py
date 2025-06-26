@@ -169,12 +169,15 @@ class TaskStatusService:
                 result = await db.execute(
                     select(Task.progress_details).where(Task.id == task_id)
                 )
-                existing_details = result.scalar_one_or_none()
-                if not isinstance(existing_details, dict):
-                    existing_details = {}
-                existing_details["performance_metrics"] = performance_metrics
-                existing_details["completed_at"] = completion_time.isoformat()
-                update_data["progress_details"] = existing_details
+                # Ensure we have a dict to work with. The raw value from JSON can be Any.
+                progress_details_raw = result.scalar_one_or_none()
+                current_details: dict[str, Any] = (
+                    progress_details_raw if isinstance(progress_details_raw, dict) else {}
+                )
+
+                current_details["performance_metrics"] = performance_metrics
+                current_details["completed_at"] = completion_time.isoformat()
+                update_data["progress_details"] = current_details
 
             logger.info("🔧 COMPLETE_TASK: Executing database update", task_id=task_id)
             await db.execute(update(Task).where(Task.id == task_id).values(update_data))

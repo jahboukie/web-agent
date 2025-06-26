@@ -5,8 +5,17 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Enum as SQLEnum,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -237,7 +246,7 @@ class AtomicAction(Base):
     )
     target_element: Mapped[InteractiveElement | None] = relationship(
         back_populates="actions_taken"
-    )  # type: ignore
+    )
 
 
 class PlanTemplate(Base):
