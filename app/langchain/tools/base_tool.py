@@ -5,6 +5,8 @@ This module provides the foundation for all custom tools used by the WebAgent
 planning agent to analyze webpages and generate execution plans.
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -31,10 +33,11 @@ class WebAgentBaseTool(BaseTool, ABC):
 
     name: str = "webagent_base_tool"
     description: str = "Base tool for WebAgent planning"
-    args_schema: type[BaseModel] = WebAgentToolInput
+    args_schema: type[BaseModel] = WebAgentToolInput  # type: ignore
     webpage_data: dict[str, Any] = Field(default_factory=dict)
+    _logger: Any = Field(default=None, exclude=True)
 
-    def __init__(self, webpage_data: dict[str, Any] | None = None, **kwargs):
+    def __init__(self, webpage_data: dict[str, Any] | None = None, **kwargs: Any):
         """
         Initialize the tool with webpage data.
 
@@ -46,16 +49,14 @@ class WebAgentBaseTool(BaseTool, ABC):
             kwargs["webpage_data"] = webpage_data
         super().__init__(**kwargs)
         # Set logger as a private attribute to avoid Pydantic field issues
-        object.__setattr__(
-            self, "_logger", structlog.get_logger(self.__class__.__name__)
-        )
+        self._logger = structlog.get_logger(self.__class__.__name__)
 
     @property
-    def logger(self):
+    def logger(self) -> Any:
         """Get the logger instance."""
-        return getattr(self, "_logger", structlog.get_logger(self.__class__.__name__))
+        return self._logger
 
-    def _run(self, query: str, **kwargs) -> str:
+    def _run(self, query: str, **kwargs: Any) -> str:
         """
         Synchronous execution of the tool.
 
@@ -79,7 +80,7 @@ class WebAgentBaseTool(BaseTool, ABC):
             self.logger.error("Tool execution failed", tool=self.name, error=str(e))
             return f"Error executing {self.name}: {str(e)}"
 
-    async def _arun(self, query: str, **kwargs) -> str:
+    async def _arun(self, query: str, **kwargs: Any) -> str:
         """
         Asynchronous execution of the tool.
 
@@ -95,7 +96,7 @@ class WebAgentBaseTool(BaseTool, ABC):
         return self._run(query, **kwargs)
 
     @abstractmethod
-    def _execute_tool(self, query: str, **kwargs) -> str:
+    def _execute_tool(self, query: str, **kwargs: Any) -> str:
         """
         Execute the tool's core functionality.
 
@@ -136,7 +137,7 @@ class WebAgentBaseTool(BaseTool, ABC):
             summary_parts.append(f"Interactive Elements: {len(elements)} found")
 
             # Group by type
-            element_types = {}
+            element_types: dict[str, list[Any]] = {}
             for element in elements[:10]:  # Limit to first 10 for summary
                 elem_type = element.get("type", "unknown")
                 if elem_type not in element_types:
@@ -153,7 +154,9 @@ class WebAgentBaseTool(BaseTool, ABC):
 
         return "\n".join(summary_parts)
 
-    def _get_interactive_elements_by_type(self, element_type: str) -> list:
+    def _get_interactive_elements_by_type(
+        self, element_type: str
+    ) -> list[dict[str, Any]]:
         """
         Get interactive elements filtered by type.
 
@@ -172,7 +175,9 @@ class WebAgentBaseTool(BaseTool, ABC):
             if elem.get("type", "").lower() == element_type.lower()
         ]
 
-    def _find_elements_by_text(self, text: str, partial_match: bool = True) -> list:
+    def _find_elements_by_text(
+        self, text: str, partial_match: bool = True
+    ) -> list[dict[str, Any]]:
         """
         Find interactive elements containing specific text.
 

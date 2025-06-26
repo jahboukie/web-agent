@@ -81,6 +81,8 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         AsyncSession: Database session
     """
     session_factory = get_async_session_factory()
+    if session_factory is None:
+        raise RuntimeError("Session factory not initialized")
 
     async with session_factory() as session:
         try:
@@ -95,6 +97,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
             logger.debug("Database session closed")
+    return  # Add a return to satisfy mypy's check for generator exit
 
 
 async def create_tables() -> None:
@@ -145,6 +148,7 @@ async def check_database_connection() -> bool:
             result.scalar()
             logger.info("Database connection check successful")
             return True
+        return False  # Should not be reached, but satisfies mypy
     except Exception as e:
         logger.error("Database connection check failed", error=str(e))
         return False

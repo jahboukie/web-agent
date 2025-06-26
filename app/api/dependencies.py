@@ -1,5 +1,9 @@
-from collections.abc import AsyncGenerator
+from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+from typing import Annotated, Any
+
+import aiohttp
 import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -8,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.http_client import get_http_session
 from app.core.security import verify_token
 from app.db.session import get_async_session
+from app.models.user import User
 
 logger = structlog.get_logger(__name__)
 
@@ -31,8 +36,9 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
-):
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
     """
     Get current authenticated user from JWT token.
 
@@ -59,15 +65,15 @@ async def get_current_user(
         raise credentials_exception
 
     # Extract user ID from token
-    user_id: int | None = payload.get("sub")
-    if user_id is None:
+    user_id_from_payload: str | int | None = payload.get("sub")
+    if user_id_from_payload is None:
         logger.warning("Token missing user ID")
         raise credentials_exception
 
     try:
-        user_id = int(user_id)
+        user_id = int(user_id_from_payload)
     except (ValueError, TypeError):
-        logger.warning("Invalid user ID in token", user_id=user_id)
+        logger.warning("Invalid user ID in token", user_id=user_id_from_payload)
         raise credentials_exception
 
     # Get user from database (import here to avoid circular imports)
@@ -84,7 +90,9 @@ async def get_current_user(
     return user
 
 
-async def get_current_active_user(current_user=Depends(get_current_user)):
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
     """
     Get current active user (must be active).
 
@@ -106,7 +114,9 @@ async def get_current_active_user(current_user=Depends(get_current_user)):
     return current_user
 
 
-async def get_current_superuser(current_user=Depends(get_current_active_user)):
+async def get_current_superuser(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> User:
     """
     Get current superuser (must be active superuser).
 
@@ -134,10 +144,10 @@ from app.security.token_blacklist import enterprise_token_blacklist
 
 # Create a simple token blacklist for basic auth functionality
 class SimpleTokenBlacklist:
-    def __init__(self):
-        self._blacklisted_tokens = set()
+    def __init__(self) -> None:
+        self._blacklisted_tokens: set[str] = set()
 
-    def add_token(self, token: str):
+    def add_token(self, token: str) -> None:
         """Add token to blacklist."""
         self._blacklisted_tokens.add(token)
 
@@ -150,7 +160,9 @@ class SimpleTokenBlacklist:
 token_blacklist = SimpleTokenBlacklist()
 
 
-async def verify_token_not_blacklisted(token: str = Depends(oauth2_scheme)) -> str:
+async def verify_token_not_blacklisted(
+    token: Annotated[str, Depends(oauth2_scheme)],
+) -> str:
     """
     Verify that token is not blacklisted.
 
@@ -183,7 +195,7 @@ async def verify_token_not_blacklisted(token: str = Depends(oauth2_scheme)) -> s
 
 
 # HTTP Session Dependencies
-async def get_http_client():
+async def get_http_client() -> aiohttp.ClientSession:
     """
     HTTP client session dependency.
 
@@ -211,9 +223,9 @@ async def get_http_client():
 
 async def get_current_user_with_tenant(
     tenant_id: int | None = None,
-    current_user=Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
-):
+) -> tuple[User, int | None, set[str]]:
     """
     Get current user with tenant context for enterprise access control.
 
@@ -244,7 +256,7 @@ async def get_current_user_with_tenant(
         )
 
 
-def require_enterprise_permission(permission: str, tenant_id: int | None = None):
+def require_enterprise_permission(permission: str, tenant_id: int | None = None) -> Any:
     """
     Dependency factory for requiring specific enterprise permissions.
 
@@ -257,9 +269,9 @@ def require_enterprise_permission(permission: str, tenant_id: int | None = None)
     """
 
     async def check_permission(
-        current_user=Depends(get_current_active_user),
+        current_user: User = Depends(get_current_active_user),
         db: AsyncSession = Depends(get_db),
-    ):
+    ) -> User:
         try:
             # Import here to avoid circular imports
             from app.services.rbac_service import enterprise_rbac_service
@@ -291,4 +303,4 @@ def require_enterprise_permission(permission: str, tenant_id: int | None = None)
                 detail="Permission check failed",
             )
 
-    return check_permission
+    return Depends(check_permission)

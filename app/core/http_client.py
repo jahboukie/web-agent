@@ -5,6 +5,10 @@ Provides a shared aiohttp.ClientSession for the entire application lifecycle.
 Properly manages session creation on startup and cleanup on shutdown.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import aiohttp
 
 from app.core.config import settings
@@ -22,7 +26,7 @@ class HTTPClientManager:
     session throughout the application lifecycle.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._session: aiohttp.ClientSession | None = None
         self._initialized = False
 
@@ -133,7 +137,7 @@ class HTTPClientManager:
         Returns:
             True if the session is healthy, False otherwise
         """
-        if not self.is_initialized:
+        if not self.is_initialized or self._session is None:
             return False
 
         try:
@@ -166,31 +170,31 @@ async def get_http_session() -> aiohttp.ClientSession:
 
 
 # Convenience functions for common HTTP operations
-async def http_get(url: str, **kwargs) -> aiohttp.ClientResponse:
+async def http_get(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
     """Convenience function for GET requests using the shared session."""
     session = http_client_manager.session
     return await session.get(url, **kwargs)
 
 
-async def http_post(url: str, **kwargs) -> aiohttp.ClientResponse:
+async def http_post(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
     """Convenience function for POST requests using the shared session."""
     session = http_client_manager.session
     return await session.post(url, **kwargs)
 
 
-async def http_put(url: str, **kwargs) -> aiohttp.ClientResponse:
+async def http_put(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
     """Convenience function for PUT requests using the shared session."""
     session = http_client_manager.session
     return await session.put(url, **kwargs)
 
 
-async def http_delete(url: str, **kwargs) -> aiohttp.ClientResponse:
+async def http_delete(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
     """Convenience function for DELETE requests using the shared session."""
     session = http_client_manager.session
     return await session.delete(url, **kwargs)
 
 
-async def http_patch(url: str, **kwargs) -> aiohttp.ClientResponse:
+async def http_patch(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
     """Convenience function for PATCH requests using the shared session."""
     session = http_client_manager.session
     return await session.patch(url, **kwargs)
