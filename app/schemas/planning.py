@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.execution_plan import ActionType, PlanStatus, StepStatus
 
@@ -49,7 +51,16 @@ class PlanGenerationRequest(BaseModel):
         description="Natural language description of what to accomplish",
     )
     planning_options: PlanningOptions | None = Field(
-        default_factory=lambda: PlanningOptions()
+        default_factory=lambda: PlanningOptions(
+            confidence_threshold=0.75,
+            risk_tolerance="medium",
+            planning_timeout_seconds=300,
+            include_screenshots=True,
+            require_user_approval=True,
+            allow_sensitive_actions=False,
+            planning_temperature=0.1,
+            max_agent_iterations=15,
+        )
     )
     context_hints: dict[str, Any] | None = Field(
         None, description="Additional context to help with planning"
@@ -271,8 +282,9 @@ class PlanApprovalRequest(BaseModel):
         None, ge=0.0, le=1.0, description="Override confidence score"
     )
 
-    @validator("approval_decision")
-    def validate_decision(cls, v):
+    @field_validator("approval_decision")
+    @classmethod
+    def validate_decision(cls, v: str) -> str:
         if v not in ["approve", "reject", "modify"]:
             raise ValueError("approval_decision must be approve, reject, or modify")
         return v

@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class UserBase(BaseModel):
@@ -16,14 +18,16 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
     confirm_password: str = Field(min_length=8, max_length=128)
 
-    @validator("confirm_password")
-    def passwords_match(cls, v, values, **kwargs):
-        if "password" in values and v != values["password"]:
+    @field_validator("confirm_password")
+    @classmethod
+    def passwords_match(cls, v: str, values: Any, **kwargs: Any) -> str:
+        if "password" in values.data and v != values.data["password"]:
             raise ValueError("Passwords do not match")
         return v
 
-    @validator("password")
-    def validate_password_strength(cls, v):
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
         if not any(c.isupper() for c in v):
@@ -48,9 +52,10 @@ class UserPasswordUpdate(BaseModel):
     new_password: str = Field(min_length=8, max_length=128)
     confirm_new_password: str = Field(min_length=8, max_length=128)
 
-    @validator("confirm_new_password")
-    def passwords_match(cls, v, values, **kwargs):
-        if "new_password" in values and v != values["new_password"]:
+    @field_validator("confirm_new_password")
+    @classmethod
+    def passwords_match(cls, v: str, values: Any, **kwargs: Any) -> str:
+        if "new_password" in values.data and v != values.data["new_password"]:
             raise ValueError("New passwords do not match")
         return v
 
@@ -160,8 +165,9 @@ class UserRegistrationRequest(UserCreate):
     accept_terms: bool = True
     marketing_consent: bool = False
 
-    @validator("accept_terms")
-    def must_accept_terms(cls, v):
+    @field_validator("accept_terms")
+    @classmethod
+    def must_accept_terms(cls, v: bool) -> bool:
         if not v:
             raise ValueError("You must accept the terms of service")
         return v

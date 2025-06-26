@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class InteractiveElementBase(BaseModel):
@@ -139,12 +141,13 @@ class WebPage(WebPageBase):
     class Config:
         from_attributes = True
 
-    @validator("domain")
-    def extract_domain_from_url(cls, v, values):
-        if "url" in values and values["url"]:
+    @field_validator("domain")
+    @classmethod
+    def extract_domain_from_url(cls, v: str, values: Any) -> str:
+        if "url" in values.data and values.data["url"]:
             from urllib.parse import urlparse
 
-            return urlparse(str(values["url"])).netloc
+            return urlparse(str(values.data["url"])).netloc
         return v
 
 

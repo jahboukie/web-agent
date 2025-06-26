@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from app.models.execution_plan import ActionType, PlanStatus
 
@@ -103,8 +105,11 @@ class ExecutionPlan(ExecutionPlanBase):
     class Config:
         from_attributes = True
 
-    @validator("atomic_actions")
-    def validate_step_numbers(cls, v):
+    @field_validator("atomic_actions")
+    @classmethod
+    def validate_step_numbers(
+        cls, v: list[AtomicActionCreate]
+    ) -> list[AtomicActionCreate]:
         if v:
             step_numbers = [action.step_number for action in v]
             if len(set(step_numbers)) != len(step_numbers):
