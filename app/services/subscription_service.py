@@ -6,19 +6,18 @@ Manages WebAgent's 2025 revenue-optimized pricing model with strategic tier mana
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
-from app.schemas.analytics import (
-    SubscriptionStatus,
-    SubscriptionTier,
-    UsageMetrics,
-    UserSubscription,
-)
+from app.schemas.analytics import SubscriptionStatus
+from app.schemas.analytics import SubscriptionTier
+from app.schemas.analytics import UsageMetrics
+from app.schemas.analytics import UserSubscription
 
 logger = structlog.get_logger(__name__)
 

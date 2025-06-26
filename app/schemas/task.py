@@ -3,9 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import HttpUrl
+from pydantic import field_validator
 
-from app.models.task import TaskPriority, TaskStatus
+from app.models.task import TaskPriority
+from app.models.task import TaskStatus
 from app.schemas.execution_plan import ExecutionPlan
 
 
