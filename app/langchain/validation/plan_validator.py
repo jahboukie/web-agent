@@ -22,12 +22,12 @@ class PlanValidator:
     assessment of AI-generated execution plans.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the plan validator."""
         self.logger = structlog.get_logger(self.__class__.__name__)
 
         # Safety patterns to flag
-        self.dangerous_patterns = [
+        self.dangerous_patterns: list[str] = [
             r"delete.*all",
             r"remove.*everything",
             r"clear.*data",
@@ -39,7 +39,7 @@ class PlanValidator:
         ]
 
         # Sensitive action patterns
-        self.sensitive_patterns = [
+        self.sensitive_patterns: list[str] = [
             r"payment",
             r"credit.*card",
             r"bank.*account",
@@ -69,7 +69,7 @@ class PlanValidator:
             self.logger.info("Starting execution plan validation")
 
             # Initialize validation result
-            validation_result = {
+            validation_result: dict[str, Any] = {
                 "overall_status": "approved",
                 "validation_timestamp": datetime.utcnow().isoformat(),
                 "scores": {
@@ -143,7 +143,7 @@ class PlanValidator:
             safety_score -= 0.2
 
         # Check action steps for dangerous patterns
-        action_steps = execution_plan.get("action_steps", [])
+        action_steps: list[dict[str, Any]] = execution_plan.get("action_steps", [])
         for step in action_steps:
             step_description = step.get("description", "").lower()
             step_name = step.get("step_name", "").lower()
@@ -210,12 +210,14 @@ class PlanValidator:
         warnings = []
         feasibility_score = 1.0
 
-        interactive_elements = webpage_data.get("interactive_elements", [])
-        element_selectors = {
+        interactive_elements: list[dict[str, Any]] = webpage_data.get(
+            "interactive_elements", []
+        )
+        element_selectors: dict[str, Any] = {
             elem.get("selector", ""): elem for elem in interactive_elements
         }
 
-        action_steps = execution_plan.get("action_steps", [])
+        action_steps: list[dict[str, Any]] = execution_plan.get("action_steps", [])
 
         for step in action_steps:
             step_num = step.get("step_number", 0)
@@ -286,7 +288,7 @@ class PlanValidator:
         quality_score = 1.0
 
         plan_meta = execution_plan.get("execution_plan", {})
-        action_steps = execution_plan.get("action_steps", [])
+        action_steps: list[dict[str, Any]] = execution_plan.get("action_steps", [])
 
         # Check plan completeness
         required_fields = ["title", "description", "original_goal"]
@@ -363,7 +365,7 @@ class PlanValidator:
 
     def _is_action_compatible(self, action_type: str, element_type: str) -> bool:
         """Check if an action type is compatible with an element type."""
-        compatibility_map = {
+        compatibility_map: dict[str, list[str]] = {
             "click": ["button", "link", "checkbox", "radio", "submit"],
             "type": ["input", "textarea"],
             "select": ["select", "dropdown"],
@@ -436,7 +438,9 @@ class PlanValidator:
             approval_status["risk_level"] = "high"
 
         # Require approval for sensitive actions
-        elif any("sensitive" in warning.lower() for warning in findings["warnings"]):
+        elif any(
+            "sensitive" in warning.lower() for warning in findings.get("warnings", [])
+        ):
             approval_status["requires_human_approval"] = True
             approval_status["approval_reason"] = "Sensitive actions detected"
             approval_status["risk_level"] = "medium"

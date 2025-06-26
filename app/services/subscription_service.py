@@ -4,6 +4,8 @@ Subscription Service
 Manages WebAgent's 2025 revenue-optimized pricing model with strategic tier management.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 import structlog
@@ -193,7 +195,10 @@ class SubscriptionService:
         # Determine subscription tier (default to free for now)
         tier = SubscriptionTier.FREE
         if hasattr(user, "subscription_tier") and user.subscription_tier:
-            tier = SubscriptionTier(user.subscription_tier)
+            try:
+                tier = SubscriptionTier(user.subscription_tier)
+            except ValueError:
+                tier = SubscriptionTier.FREE  # Default to free if tier is invalid
 
         # Get tier configuration
         tier_config = self.PRICING_TIERS[tier]
@@ -214,13 +219,13 @@ class SubscriptionService:
             status=SubscriptionStatus.ACTIVE,
             current_period_start=current_period_start,
             current_period_end=current_period_end,
-            limits=tier_config["limits"],
+            limits=dict(tier_config.get("limits", {})),
             usage=usage_metrics,
-            monthly_cost=tier_config["monthly_cost"],
-            annual_discount=tier_config.get("annual_discount", 0.0),
+            monthly_cost=float(tier_config.get("monthly_cost", 0.0)),
+            annual_discount=float(tier_config.get("annual_discount", 0.0)),
             next_billing_date=current_period_end + timedelta(days=1),
-            features=tier_config["features"],
-            restrictions=tier_config["restrictions"],
+            features=list(tier_config.get("features", [])),
+            restrictions=list(tier_config.get("restrictions", [])),
         )
 
     async def _calculate_current_usage(
@@ -255,19 +260,19 @@ class SubscriptionService:
         """
         Get usage limits for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier]["limits"]
+        return self.PRICING_TIERS[tier].get("limits", {})
 
     def get_tier_features(self, tier: SubscriptionTier) -> list[str]:
         """
         Get features available for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier]["features"]
+        return self.PRICING_TIERS[tier].get("features", [])
 
     def get_tier_cost(self, tier: SubscriptionTier) -> float:
         """
         Get monthly cost for a specific subscription tier.
         """
-        return self.PRICING_TIERS[tier]["monthly_cost"]
+        return self.PRICING_TIERS[tier].get("monthly_cost", 0.0)
 
     def calculate_upgrade_savings(
         self, current_tier: SubscriptionTier, target_tier: SubscriptionTier
@@ -311,10 +316,11 @@ class SubscriptionService:
         Check if user is approaching usage limits for upgrade prompts.
         """
 
-        approaching_limits = {}
+        approaching_limits: dict[str, bool] = {}
+        limits = subscription.limits or {}
 
-        for limit_type, limit_value in subscription.limits.items():
-            if limit_value == "unlimited":
+        for limit_type, limit_value in limits.items():
+            if limit_value == "unlimited" or not isinstance(limit_value, int):
                 approaching_limits[limit_type] = False
                 continue
 

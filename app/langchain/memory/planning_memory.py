@@ -5,6 +5,8 @@ This module provides memory capabilities for the planning agent to learn from
 past executions and improve future plan generation.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
@@ -21,12 +23,12 @@ class PlanningMemory:
     and domain-specific knowledge to improve planning over time.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the planning memory system."""
-        self.successful_patterns = {}  # Store successful plan patterns
-        self.failure_analysis = {}  # Store failure patterns to avoid
-        self.domain_knowledge = {}  # Website-specific knowledge
-        self.element_patterns = {}  # Common element identification patterns
+        self.successful_patterns: dict[str, list[dict[str, Any]]] = {}
+        self.failure_analysis: dict[str, list[dict[str, Any]]] = {}
+        self.domain_knowledge: dict[str, dict[str, Any]] = {}
+        self.element_patterns: dict[str, Any] = {}
         self.logger = structlog.get_logger(self.__class__.__name__)
 
     async def store_planning_outcome(
@@ -181,7 +183,7 @@ class PlanningMemory:
 
             parsed = urlparse(url)
             return parsed.netloc.lower()
-        except:
+        except Exception:
             return "unknown"
 
     def _categorize_goal(self, goal: str) -> str:
@@ -286,12 +288,13 @@ class PlanningMemory:
             domain_data["successful_plans"] += 1
 
         # Calculate success rate and average confidence
-        domain_data["success_rate"] = (
-            domain_data["successful_plans"] / domain_data["total_plans"]
-        )
-        domain_data["avg_confidence"] = (
-            domain_data["total_confidence"] / domain_data["total_plans"]
-        )
+        if domain_data["total_plans"] > 0:
+            domain_data["success_rate"] = (
+                domain_data["successful_plans"] / domain_data["total_plans"]
+            )
+            domain_data["avg_confidence"] = (
+                domain_data["total_confidence"] / domain_data["total_plans"]
+            )
         domain_data["last_updated"] = datetime.utcnow().isoformat()
 
         # Update recommendations based on patterns
@@ -301,7 +304,7 @@ class PlanningMemory:
         self, domain_data: dict[str, Any], outcome_record: dict[str, Any]
     ) -> None:
         """Update domain-specific recommendations."""
-        recommendations = domain_data.get("recommendations", [])
+        recommendations: list[str] = domain_data.get("recommendations", [])
 
         # Add recommendations based on success patterns
         if (

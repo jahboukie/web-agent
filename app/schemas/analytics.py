@@ -5,11 +5,13 @@ Revenue-optimized analytics schemas for WebAgent's 2025 pricing model.
 Designed to maximize conversion through strategic feature gating and value demonstration.
 """
 
-from datetime import datetime
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class SubscriptionTier(str, Enum):
@@ -310,11 +312,9 @@ class AnalyticsDashboard(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
     cache_expires_at: datetime
 
-    @validator("cache_expires_at", pre=True, always=True)
-    def set_cache_expiry(cls, v, values):
+    @field_validator("cache_expires_at", pre=True, always=True)
+    def set_cache_expiry(cls, v: Any, values: Any) -> Any:
         if v is None:
             # Cache for 5 minutes for real-time feel
-            from datetime import timedelta
-
             return datetime.utcnow() + timedelta(minutes=5)
         return v
