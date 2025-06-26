@@ -13,7 +13,7 @@ import asyncio
 import uuid
 from asyncio import Queue, Task
 from datetime import datetime
-from typing import Any, Collection
+from typing import Any
 
 import psutil  # type: ignore[import-untyped]
 import structlog

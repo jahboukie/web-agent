@@ -263,8 +263,8 @@ class WebpageCacheService:
             )
 
             # Increment counters
-            await self.redis_client.hincrby(stats_key, f"{operation}_count", 1) # type: ignore
-            await self.redis_client.hincrby(stats_key, "total_operations", 1) # type: ignore
+            await self.redis_client.hincrby(stats_key, f"{operation}_count", 1)  # type: ignore
+            await self.redis_client.hincrby(stats_key, "total_operations", 1)  # type: ignore
 
             # Set expiry for stats (keep for 7 days)
             await self.redis_client.expire(stats_key, 7 * 24 * 3600)
@@ -308,7 +308,7 @@ class WebpageCacheService:
             stats_key = f"{self.STATS_PREFIX}daily:{today}"
 
             # Get daily stats
-            daily_stats = await self.redis_client.hgetall(stats_key) # type: ignore
+            daily_stats = await self.redis_client.hgetall(stats_key)  # type: ignore
 
             # Get Redis info
             redis_info = await self.redis_client.info("memory")

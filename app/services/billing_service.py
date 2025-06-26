@@ -132,7 +132,9 @@ class BillingService:
             "annual_discount", 0.0
         )
         annual_discount = (
-            float(annual_discount_obj) if isinstance(annual_discount_obj, (int, float)) else 0.0
+            float(annual_discount_obj)
+            if isinstance(annual_discount_obj, (int, float))
+            else 0.0
         )
 
         # Calculate final amount based on billing cycle
