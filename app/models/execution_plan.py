@@ -9,12 +9,14 @@ from sqlalchemy import (
     JSON,
     Boolean,
     DateTime,
-    Enum as SQLEnum,
     Float,
     ForeignKey,
     Integer,
     String,
     Text,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func

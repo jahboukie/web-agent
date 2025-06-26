@@ -2,19 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON
-from sqlalchemy import Boolean
-from sqlalchemy import DateTime
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy import Text
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.db.base import Base

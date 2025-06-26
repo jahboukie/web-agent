@@ -172,7 +172,9 @@ class TaskStatusService:
                 # Ensure we have a dict to work with. The raw value from JSON can be Any.
                 progress_details_raw = result.scalar_one_or_none()
                 current_details: dict[str, Any] = (
-                    progress_details_raw if isinstance(progress_details_raw, dict) else {}
+                    progress_details_raw
+                    if isinstance(progress_details_raw, dict)
+                    else {}
                 )
 
                 current_details["performance_metrics"] = performance_metrics
