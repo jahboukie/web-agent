@@ -102,10 +102,13 @@ jobs:
         rm -rf .mypy_cache
         echo "Caches cleared."
 
-    # --- UPDATED STEP HERE ---
-    - name: Run unit and integration tests
-      run: poetry run pytest --cov=app --cov-report=xml --deselect tests/services/test_analytics_service.py::test_get_dashboard_data
-    # --- END OF UPDATED STEP ---
+    # --- UPDATED STEPS FOR COVERAGE ---
+    - name: Run unit and integration tests (collect coverage)
+      run: poetry run coverage run -m pytest --deselect tests/services/test_analytics_service.py::test_get_dashboard_data
+
+    - name: Generate coverage XML report
+      run: poetry run coverage xml -o coverage.xml
+    # --- END OF UPDATED STEPS ---
 
     - name: Upload coverage report
       if: always()
