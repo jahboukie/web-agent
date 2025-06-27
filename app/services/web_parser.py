@@ -19,18 +19,18 @@ from datetime import datetime
 from typing import Any
 
 import structlog
-from playwright.async_api import (
-    Browser,
-    BrowserContext,
-    Page,
-    Playwright,
-    async_playwright,
-)
+from playwright.async_api import Browser
+from playwright.async_api import BrowserContext
+from playwright.async_api import Page
+from playwright.async_api import Playwright
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.schemas.web_page import WebPage, WebPageParseRequest, WebPageParseResponse
+from app.schemas.web_page import WebPage
+from app.schemas.web_page import WebPageParseRequest
+from app.schemas.web_page import WebPageParseResponse
 from app.services.task_status_service import TaskStatusService
 from app.services.webpage_cache_service import webpage_cache_service
 from app.utils.browser_pool import browser_pool

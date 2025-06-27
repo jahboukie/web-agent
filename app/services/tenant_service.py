@@ -10,17 +10,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func
+from sqlalchemy import or_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.logging import get_logger
 from app.models.security import EnterpriseTenant
-from app.models.user import (
-    User,  # type: ignore
-    user_tenant_roles,
-)
-from app.schemas.enterprise import EnterpriseTenantCreate, EnterpriseTenantUpdate
+from app.models.user import User  # type: ignore
+from app.models.user import user_tenant_roles
+from app.schemas.enterprise import EnterpriseTenantCreate
+from app.schemas.enterprise import EnterpriseTenantUpdate
 
 logger = get_logger(__name__)
 
