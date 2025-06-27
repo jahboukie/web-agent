@@ -12,7 +12,6 @@ jobs:
     name: Backend Tests & Checks
     runs-on: ubuntu-latest
 
-    # Action 1: Give the workflow permission to write back to the repo.
     permissions:
       contents: write
 
@@ -52,7 +51,6 @@ jobs:
           - 6379:6379
 
     steps:
-    # Action 2: Provide a token to the checkout step so it can push.
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -75,22 +73,15 @@ jobs:
     - name: Install dependencies
       run: poetry install --no-interaction --no-ansi
 
-    # Action 3: Replace the linter step with an auto-fixing script.
     - name: Format, Lint, and Auto-Commit
       run: |
-        # Configure git with a user name and email for the commit
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Run the formatter and fixer. The `--fix` flag tells it to correct errors.
         echo "Running ruff format and check..."
         poetry run ruff format .
         poetry run ruff check . --fix
-
-        # Check if the formatter made any changes
         if ! git diff --quiet; then
           echo "Code was auto-formatted. Committing changes."
-          # Add all changed files, commit them, and push back to the branch
           git add .
           git commit -m "style: Auto-format code via CI"
           git push
@@ -103,6 +94,15 @@ jobs:
 
     - name: Run database migrations
       run: poetry run alembic upgrade head
+
+    # --- NEW STEP ADDED HERE ---
+    - name: Clear Pytest Cache
+      run: |
+        echo "Clearing pytest and mypy cache directories..."
+        rm -rf .pytest_cache
+        rm -rf .mypy_cache
+        echo "Caches cleared."
+    # --- END OF NEW STEP ---
 
     - name: Run unit and integration tests
       run: poetry run pytest --cov=app --cov-report=xml
