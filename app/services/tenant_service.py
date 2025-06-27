@@ -5,6 +5,9 @@ Provides comprehensive tenant management for multi-tenant enterprise deployments
 with security, compliance, and organizational features.
 """
 
+from __future__ import annotations
+
+from collections.abc import Sequence
 from typing import Any
 
 from sqlalchemy import func, or_, select
@@ -12,8 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.logging import get_logger
-from app.models.security import EnterpriseTenant, user_tenant_roles
-from app.models.user import User
+from app.models.security import EnterpriseTenant
+from app.models.user import (
+    User,  # type: ignore
+    user_tenant_roles,
+)
 from app.schemas.enterprise import EnterpriseTenantCreate, EnterpriseTenantUpdate
 
 logger = get_logger(__name__)
@@ -127,7 +133,7 @@ class EnterpriseTenantService:
                 return None
 
             # Update fields
-            update_data = tenant_data.dict(exclude_unset=True)
+            update_data = tenant_data.model_dump(exclude_unset=True)
             for field, value in update_data.items():
                 if hasattr(db_tenant, field):
                     if field == "compliance_level" and value:
@@ -174,7 +180,8 @@ class EnterpriseTenantService:
             )
 
             result = await db.execute(query)
-            return result.scalars().all()
+            tenants: Sequence[EnterpriseTenant] = result.scalars().all()
+            return list(tenants)
 
         except Exception as e:
             logger.error(f"Failed to list tenants: {str(e)}")
@@ -199,12 +206,13 @@ class EnterpriseTenantService:
             )
 
             if include_roles:
-                query = query.options(selectinload(User.tenants))
+                query = query.options(selectinload(User.roles))
 
             query = query.offset(skip).limit(limit).order_by(User.created_at.desc())
 
             result = await db.execute(query)
-            return result.scalars().all()
+            users: Sequence[User] = result.scalars().all()
+            return list(users)
 
         except Exception as e:
             logger.error(f"Failed to get tenant users: {str(e)}")
@@ -217,11 +225,10 @@ class EnterpriseTenantService:
 
         try:
             # Get user count
-            user_count_result = await db.execute(
-                select(func.count(func.distinct(user_tenant_roles.c.user_id))).where(
-                    user_tenant_roles.c.tenant_id == tenant_id
-                )
-            )
+            user_count_query = select(
+                func.count(func.distinct(user_tenant_roles.c.user_id))
+            ).where(user_tenant_roles.c.tenant_id == tenant_id)
+            user_count_result = await db.execute(user_count_query)
             user_count = user_count_result.scalar() or 0
 
             # Get active user count (users with recent activity)
@@ -267,11 +274,10 @@ class EnterpriseTenantService:
 
             if check_type == "users":
                 # Check user limit
-                user_count_result = await db.execute(
-                    select(
-                        func.count(func.distinct(user_tenant_roles.c.user_id))
-                    ).where(user_tenant_roles.c.tenant_id == tenant_id)
-                )
+                user_count_query = select(
+                    func.count(func.distinct(user_tenant_roles.c.user_id))
+                ).where(user_tenant_roles.c.tenant_id == tenant_id)
+                user_count_result = await db.execute(user_count_query)
                 current_users = user_count_result.scalar() or 0
 
                 return {
