@@ -95,14 +95,12 @@ jobs:
     - name: Run database migrations
       run: poetry run alembic upgrade head
 
-    # --- NEW STEP ADDED HERE ---
     - name: Clear Pytest Cache
       run: |
         echo "Clearing pytest and mypy cache directories..."
         rm -rf .pytest_cache
         rm -rf .mypy_cache
         echo "Caches cleared."
-    # --- END OF NEW STEP ---
 
     - name: Run unit and integration tests
       run: poetry run pytest --cov=app --cov-report=xml
