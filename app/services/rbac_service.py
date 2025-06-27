@@ -7,20 +7,16 @@ Claude Code's RBAC engine with the new enterprise database models.
 
 from __future__ import annotations
 
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.models.security import AccessSession
-from app.models.security import EnterpriseRole
+from app.models.security import AccessSession, EnterpriseRole
 from app.schemas.enterprise import EnterpriseRoleCreate
-from app.schemas.user import AccessContext
-from app.schemas.user import DeviceInfo
-from app.schemas.user import UserTenantRoleAssignment
+from app.schemas.user import AccessContext, DeviceInfo, UserTenantRoleAssignment
 from app.security.rbac_engine import enterprise_access_control
 from app.security.zero_trust import zero_trust_engine
 
